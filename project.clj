@@ -1,0 +1,36 @@
+(defproject api "version placeholder"
+  :description "Promotably API server"
+  ;; :url "http://example.com/FIXME"
+  ;; :license {:name "Eclipse Public License"
+  ;;           :url "http://www.eclipse.org/legal/epl-v10.html"}
+  :profiles {:dev {:dependencies [[midje "1.5.0"]]
+                   :plugins [[drift "1.5.2"]
+                             [lein-ring "0.8.10"]
+                             [lein-beanstalk "0.2.7"]]}}
+  :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.1"]]
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [org.clojure/tools.logging "0.2.6"]
+                 [org.clojure/data.json "0.2.4"]
+                 [log4j/log4j "1.2.17"]
+                 [org.postgresql/postgresql "9.3-1100-jdbc4"]
+                 [org.clojars.cvillecsteele/ring-permacookie-middleware "1.0.0-SNAPSHOT"]
+                 [korma "0.3.1"]
+                 [clj-logging-config "1.9.7"]
+                 [ring/ring-core "1.2.2"]
+                 [compojure "1.1.8"]
+                 [prismatic/schema "0.2.3"]
+                 [clj-time "0.7.0"]
+                 [clojure.joda-time "0.1.0"]
+                 [com.cemerick/friend "0.2.1"]]
+  :resource-paths ["resources"]
+  :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC"]
+  :ring {:handler api.core/current-app
+         :init api.core/init-app
+         :destroy api.core/shutdown-app
+         :auto-reload? false
+         :reload-paths "src"
+         :nrepl {:start? true :port 55555}}
+  :aws {:beanstalk {:environments [{:name "ns-api-staging"
+                                    :cname-prefix "ns-api-staging"
+                                    :env {"ENV" "staging"}}]
+                    :s3-bucket "lein-beanstalk.signal96-api"}})
