@@ -20,7 +20,7 @@ GRANT ALL PRIVILEGES ON TABLE migrations TO p_user;
 
 ### Migrations
 
-ns-api uses [drift for migrations](https://github.com/macourtney/drift).
+api uses [drift for migrations](https://github.com/macourtney/drift).
 
 #### To run migrations:
 ```
@@ -38,10 +38,3 @@ This places a migration file in the src/migrations directory
 ```
 lein ring server
 ```
-
-## License
-
-Copyright © 2014 FIXME
-
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
