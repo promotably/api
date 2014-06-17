@@ -1,6 +1,6 @@
-# ns-api
+# api
 
-The Signal96 API Application
+The Promotably API Application
 
 ## Usage
 
