@@ -30,7 +30,7 @@
          :auto-reload? false
          :reload-paths "src"
          :nrepl {:start? true :port 55555}}
-  :aws {:beanstalk {:environments [{:name "ns-api-staging"
-                                    :cname-prefix "ns-api-staging"
+  :aws {:beanstalk {:environments [{:name "promotably-api-staging"
+                                    :cname-prefix "promotably-api-staging"
                                     :env {"ENV" "staging"}}]
-                    :s3-bucket "lein-beanstalk.signal96-api"}})
+                    :s3-bucket "lein-beanstalk.promotably-api"}})

@@ -23,9 +23,9 @@
                                          :make-pool? true}
                                   "test" {}
                                   "staging" {:db "promotably_staging"
-                                             :user "nsuser"
+                                             :user "promoStaging"
                                              :password "z1H0rJxmF3qS"
-                                             :host "rds.staging.signal96.com"
+                                             :host "rds.staging.promotably.com"
                                              :port 5432
                                              :make-pool? true}})
   (when-not (= "test" @$env)
