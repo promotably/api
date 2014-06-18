@@ -50,7 +50,7 @@
   (POST "/accounts" [] create-new-account!))
 
 (defroutes all-routes
-  anonymous-routes
+  (-> anonymous-routes
+      (wrap-permacookie {:name "promotably"}))
   (-> authenticated-routes
-      (friend/wrap-authorize #{::api})
-      (wrap-permacookie {:name "sig96"})))
+      (friend/wrap-authorize #{::api})))

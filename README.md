@@ -1,12 +1,12 @@
-# api
+# API
 
-The Promotably API Application
+The Promotably API Server
 
 ## Usage
 
 ### Database
 
-* ns-api uses PostgreSQL 9.3. If you're looking for a really easy way to run a postgresql database on your mac, checkout [postgres.app](http://postgresapp.com/)
+* This server uses PostgreSQL 9.3. If you're looking for a really easy way to run a postgresql database on your mac, checkout [postgres.app](http://postgresapp.com/)
 * Also, the postgresql extension uuid-ossp is required. Once you have your database up, do the following setup:
 ```
 CREATE USER p_user WITH PASSWORD 'pr0m0';
@@ -20,7 +20,7 @@ GRANT ALL PRIVILEGES ON TABLE migrations TO p_user;
 
 ### Migrations
 
-api uses [drift for migrations](https://github.com/macourtney/drift).
+API uses [drift for migrations](https://github.com/macourtney/drift).
 
 #### To run migrations:
 ```
@@ -38,3 +38,7 @@ This places a migration file in the src/migrations directory
 ```
 lein ring server
 ```
+
+## License
+
+Copyright © 2014 Promotably
