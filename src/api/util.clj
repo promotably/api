@@ -1,6 +1,6 @@
 (ns api.util
-  (:require [clojure.string :refer [replace]]))
+  (:require [clojure.string :as str]))
 
 (defn hyphenify-key
   [k]
-  (keyword (replace (name k) #"_" "-")))
+  (keyword (str/replace (name k) #"_" "-")))

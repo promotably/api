@@ -1,7 +1,7 @@
 (ns api.models.promo
   (:require [clj-time.core :refer [before? after? now]]
             [clj-time.coerce :refer [from-sql-date]]
-            [clojure.set :refer [rename-keys]]
+            [clojure.set :refer [rename-keys intersection]]
             [api.db :refer :all]
             [api.entities :refer :all]
             [api.util :refer [hyphenify-key]]
@@ -74,10 +74,33 @@
     (> (:current-usage-count the-promo) (:max-usage-count the-promo))
     false))
 
+(defn- cart-includes-excluded-products?
+  [the-promo context]
+  (when-not (and (nil? (:exclude-product-ids the-promo))
+                 (nil? (:cart-items context)))
+    (seq (intersection (set (:exclude-product-ids the-promo))
+                       (set (map :product-id (:cart-items context)))))))
+
+(defn- cart-includes-excluded-product-categories?
+  [the-promo context]
+  (when-not (and (nil? (:exclude-product-categories the-promo))
+                 (nil? (:cart-items context)))
+    (seq (intersection (set (:exclude-product-categories the-promo))
+                       (set (mapcat :product-categories (:cart-items context)))))))
+
+(defn- cart-missing-required-products?
+  "If a promo has required product ids, there has to be at
+   least one of those in the cart"
+  [the-promo context]
+  (when-not (nil? (:product-ids the-promo))
+    (not= (count (intersection (set (:product-ids the-promo))
+                                  (set (map :product-id (:cart-items context)))))
+         (count (:product-ids the-promo)))))
+
 (defn valid?
   "Validates whether a promo can be used, based on the rules
    of the promo, and the context passed in"
-  [the-promo & [context]]
+  [the-promo context]
   (cond (not (:active the-promo)) {:valid false
                                    :message "That promo is currently inactive"}
         (before-incept? the-promo) {:valid false
@@ -86,4 +109,11 @@
                                    :message "That promo has expired"}
         (past-max-usage? the-promo) {:valid false
                                      :message "That promo is no longer available"}
+        (cart-includes-excluded-products? the-promo context) {:valid false
+                                                              :message "There is an excluded product in the cart"}
+        (cart-includes-excluded-product-categories? the-promo context) {:valid false
+                                                                        :message "There is an excluded product category in the cart"}
+        (cart-missing-required-products? the-promo context) {:valid false
+                                                             :message "Required products are missing"}
+
         :else {:valid true}))

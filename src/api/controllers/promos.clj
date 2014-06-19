@@ -62,7 +62,7 @@
           the-promo (promo/find-by-site-uuid-and-code site-uuid code)]
       (if-not the-promo
         {:status 404 :body "Can't find that promo"}
-        (let [v (promo/valid? the-promo)]
+        (let [v (promo/valid? the-promo input)]
           {:status 201 :body (shape-validate (merge v {:uuid (:uuid the-promo)
                                                        :code code}))})))))
 
