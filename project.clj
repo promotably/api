@@ -16,7 +16,7 @@
                  [org.clojars.cvillecsteele/ring-permacookie-middleware "1.0.0-SNAPSHOT"]
                  [korma "0.3.1"]
                  [clj-logging-config "1.9.7"]
-                 [ring/ring-core "1.2.2"]
+                 [ring/ring-core "1.3.0"]
                  [compojure "1.1.8"]
                  [prismatic/schema "0.2.3"]
                  [clj-time "0.7.0"]
