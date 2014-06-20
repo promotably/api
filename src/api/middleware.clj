@@ -27,8 +27,9 @@
     (try
       (handler req)
       (catch clojure.lang.ExceptionInfo ex
-        (let [exdata (ex-data ex)]
-          (assoc-in (assoc-in (:response exdata) [:body] (name (:error exdata)))
+        (println (ex-data ex))
+        (when-let [exdata (ex-data ex)]
+          (assoc-in (assoc-in (:response exdata) [:body] (pprint (:error exdata)))
                     [:headers "X-Error"] (.getMessage ex)))))))
 
 (defn wrap-stacktrace
