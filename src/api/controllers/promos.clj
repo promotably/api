@@ -38,20 +38,20 @@
 
 (let [inbound-schema {(s/required-key :site-id) s/Uuid
                       (s/required-key :code) s/Str
-                      (s/required-key :shopper-id) s/Str
+                      (s/required-key :shopper-id) (s/maybe s/Str)
                       (s/required-key :shopper-email) s/Str
                       (s/optional-key :applied-coupons) [s/Str]
-                      (s/optional-key :cart-items) [{(s/required-key :product-id) s/Str
-                                                     (s/optional-key :product-title) s/Str
-                                                     (s/optional-key :product-type) s/Str
-                                                     (s/optional-key :product-categories) [s/Str]
-                                                     (s/optional-key :variation-id) s/Str
-                                                     (s/optional-key :variation) s/Str
-                                                     (s/optional-key :quantity) s/Int
-                                                     (s/optional-key :line-total) s/Num
-                                                     (s/optional-key :line-subtotal) s/Num
-                                                     (s/optional-key :line-tax) s/Num
-                                                     (s/optional-key :line-subtotal-tax) s/Num}]
+                      (s/optional-key :cart-contents) [{(s/required-key :product-id) s/Str
+                                                        (s/optional-key :product-title) s/Str
+                                                        (s/optional-key :product-type) s/Str
+                                                        (s/optional-key :product-categories) [s/Str]
+                                                        (s/optional-key :variation-id) s/Str
+                                                        (s/optional-key :variation) s/Str
+                                                        (s/optional-key :quantity) s/Int
+                                                        (s/optional-key :line-total) s/Num
+                                                        (s/optional-key :line-subtotal) s/Num
+                                                        (s/optional-key :line-tax) s/Num
+                                                        (s/optional-key :line-subtotal-tax) s/Num}]
                       (s/optional-key :product-ids-on-sale) [s/Str]}]
   (defn validate-promo
     [{:keys [params body] :as request}]
