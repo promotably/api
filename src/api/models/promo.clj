@@ -68,7 +68,7 @@
     (after? (now) (from-sql-date (:expiry-date the-promo)))
     false))
 
-(defn- past-max-usage?
+(defn- max-usage-exceeded?
   [the-promo]
   (if-not (nil? (:max-usage-count the-promo))
     (> (:current-usage-count the-promo) (:max-usage-count the-promo))
@@ -95,7 +95,8 @@
   (when-not (nil? (:product-ids the-promo))
     (not= (count (intersection (set (:product-ids the-promo))
                                   (set (map :product-id (:cart-items context)))))
-         (count (:product-ids the-promo)))))
+          (count (:product-ids the-promo)))))
+
 
 (defn valid?
   "Validates whether a promo can be used, based on the rules
@@ -107,7 +108,7 @@
                                     :message "That promo hasn't started yet"}
         (after-expiry? the-promo) {:valid false
                                    :message "That promo has expired"}
-        (past-max-usage? the-promo) {:valid false
+        (max-usage-exceeded? the-promo) {:valid false
                                      :message "That promo is no longer available"}
         (cart-includes-excluded-products? the-promo context) {:valid false
                                                               :message "There is an excluded product in the cart"}
