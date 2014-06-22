@@ -1,7 +1,7 @@
 (ns api.entities
   (:require [korma.core :refer :all]))
 
-(declare accounts users sites promos)
+(declare accounts users sites promos redemptions)
 
 (defentity accounts
   (table "public.accounts")
@@ -19,7 +19,12 @@
 
 (defentity promos
   (table "public.promos")
-  (belongs-to sites {:fk :site_id}))
+  (belongs-to sites {:fk :site_id})
+  (has-many redemptions {:fk :promo_id}))
+
+(defentity redemptions
+  (table "public.redemptions")
+  (belongs-to promos {:fk :promo_id}))
 
 (defentity time-frame-rules
   (table "public.time_frame_rules")

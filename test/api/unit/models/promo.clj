@@ -1,8 +1,9 @@
 (ns api.unit.models.promo
-  (:require [clj-time.coerce :refer [to-sql-date]]
+  (:require [api.models.promo :refer :all]
+            [api.models.redemption :as rd]
+            [clj-time.coerce :refer [to-sql-date]]
             [clj-time.core :refer [now plus minus months]]
-            [midje.sweet :refer :all]
-            [api.models.promo :refer :all]))
+            [midje.sweet :refer :all]))
 
 (fact "Inactive promos are declared invalid"
   (let [the-promo {:active false}]
@@ -78,6 +79,15 @@
         context {:cart-items [{:product-id "1234"}]}]
     (valid? the-promo context) => (contains {:valid false})))
 
+(fact "Promo validation checks individual shopper usage"
+  (let [the-promo {:id ...promo-id...
+                   :active true
+                   :usage-limit-per-user 4}
+        context {:shopper-email ...shopper-email...}]
+    (valid? the-promo context) => (contains {:valid false})
+    (provided (rd/count-by-promo-and-shopper-email ...promo-id...
+                                                   ...shopper-email...) => 5)))
+
 (fact "Totally valid promos are declared valid"
   (let [the-promo {:active true
                    :incept-date (to-sql-date (minus (now) (months 1)))
@@ -88,3 +98,5 @@
                    :exclude-product-categories ["shoes"]}
         context {:cart-items [{:product-id "67890" :product-categories ["boots"]}]}]
     (valid? the-promo context) => {:valid true}))
+
+

@@ -4,6 +4,7 @@
             [clojure.set :refer [rename-keys intersection]]
             [api.db :refer :all]
             [api.entities :refer :all]
+            [api.models.redemption :as rd]
             [api.util :refer [hyphenify-key]]
             [korma.core :refer :all]
             [schema.core :as s]
@@ -74,6 +75,13 @@
     (> (:current-usage-count the-promo) (:max-usage-count the-promo))
     false))
 
+(defn individual-shopper-usage-exceeded?
+  [the-promo context]
+  (when-not (nil? (:usage-limit-per-user the-promo))
+    (let [redemption-count
+          (rd/count-by-promo-and-shopper-email (:id the-promo) (:shopper-email context))]
+      (> redemption-count (:usage-limit-per-user the-promo)))))
+
 (defn- cart-includes-excluded-products?
   [the-promo context]
   (when-not (and (nil? (:exclude-product-ids the-promo))
@@ -102,19 +110,20 @@
   "Validates whether a promo can be used, based on the rules
    of the promo, and the context passed in"
   [the-promo context]
-  (cond (not (:active the-promo)) {:valid false
-                                   :message "That promo is currently inactive"}
-        (before-incept? the-promo) {:valid false
-                                    :message "That promo hasn't started yet"}
-        (after-expiry? the-promo) {:valid false
-                                   :message "That promo has expired"}
-        (max-usage-exceeded? the-promo) {:valid false
-                                     :message "That promo is no longer available"}
-        (cart-includes-excluded-products? the-promo context) {:valid false
-                                                              :message "There is an excluded product in the cart"}
-        (cart-includes-excluded-product-categories? the-promo context) {:valid false
-                                                                        :message "There is an excluded product category in the cart"}
-        (cart-missing-required-products? the-promo context) {:valid false
-                                                             :message "Required products are missing"}
-
+  (cond (not (:active the-promo))
+        {:valid false :message "That promo is currently inactive"}
+        (before-incept? the-promo)
+        {:valid false :message "That promo hasn't started yet"}
+        (after-expiry? the-promo)
+        {:valid false :message "That promo has expired"}
+        (max-usage-exceeded? the-promo)
+        {:valid false :message "That promo is no longer available"}
+        (individual-shopper-usage-exceeded? the-promo context)
+        {:valid false :message "Shopper has exceeded maximum usage"}
+        (cart-includes-excluded-products? the-promo context)
+        {:valid false :message "There is an excluded product in the cart"}
+        (cart-includes-excluded-product-categories? the-promo context)
+        {:valid false :message "There is an excluded product category in the cart"}
+        (cart-missing-required-products? the-promo context)
+        {:valid false :message "Required products are missing"}
         :else {:valid true}))
