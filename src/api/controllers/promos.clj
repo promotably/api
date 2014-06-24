@@ -21,10 +21,12 @@
   [params]
   (log/debug params))
 
-(let [inbound-schema {:site-id s/Uuid :promo-code s/Str}]
+(let [inbound-schema {:site-id s/Uuid
+                      (s/optional-key :promotably-auth) s/Str
+                      :promo-code s/Str}]
   (defn query-promo
     [{:keys [params] :as request}]
-    (let [{:keys [site-id promo-code] :as cp}
+    (let [{:keys [site-id promo-code] :as coerced-params}
           ((c/coercer inbound-schema
                       (c/first-matcher [custom-matcher
                                         c/string-coercion-matcher]))
@@ -36,8 +38,9 @@
         (do
           {:body (shape-promo the-promo)})))))
 
-(let [inbound-schema {(s/required-key :site-id) s/Uuid
+(let [inbound-schema {(s/required-key :site-id) s/Str
                       (s/required-key :code) s/Str
+                      (s/optional-key :promotably-auth) [s/Str]
                       (s/required-key :shopper-id) (s/maybe s/Str)
                       (s/required-key :shopper-email) s/Str
                       (s/optional-key :applied-coupons) [s/Str]
@@ -56,17 +59,19 @@
   (defn validate-promo
     [{:keys [params body] :as request}]
     (let [input-json (read-str (slurp body) :key-fn keyword)
-          {:keys [site-id code] :as coerced-params}
+          {:keys [code] :as coerced-params}
             ((c/coercer inbound-schema
                         (c/first-matcher [custom-matcher
                                           c/string-coercion-matcher]))
              input-json)
-          the-promo (promo/find-by-site-uuid-and-code site-id code)]
+          site-uuid (java.util.UUID/fromString (:site-id params))
+          the-promo (promo/find-by-site-uuid-and-code site-uuid code)]
       (if-not the-promo
         {:status 404 :body "Can't find that promo"}
-        (let [v (promo/valid? the-promo coerced-params)]
-          {:status 201 :body (shape-validate (merge v {:uuid (:uuid the-promo)
-                                                       :code code}))}))))
+        (let [v (promo/valid? the-promo coerced-params)
+              resp (merge v {:uuid (:uuid the-promo)
+                             :code code})]
+          {:status 201 :body (shape-validate resp)}))))
 
   (defn calculate-promo
     [{:keys [params body] :as request}]
@@ -76,7 +81,8 @@
                       (c/first-matcher [custom-matcher
                                         c/string-coercion-matcher]))
            input-json)
-          the-promo (promo/find-by-site-uuid-and-code site-id code)]
+          site-uuid (java.util.UUID/fromString (:site-id params))
+          the-promo (promo/find-by-site-uuid-and-code site-uuid code)]
       (if-not the-promo
         {:status 404 :body "Can't find that promo"}
         (let [v (promo/valid? the-promo coerced-params)]

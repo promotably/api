@@ -28,8 +28,7 @@
          :init api.core/init-app
          :destroy api.core/shutdown-app
          :auto-reload? false
-         :reload-paths "src"
-         :nrepl {:start? true :port 55555}}
+         :reload-paths "src"}
   :aws {:beanstalk {:environments [{:name "promotably-api-staging"
                                     :cname-prefix "promotably-api-staging"
                                     :env {"ENV" "staging"}}]

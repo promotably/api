@@ -4,6 +4,7 @@
             [joda-time :refer [date-time to-millis-from-epoch]]
             [clojure.java.jdbc :as jdbc]))
 
+;; TODO: use api.env instead of this
 (defonce $env (atom nil))
 (defonce db-environment-configs (atom nil))
 (defonce $db-config (atom nil))
@@ -11,6 +12,7 @@
 (defn init!
   "Initialize db subsystem."
   [& [env]]
+  ;; TODO: use api.env instead of this
   (reset! $env (or env
                    (System/getenv "ENV")
                    (System/getProperty "ENV")
@@ -75,7 +77,7 @@
                        :updated_at (sqlfn now)
                        :individual_use false
                        :exclude_sale_items true
-                       :max_usage_count 100
+                       :max_usage_count 1000
                        :current_usage_count 0
                        :type "percent"
                        :amount 20.0
@@ -87,4 +89,5 @@
                        :usage_limit_per_user -1}))
       (api.models.promo/find-by-site-uuid-and-code
        site-uuid
-       "TWENTYOFF"))))
+       "TWENTYOFF")))
+)

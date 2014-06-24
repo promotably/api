@@ -1,5 +1,6 @@
 (ns api.models.promo
-  (:require [clj-time.core :refer [before? after? now]]
+  (:require [clojure.tools.logging :as log]
+            [clj-time.core :refer [before? after? now]]
             [clj-time.coerce :refer [from-sql-date]]
             [clojure.set :refer [rename-keys intersection]]
             [api.db :refer :all]
@@ -76,11 +77,11 @@
     false))
 
 (defn individual-shopper-usage-exceeded?
-  [the-promo context]
-  (when-not (nil? (:usage-limit-per-user the-promo))
+  [{:keys [usage-limit-per-user] :as the-promo} context]
+  (when (and (not (nil? usage-limit-per-user)) (> 0 usage-limit-per-user))
     (let [redemption-count
           (rd/count-by-promo-and-shopper-email (:id the-promo) (:shopper-email context))]
-      (> redemption-count (:usage-limit-per-user the-promo)))))
+      (> usage-limit-per-user redemption-count))))
 
 (defn- cart-includes-excluded-products?
   [the-promo context]

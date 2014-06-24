@@ -1,6 +1,8 @@
 (ns api.core
   (:require [clojure.tools.logging :as log]
             [compojure.handler :as handler]
+            [clojure.tools.nrepl.server :as nrepl-server]
+            [cider.nrepl :refer (cider-nrepl-handler)]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.content-type :refer [wrap-content-type]]
@@ -15,6 +17,7 @@
                                        wrap-request-logging]]
             [api.routes :as routes]
             [api.state]
+            [api.env :as env]
             [api.cache :as cache]
             [api.lib.protocols :refer (EventCache init shutdown)]
             [api.controllers.users :refer [authenticate-user]]))
@@ -31,13 +34,15 @@
        {:credential-fn authenticate-user
         :workflows [(wf/interactive-form)]
         :allow-anon? true})
-      (wrap-request-logging)
       (wrap-exceptions)
       (wrap-stacktrace)
+      (wrap-request-logging)
       (wrap-content-type)))
 
 (defn init-app
   []
+  (env/init!)
+
   ;; Configure logging if on tomcat
   (if (not (empty? (. System getProperty "catalina.base")))
     (log-config/set-logger!
@@ -57,6 +62,12 @@
      :out (org.apache.log4j.ConsoleAppender.
            (org.apache.log4j.PatternLayout.
             "%d{HH:mm:ss} %-5p %22.22t %-22.22c{2} %m%n"))))
+
+  ;; start nrepl
+  (env/when-env "dev"
+                (log/info "Starting cider (nrepl) on 55555")
+                (nrepl-server/start-server :port 55555 :handler cider-nrepl-handler))
+
   (log/info :STARTING "NS Servlet")
   (db/init!)
   (let [events-cache (cache/exporting-event-cache)]
