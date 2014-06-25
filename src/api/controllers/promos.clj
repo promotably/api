@@ -38,7 +38,7 @@
         (do
           {:body (shape-promo the-promo)})))))
 
-(let [inbound-schema {(s/required-key :site-id) s/Str
+(let [inbound-schema {(s/required-key :site-id) s/Uuid
                       (s/required-key :code) s/Str
                       (s/optional-key :promotably-auth) [s/Str]
                       (s/required-key :shopper-id) (s/maybe s/Str)
@@ -59,13 +59,13 @@
   (defn validate-promo
     [{:keys [params body] :as request}]
     (let [input-json (read-str (slurp body) :key-fn keyword)
-          {:keys [code] :as coerced-params}
+          {:keys [site-id code] :as coerced-params}
             ((c/coercer inbound-schema
                         (c/first-matcher [custom-matcher
                                           c/string-coercion-matcher]))
              input-json)
-          site-uuid (java.util.UUID/fromString (:site-id params))
-          the-promo (promo/find-by-site-uuid-and-code site-uuid code)]
+          ;; site-uuid (java.util.UUID/fromString (:site-id params))
+          the-promo (promo/find-by-site-uuid-and-code site-id code)]
       (if-not the-promo
         {:status 404 :body "Can't find that promo"}
         (let [v (promo/valid? the-promo coerced-params)
@@ -81,8 +81,8 @@
                       (c/first-matcher [custom-matcher
                                         c/string-coercion-matcher]))
            input-json)
-          site-uuid (java.util.UUID/fromString (:site-id params))
-          the-promo (promo/find-by-site-uuid-and-code site-uuid code)]
+          ;; site-uuid (java.util.UUID/fromString (:site-id params))
+          the-promo (promo/find-by-site-uuid-and-code site-id code)]
       (if-not the-promo
         {:status 404 :body "Can't find that promo"}
         (let [v (promo/valid? the-promo coerced-params)]
