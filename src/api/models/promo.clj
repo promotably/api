@@ -106,6 +106,11 @@
                                   (set (map :product-id (:cart-items context)))))
           (count (:product-ids the-promo)))))
 
+(defn- cart-violates-minimum-amount?
+  [the-promo context]
+  (when-not (nil? (:minimum-cart-amount the-promo))
+    (let [cart-total (reduce + (map :line-total (:cart-items context)))]
+      (< cart-total (:minimum-cart-amount the-promo)))))
 
 (defn valid?
   "Validates whether a promo can be used, based on the rules
@@ -127,4 +132,6 @@
         {:valid false :message "There is an excluded product category in the cart"}
         (cart-missing-required-products? the-promo context)
         {:valid false :message "Required products are missing"}
+        (cart-violates-minimum-amount? the-promo context)
+        {:valid false :message "The total cart amount is less than the minimum"}
         :else {:valid true}))
