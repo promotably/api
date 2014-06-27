@@ -4,6 +4,14 @@ The Promotably API Server
 
 ## Usage
 
+### Cider
+
+Make sure your ~/.lein/profiles.clj has at least:
+
+     $ cat ~/.lein/profiles.clj
+     {:user {:plugins [[lein-midje "3.0.0"]
+                      [cider/cider-nrepl "0.7.0-SNAPSHOT"]]}}
+
 ### Database
 
 * This server uses PostgreSQL 9.3. If you're looking for a really easy way to run a postgresql database on your mac, checkout [postgres.app](http://postgresapp.com/)

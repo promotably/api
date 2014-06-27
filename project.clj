@@ -7,6 +7,7 @@
                    :plugins [[drift "1.5.2"]
                              [lein-ring "0.8.10"]
                              [lein-beanstalk "0.2.7"]]}}
+  :global-vars {*warn-on-reflection* true}
   :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.1"]]
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.0"]
