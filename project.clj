@@ -3,7 +3,9 @@
   ;; :url "http://example.com/FIXME"
   ;; :license {:name "Eclipse Public License"
   ;;           :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :profiles {:dev {:dependencies [[midje "1.6.3"]]
+  :profiles {:dev {:dependencies [[midje "1.6.3"]
+                                  [cider/cider-nrepl "0.7.0-SNAPSHOT"]
+                                  [org.clojure/tools.nrepl "0.2.3"]]
                    :plugins [[drift "1.5.2"]
                              [lein-ring "0.8.10"]
                              [lein-beanstalk "0.2.7"]]}}
@@ -22,7 +24,8 @@
                  [prismatic/schema "0.2.4"]
                  [clj-time "0.7.0"]
                  [clojure.joda-time "0.1.0"]
-                 [com.cemerick/friend "0.2.1"]]
+                 [com.cemerick/friend "0.2.1"]
+                 [org.clojure/tools.nrepl "0.2.3"]]
   :resource-paths ["resources"]
   :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC"]
   :ring {:handler api.core/current-app
