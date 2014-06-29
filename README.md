@@ -296,6 +296,9 @@ The response has the JSON form:
     "usage-limit-per-user": -1,
 }
 
+* type: Enum.  One of "percent_product", "amount_product",
+  "percent_cart", "amount_cart".
+
 * minimum-product-amount: Float.  If product-ids is not empty, to
   qualify for this promo, the product to which it applies must exceed
   this amount in value.  If product-categories is not empty, the
