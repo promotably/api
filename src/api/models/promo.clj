@@ -78,10 +78,10 @@
 
 (defn individual-shopper-usage-exceeded?
   [{:keys [usage-limit-per-user] :as the-promo} context]
-  (when (and (not (nil? usage-limit-per-user)) (> 0 usage-limit-per-user))
+  (when-not (nil? usage-limit-per-user)
     (let [redemption-count
           (rd/count-by-promo-and-shopper-email (:id the-promo) (:shopper-email context))]
-      (> usage-limit-per-user redemption-count))))
+      (> redemption-count usage-limit-per-user))))
 
 (defn- cart-includes-excluded-products?
   [the-promo context]
