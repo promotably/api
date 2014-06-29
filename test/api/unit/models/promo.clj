@@ -39,7 +39,7 @@
                    :max-usage-count 100
                    :current-usage-count 1
                    :exclude-product-ids ["12345" "67890"]}
-        context {:cart-items [{:product-id "12345"} {:product-id "adsf"}]}]
+        context {:cart-contents [{:product-id "12345"} {:product-id "adsf"}]}]
     (valid? the-promo context) => (just {:valid false
                                          :message "There is an excluded product in the cart"})))
 
@@ -51,21 +51,21 @@
                    :current-usage-count 1
                    :exclude-product-ids ["67890"]
                    :exclude-product-categories ["shoes"]}
-        context {:cart-items [{:product-id "12345"
-                               :product-categories ["shoes"]} {:product-id "adsf"}]}]
+        context {:cart-contents [{:product-id "12345"
+                                  :product-categories ["shoes"]} {:product-id "adsf"}]}]
     (valid? the-promo context) => (just {:valid false
                                          :message "There is an excluded product category in the cart"})))
 
 (fact "Promos that require products that are not in the cart are declared invalid"
   (let [the-promo {:active true
                    :product-ids ["adsf"]}
-        context {:cart-items [{:product-id "jkl"}]}]
+        context {:cart-contents [{:product-id "jkl"}]}]
     (valid? the-promo context) => (contains {:valid false})))
 
 (fact "Promos that require a product that the cart has are declared valid"
   (let [the-promo {:active true
                    :product-ids ["adf"]}
-        context {:cart-items [{:product-id "adf"} {:product-id "klhjasideogh"}]}]
+        context {:cart-contents [{:product-id "adf"} {:product-id "klhjasideogh"}]}]
     (valid? the-promo context) => (just {:valid true})))
 
 (fact "Promos that require a product and nothing is in the cart are declared invalid"
@@ -76,7 +76,7 @@
 (fact "Promo validation checks for all required products"
   (let [the-promo {:active true
                    :product-ids ["adsf" "1234"]}
-        context {:cart-items [{:product-id "1234"}]}]
+        context {:cart-contents [{:product-id "1234"}]}]
     (valid? the-promo context) => (contains {:valid false})))
 
 (fact "Promo validation checks individual shopper usage"
@@ -96,7 +96,7 @@
                    :current-usage-count 1
                    :exclude-product-ids ["12345"]
                    :exclude-product-categories ["shoes"]}
-        context {:cart-items [{:product-id "67890" :product-categories ["boots"]}]}]
+        context {:cart-contents [{:product-id "67890" :product-categories ["boots"]}]}]
     (valid? the-promo context) => {:valid true}))
 
 

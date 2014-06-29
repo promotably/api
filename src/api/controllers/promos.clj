@@ -64,7 +64,6 @@
                         (c/first-matcher [custom-matcher
                                           c/string-coercion-matcher]))
              input-json)
-          ;; site-uuid (java.util.UUID/fromString (:site-id params))
           the-promo (promo/find-by-site-uuid-and-code site-id code)]
       (if-not the-promo
         {:status 404 :body "Can't find that promo"}
@@ -81,7 +80,6 @@
                       (c/first-matcher [custom-matcher
                                         c/string-coercion-matcher]))
            input-json)
-          ;; site-uuid (java.util.UUID/fromString (:site-id params))
           the-promo (promo/find-by-site-uuid-and-code site-id code)]
       (if-not the-promo
         {:status 404 :body "Can't find that promo"}

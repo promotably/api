@@ -59,58 +59,63 @@
                                                     promo-code)})))))
 
 (defn- before-incept?
-  [the-promo]
-  (if-not (nil? (:incept-date the-promo))
-    (before? (now) (from-sql-date (:incept-date the-promo)))
+  [{:keys [incept-date] :as the-promo}]
+  (if-not (nil? incept-date)
+    (before? (now) (from-sql-date incept-date))
     false))
 
 (defn- after-expiry?
-  [the-promo]
-  (if-not (nil? (:expiry-date the-promo))
-    (after? (now) (from-sql-date (:expiry-date the-promo)))
+  [{:keys [expiry-date] :as the-promo}]
+  (if-not (nil? expiry-date)
+    (after? (now) (from-sql-date expiry-date))
     false))
 
 (defn- max-usage-exceeded?
-  [the-promo]
-  (if-not (nil? (:max-usage-count the-promo))
-    (> (:current-usage-count the-promo) (:max-usage-count the-promo))
+  [{:keys [max-usage-count current-usage-count] :as the-promo}]
+  (if-not (nil? max-usage-count)
+    (> current-usage-count max-usage-count)
     false))
 
 (defn individual-shopper-usage-exceeded?
-  [{:keys [usage-limit-per-user] :as the-promo} context]
+  [{:keys [usage-limit-per-user id] :as the-promo}
+   {:keys [shopper-email] :as context}]
   (when-not (nil? usage-limit-per-user)
     (let [redemption-count
-          (rd/count-by-promo-and-shopper-email (:id the-promo) (:shopper-email context))]
+          (rd/count-by-promo-and-shopper-email id shopper-email)]
       (> redemption-count usage-limit-per-user))))
 
 (defn- cart-includes-excluded-products?
-  [the-promo context]
-  (when-not (and (nil? (:exclude-product-ids the-promo))
-                 (nil? (:cart-items context)))
-    (seq (intersection (set (:exclude-product-ids the-promo))
-                       (set (map :product-id (:cart-items context)))))))
+  [{:keys [exclude-product-ids] :as the-promo}
+   {:keys [cart-contents] :as context}]
+  (when-not (and (nil? exclude-product-ids)
+                 (nil? cart-contents))
+    (seq (intersection (set exclude-product-ids)
+                       (set (map :product-id cart-contents))))))
 
 (defn- cart-includes-excluded-product-categories?
-  [the-promo context]
-  (when-not (and (nil? (:exclude-product-categories the-promo))
-                 (nil? (:cart-items context)))
-    (seq (intersection (set (:exclude-product-categories the-promo))
-                       (set (mapcat :product-categories (:cart-items context)))))))
+  [{:keys [exclude-product-categories] :as the-promo}
+   {:keys [cart-contents] :as context}]
+  (when-not (and (nil? exclude-product-categories)
+                 (nil? cart-contents))
+    (seq (intersection (set exclude-product-categories)
+                       (set (mapcat :product-categories cart-contents))))))
 
 (defn- cart-missing-required-products?
   "If a promo has required product ids, there has to be at
    least one of those in the cart"
-  [the-promo context]
-  (when-not (nil? (:product-ids the-promo))
-    (not= (count (intersection (set (:product-ids the-promo))
-                                  (set (map :product-id (:cart-items context)))))
-          (count (:product-ids the-promo)))))
+  [{:keys [product-ids] :as the-promo}
+   {:keys [cart-contents] :as context}]
+  (when-not (nil? product-ids)
+    (not= (count (intersection (set product-ids)
+                               (set (map :product-id cart-contents))))
+          (count product-ids))))
 
 (defn- cart-violates-minimum-amount?
-  [the-promo context]
-  (when-not (nil? (:minimum-cart-amount the-promo))
-    (let [cart-total (reduce + (map :line-total (:cart-items context)))]
-      (< cart-total (:minimum-cart-amount the-promo)))))
+  [{:keys [minimum-cart-amount] :as the-promo}
+   {:keys [cart-contents] :as context}]
+  (when-not (nil? minimum-cart-amount)
+    (let [cart-total (reduce + (map :line-total cart-contents))]
+      (< cart-total minimum-cart-amount))))
 
 (defn valid?
   "Validates whether a promo can be used, based on the rules
