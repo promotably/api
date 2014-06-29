@@ -85,7 +85,7 @@ string fields available in the URL; nor any at all, for that matter.
 Then the requestor computes a signature string by concatenating the
 following elements:
 
-    0. requestor's side id + newline ("\n")
+    0. requestor's site id + newline ("\n")
     1. requestor's API secret key + newline ("\n")
     2. http host (as presented in HTTP request) + newline ("\n")
     3. http verb (as presented in HTTP request) + newline ("\n")
