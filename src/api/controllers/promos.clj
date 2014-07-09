@@ -77,11 +77,16 @@
     (let [input-json (read-str (slurp body) :key-fn keyword)
           {:keys [site-id code] :as coerced-params}
           ((c/coercer inbound-schema
-                      (c/first-matcher [custom-matcher
-                                        c/string-coercion-matcher]))
+                        (c/first-matcher [custom-matcher
+                                          c/string-coercion-matcher]))
            input-json)
           the-promo (promo/find-by-site-uuid-and-code site-id code)]
       (if-not the-promo
         {:status 404 :body "Can't find that promo"}
         (let [v (promo/valid? the-promo coerced-params)]
-          {:status 201 :body (shape-calculate (merge v {:discount-amount "5.99"}))})))))
+          (println (:type the-promo))
+          (println (class (:type the-promo)))
+          {:status 201
+           :body (shape-calculate (merge v
+                                         (promo/calculate-discount the-promo
+                                                                   coerced-params)))})))))
