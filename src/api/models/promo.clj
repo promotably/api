@@ -177,7 +177,6 @@
   (fn [{:keys [type]}
       context] type))
 
-
 (defmethod calculate-discount :percent-product
   [{:keys [type product-ids product-categories
            amount limit-usage-to-x-items] :as the-promo}
