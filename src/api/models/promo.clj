@@ -5,24 +5,64 @@
             [clojure.set :refer [rename-keys intersection]]
             [api.db :refer :all]
             [api.entities :refer :all]
+            [api.lib.coercion-helper :refer [custom-matcher]]
             [api.models.redemption :as rd]
             [api.util :refer [hyphenify-key]]
             [korma.core :refer :all]
             [schema.core :as s]
-            [schema.macros :as sm]))
+            [schema.macros :as sm]
+            [schema.coerce :as sc]))
 
 (def PromoSchema {(s/optional-key :id) s/Int
                   (s/required-key :site-id) s/Int
                   (s/required-key :name) s/Str
                   (s/required-key :code) s/Str
                   (s/optional-key :created-at) s/Inst
-                  (s/optional-key :updated-at) s/Inst})
+                  (s/optional-key :updated-at) s/Inst
+                  (s/required-key :uuid) s/Uuid
+                  (s/optional-key :incept-date) s/Inst
+                  (s/optional-key :expiry-date) s/Inst
+                  (s/optional-key :individual-use) s/Bool
+                  (s/optional-key :exclude-sale-items) s/Bool
+                  (s/optional-key :max-usage-count) (s/maybe s/Int)
+                  (s/optional-key :current-usage-count) s/Int
+                  (s/required-key :type) (s/enum :percent-product
+                                                 :amount-product
+                                                 :percent-cart
+                                                 :amount-cart)
+                  (s/required-key :active) s/Bool
+                  (s/optional-key :amount) s/Num
+                  (s/optional-key :apply-before-tax) s/Bool
+                  (s/optional-key :free-shipping) s/Bool
+                  (s/optional-key :minimum-cart-amount) (s/maybe s/Num)
+                  (s/optional-key :minimum-product-amount) (s/maybe s/Num)
+                  (s/optional-key :usage-limit-per-user) (s/maybe s/Int)
+                  (s/optional-key :product-ids) [s/Str]
+                  (s/optional-key :exclude-product-ids) [s/Str]
+                  (s/optional-key :product-categories) [s/Str]
+                  (s/optional-key :exclude-product-categories) [s/Str]
+                  (s/optional-key :limit-usage-to-x-items) (s/maybe s/Int)})
 
-(defn- db-to-promo
+(defn- jdbc-array->seq
+  [^org.postgresql.jdbc4.Jdbc4Array jdbc-array]
+  (when-not (nil? jdbc-array)
+    (seq (.getArray jdbc-array))))
+
+(defn db-to-promo
   "Convert a database result to a promo that obeys the PromoSchema"
   [r]
-  (let [ks (keys r)]
-    (rename-keys r (zipmap ks (map hyphenify-key ks)))))
+  (let [ks (keys r)
+        {:keys [product-ids product-categories
+                exclude-product-ids exclude-product-categories]
+         :as hyphenified-params} (rename-keys r (zipmap ks (map hyphenify-key ks)))]
+    ((sc/coercer PromoSchema
+                 (sc/first-matcher [custom-matcher
+                                    sc/string-coercion-matcher]))
+     (merge hyphenified-params
+            {:product-ids (jdbc-array->seq product-ids)
+             :product-categories (jdbc-array->seq product-categories)
+             :exclude-product-ids (jdbc-array->seq exclude-product-ids)
+             :exclude-product-categories (jdbc-array->seq exclude-product-categories)}))))
 
 (sm/defn new-promo! :- PromoSchema
   "Creates a new promo in the database"
@@ -52,11 +92,13 @@
   Returns nil if no results found"
   [site-uuid :- s/Uuid
    promo-code :- s/Str]
-  (db-to-promo (first (select promos
-                              (join sites (= :sites.id :site_id))
-                              (where {:sites.uuid site-uuid
-                                      :promos.code (clojure.string/upper-case
-                                                    promo-code)})))))
+  (let [row (first (select promos
+                           (join sites (= :sites.id :site_id))
+                           (where {:sites.uuid site-uuid
+                                   :promos.code (clojure.string/upper-case
+                                                 promo-code)})))]
+    (println (class (:product_ids row)))
+    (db-to-promo row)))
 
 (defn- before-incept?
   [{:keys [incept-date] :as the-promo}]
@@ -140,3 +182,82 @@
         (cart-violates-minimum-amount? the-promo context)
         {:valid false :message "The total cart amount is less than the minimum"}
         :else {:valid true}))
+
+(defn- line-to-discount
+  [line-intersection]
+  {:pre [(seq? line-intersection)]}
+  (first (sort-by :line-subtotal <
+                  line-intersection)))
+
+(defn- per-item-discount
+  [ltd amount]
+  {:pre [(map? ltd)
+         (contains? ltd :line-subtotal)
+         (contains? ltd :quantity)
+         (float? (:line-subtotal ltd))
+         (integer? (:quantity ltd))
+         (number? amount)]}
+  (* (/ (:line-subtotal ltd)
+        (:quantity ltd))
+     amount))
+
+(defn- discount-quantity
+  [limit-usage-to-x-items quantity]
+  {:pre [(integer? quantity)]}
+  (if-not (nil? limit-usage-to-x-items)
+    (min quantity limit-usage-to-x-items)
+    quantity))
+
+(defmulti calculate-discount
+  (fn [{:keys [type]}
+      context] type))
+
+(defmethod calculate-discount :percent-product
+  [{:keys [type product-ids product-categories
+           amount limit-usage-to-x-items] :as the-promo}
+   {:keys [cart-contents] :as context}]
+  (let [product-id-intersect (intersection (set product-ids)
+                                           (set (map :product-id cart-contents)))
+        product-categories-intersect (intersection (set product-categories)
+                                                   (set (mapcat :product-categories cart-contents)))]
+    (cond
+     (seq? (seq product-id-intersect))
+     ;; We've got overlap between products in the cart and in the
+     ;; promo
+     (let [line-intersect (filter #(some #{(:product-id %)} product-id-intersect)
+                                  cart-contents)
+           ltd (line-to-discount line-intersect)
+           pid (per-item-discount ltd amount)
+           dq (discount-quantity limit-usage-to-x-items (:quantity ltd))]
+       {:discount-amount (* pid dq)
+        :discounted-product-id (:product-id ltd)
+        :number-discounted-items dq})
+     (seq? (seq product-categories-intersect))
+     (let [line-intersect (filter (fn [item]
+                                    (seq? (seq
+                                           (intersection (set (:product-categories item))
+                                                         product-categories-intersect))))
+                                  cart-contents)
+           ltd (line-to-discount line-intersect)
+           pid (per-item-discount ltd amount)
+           dq (discount-quantity limit-usage-to-x-items (:quantity ltd))]
+       {:discount-amount (* pid dq)
+        :discounted-product-id (:product-id ltd)
+        :number-discounted-items dq})
+     :else {:discount-amount 0.00})))
+
+
+(defmethod calculate-discount :amount-product
+  [{:keys [type] :as the-promo}
+   {:keys [cart-contents] :as context}]
+  :bully)
+
+(defmethod calculate-discount :percent-cart
+  [{:keys [type] :as the-promo}
+   {:keys [cart-contents] :as context}]
+  :jolly-good)
+
+(defmethod calculate-discount :amount-cart
+  [{:keys [type] :as the-promo}
+   {:keys [cart-contents] :as context}]
+  :good-show)
