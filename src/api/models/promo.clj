@@ -43,15 +43,26 @@
                   (s/optional-key :exclude-product-categories) [s/Str]
                   (s/optional-key :limit-usage-to-x-items) (s/maybe s/Int)})
 
-(defn- db-to-promo
+(defn- jdbc-array->seq
+  [^org.postgresql.jdbc4.Jdbc4Array jdbc-array]
+  (when-not (nil? jdbc-array)
+    (seq (.getArray jdbc-array))))
+
+(defn db-to-promo
   "Convert a database result to a promo that obeys the PromoSchema"
   [r]
   (let [ks (keys r)
-        hyphenified-params (rename-keys r (zipmap ks (map hyphenify-key ks)))]
+        {:keys [product-ids product-categories
+                exclude-product-ids exclude-product-categories]
+         :as hyphenified-params} (rename-keys r (zipmap ks (map hyphenify-key ks)))]
     ((sc/coercer PromoSchema
                  (sc/first-matcher [custom-matcher
                                     sc/string-coercion-matcher]))
-     hyphenified-params)))
+     (merge hyphenified-params
+            {:product-ids (jdbc-array->seq product-ids)
+             :product-categories (jdbc-array->seq product-categories)
+             :exclude-product-ids (jdbc-array->seq exclude-product-ids)
+             :exclude-product-categories (jdbc-array->seq exclude-product-categories)}))))
 
 (sm/defn new-promo! :- PromoSchema
   "Creates a new promo in the database"
@@ -172,6 +183,30 @@
         {:valid false :message "The total cart amount is less than the minimum"}
         :else {:valid true}))
 
+(defn- line-to-discount
+  [line-intersection]
+  {:pre [(seq? line-intersection)]}
+  (first (sort-by :line-subtotal <
+                  line-intersection)))
+
+(defn- per-item-discount
+  [ltd amount]
+  {:pre [(map? ltd)
+         (contains? ltd :line-subtotal)
+         (contains? ltd :quantity)
+         (float? (:line-subtotal ltd))
+         (integer? (:quantity ltd))
+         (number? amount)]}
+  (* (/ (:line-subtotal ltd)
+        (:quantity ltd))
+     amount))
+
+(defn- discount-quantity
+  [limit-usage-to-x-items quantity]
+  {:pre [(integer? quantity)]}
+  (if-not (nil? limit-usage-to-x-items)
+    (min quantity limit-usage-to-x-items)
+    quantity))
 
 (defmulti calculate-discount
   (fn [{:keys [type]}
@@ -185,22 +220,31 @@
                                            (set (map :product-id cart-contents)))
         product-categories-intersect (intersection (set product-categories)
                                                    (set (mapcat :product-categories cart-contents)))]
-    (when (seq? (seq product-id-intersect))
-      ;; We've got overlap between products in the cart and in the
-      ;; promo
-      (let [line-intersect (filter #(some #{(:product-id %)} product-id-intersect)
-                                   cart-contents)
-            line-to-discount (first (sort-by :line-subtotal <
-                                             line-intersect))
-            per-item-discount (* (/ (:line-subtotal line-to-discount)
-                                    (:quantity line-to-discount))
-                                 amount)
-            discount-quantity (if-not (nil? limit-usage-to-x-items)
-                                (min (:quantity line-to-discount) limit-usage-to-x-items)
-                                (:quantity line-to-discount))]
-        {:discount-amount (* per-item-discount discount-quantity)
-         :discounted-product-id (:product-id line-to-discount)
-         :number-discounted-items discount-quantity}))))
+    (cond
+     (seq? (seq product-id-intersect))
+     ;; We've got overlap between products in the cart and in the
+     ;; promo
+     (let [line-intersect (filter #(some #{(:product-id %)} product-id-intersect)
+                                  cart-contents)
+           ltd (line-to-discount line-intersect)
+           pid (per-item-discount ltd amount)
+           dq (discount-quantity limit-usage-to-x-items (:quantity ltd))]
+       {:discount-amount (* pid dq)
+        :discounted-product-id (:product-id ltd)
+        :number-discounted-items dq})
+     (seq? (seq product-categories-intersect))
+     (let [line-intersect (filter (fn [item]
+                                    (seq? (seq
+                                           (intersection (set (:product-categories item))
+                                                         product-categories-intersect))))
+                                  cart-contents)
+           ltd (line-to-discount line-intersect)
+           pid (per-item-discount ltd amount)
+           dq (discount-quantity limit-usage-to-x-items (:quantity ltd))]
+       {:discount-amount (* pid dq)
+        :discounted-product-id (:product-id ltd)
+        :number-discounted-items dq})
+     :else {:discount-amount 0.00})))
 
 
 (defmethod calculate-discount :amount-product
