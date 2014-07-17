@@ -11,7 +11,8 @@
                                             validate-promo calculate-promo]]
             [api.controllers.accounts :refer [create-new-account!]]
             [api.controllers.rules :refer [create-new-rule!
-                                           show-rule]]))
+                                           show-rule]]
+            [api.controllers.email_subscribers :refer [create-email-subscriber!]]))
 
 (def js-content-type "text/javascript; charset=utf-8")
 (def promo-code-regex #"[a-zA-Z0-9]{1,}")
@@ -37,11 +38,13 @@
                                 (-> (response "{status: 'success'}")
                                     (content-type js-content-type))
                                 (throw (ex-info "Error recording event." {:reason "Cache insert failed."}))))
+           (POST "/email-subscribers" [] create-email-subscriber!)
            promo-routes))
 
 (defroutes anonymous-routes
   (GET "/health-check" [] "<h1>I'm here</h1>")
   (POST "/users" [] create-new-user!)
+
   api-routes)
 
 (defroutes authenticated-routes
