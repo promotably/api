@@ -3,6 +3,9 @@
 
 (declare accounts users sites promos redemptions)
 
+(defentity email-subscribers
+  (table "public.email_subscribers"))
+
 (defentity accounts
   (table "public.accounts")
   (has-many users)
