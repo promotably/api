@@ -201,6 +201,29 @@
         (:quantity ltd))
      amount))
 
+(defn- product-id-intersect
+  [product-ids cart-contents]
+  (intersection (set product-ids)
+                (set (map :product-id cart-contents))))
+
+(defn- product-categories-intersect
+  [product-categories cart-contents]
+  (intersection (set product-categories)
+                (set (mapcat :product-categories cart-contents))))
+
+(defn- product-id-line-intersect
+  [pid-int cart-contents]
+  (filter #(some #{(:product-id %)} pid-int)
+          cart-contents))
+
+(defn- product-categories-line-intersect
+  [pc-int cart-contents]
+  (filter (fn [item]
+            (seq? (seq
+                   (intersection (set (:product-categories item))
+                                 pc-int))))
+          cart-contents))
+
 (defn- discount-quantity
   [limit-usage-to-x-items quantity]
   {:pre [(integer? quantity)]}
@@ -216,28 +239,22 @@
   [{:keys [type product-ids product-categories
            amount limit-usage-to-x-items] :as the-promo}
    {:keys [cart-contents] :as context}]
-  (let [product-id-intersect (intersection (set product-ids)
-                                           (set (map :product-id cart-contents)))
-        product-categories-intersect (intersection (set product-categories)
-                                                   (set (mapcat :product-categories cart-contents)))]
+  (let [pid-int (product-id-intersect product-ids cart-contents)
+        pc-int (product-categories-intersect product-categories cart-contents)]
     (cond
-     (seq? (seq product-id-intersect))
+     (seq? (seq pid-int))
      ;; We've got overlap between products in the cart and in the
      ;; promo
-     (let [line-intersect (filter #(some #{(:product-id %)} product-id-intersect)
-                                  cart-contents)
+     (let [line-intersect (product-id-line-intersect pid-int cart-contents)
            ltd (line-to-discount line-intersect)
            pid (per-item-discount ltd amount)
            dq (discount-quantity limit-usage-to-x-items (:quantity ltd))]
        {:discount-amount (* pid dq)
         :discounted-product-id (:product-id ltd)
         :number-discounted-items dq})
-     (seq? (seq product-categories-intersect))
-     (let [line-intersect (filter (fn [item]
-                                    (seq? (seq
-                                           (intersection (set (:product-categories item))
-                                                         product-categories-intersect))))
-                                  cart-contents)
+     (seq? (seq pc-int))
+     ;; We've got overlap between products categories
+     (let [line-intersect (product-categories-line-intersect pc-int cart-contents)
            ltd (line-to-discount line-intersect)
            pid (per-item-discount ltd amount)
            dq (discount-quantity limit-usage-to-x-items (:quantity ltd))]
