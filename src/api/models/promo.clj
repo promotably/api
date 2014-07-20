@@ -271,14 +271,18 @@
 
 
 (defmethod calculate-discount :amount-product
-  [{:keys [type product-ids product-categories] :as the-promo}
+  [{:keys [type product-ids product-categories
+           limit-usage-to-x-items amount] :as the-promo}
    {:keys [cart-contents] :as context}]
   (let [pid-int (product-id-intersect product-ids cart-contents)
-        pc-int (product-categories-intersect product-categories cart-contents)]
-    (cond
-     (seq? pid-int)
-     (let [line-intersect (product-id-line-intersect pid-int cart-contents)
-           ltd (line-to-discount line-intersect)]))))
+        pc-int (product-categories-intersect product-categories cart-contents)
+        ltd (line-to-discount pid-int pc-int cart-contents)]
+    (if ltd
+      (let [dq (discount-quantity limit-usage-to-x-items (:quantity ltd))]
+        {:discount-amount (* amount dq)
+         :discounted-product-id (:product-id ltd)
+         :number-discounted-items dq})
+      {:discount-amount 0.00})))
 
 (defmethod calculate-discount :percent-cart
   [{:keys [type] :as the-promo}

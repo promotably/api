@@ -92,22 +92,29 @@
                                                                :number-discounted-items 1
                                                                :discounted-product-id "1234"})
 
-(future-fact
- (tabular
-  (fact "Amount product promos with overlapping product ids
+(tabular
+ (fact "Amount product promos with overlapping product ids
       and usage limits are calculated properly"
-    (let [p {:active true
-             :type :amount-product
-             :incept-date (to-sql-date (minus (now) (months 1)))
-             :expiry-date (to-sql-date (plus (now) (months 1)))
-             :product-ids ?product-ids
-             :amount ?amount
-             :limit-usage-to-x-items ?usage}
-          c {:cart-contents ?cart-contents}]
-      (calculate-discount p c) => (contains ?expected)))
-  ?product-ids     ?amount ?usage ?cart-contents            ?expected
-  ["1234", "adsf"] 10.0    3      [{:product-id "1234"
-                                    :quantity 5
-                                    :line-subtotal 250.00}] {:discount-amount 30.0
-                                                             :number-discounted-items 3
-                                                             :discounted-product-id "1234"}))
+   (let [p {:active true
+            :type :amount-product
+            :incept-date (to-sql-date (minus (now) (months 1)))
+            :expiry-date (to-sql-date (plus (now) (months 1)))
+            :product-ids ?product-ids
+            :amount ?amount
+            :limit-usage-to-x-items ?usage}
+         c {:cart-contents ?cart-contents}]
+     (calculate-discount p c) => (contains ?expected)))
+ ?product-ids     ?amount ?usage ?cart-contents            ?expected
+ ["1234", "adsf"] 10.00   3      [{:product-id "1234"
+                                   :quantity 5
+                                   :line-subtotal 250.00}] {:discount-amount 30.0
+                                                            :number-discounted-items 3
+                                                            :discounted-product-id "1234"}
+ ["asddf"]        5.00    100    [{:product-id "1234"
+                                   :quantity 5
+                                   :line-subtotal 125.00}
+                                  {:product-id "asddf"
+                                   :quantity 50
+                                   :line-subtotal 500.00}] {:discount-amount 250.00
+                                                            :number-discounted-items 50
+                                                            :discounted-product-id "asddf"})
