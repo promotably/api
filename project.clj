@@ -6,7 +6,8 @@
   :profiles {:dev {:dependencies [[midje "1.6.3"]]
                    :plugins [[drift "1.5.2"]
                              [lein-ring "0.8.10"]
-                             [lein-beanstalk "0.2.7"]]}}
+                             [lein-beanstalk "0.2.7"]
+                             [lein-midje "3.0.0"]]}}
   :global-vars {*warn-on-reflection* true}
   :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.1"]]
   :dependencies [[org.clojure/clojure "1.6.0"]
