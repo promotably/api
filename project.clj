@@ -3,7 +3,8 @@
   ;; :url "http://example.com/FIXME"
   ;; :license {:name "Eclipse Public License"
   ;;           :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :profiles {:dev {:dependencies [[midje "1.6.3"]]
+  :profiles {:dev {:dependencies [[midje "1.6.3"]
+                                  [javax.servlet/servlet-api "2.5"]]
                    :plugins [[drift "1.5.2"]
                              [lein-ring "0.8.10"]
                              [lein-beanstalk "0.2.7"]
