@@ -251,23 +251,14 @@
   (let [pid-int (product-id-intersect product-ids cart-contents)
         pc-int (product-categories-intersect product-categories cart-contents)
         ltd (line-to-discount pid-int pc-int cart-contents)]
-    (cond
-     (seq? (seq pid-int))
-     ;; We've got overlap between products in the cart and in the
-     ;; promo
-     (let [pid (per-item-discount ltd amount)
-           dq (discount-quantity limit-usage-to-x-items (:quantity ltd))]
-       {:discount-amount (* pid dq)
-        :discounted-product-id (:product-id ltd)
-        :number-discounted-items dq})
-     (seq? (seq pc-int))
-     ;; We've got overlap between products categories
-     (let [pid (per-item-discount ltd amount)
-           dq (discount-quantity limit-usage-to-x-items (:quantity ltd))]
-       {:discount-amount (* pid dq)
-        :discounted-product-id (:product-id ltd)
-        :number-discounted-items dq})
-     :else {:discount-amount 0.00})))
+    (if ltd
+      (let [pid (per-item-discount ltd amount)
+            dq (discount-quantity limit-usage-to-x-items (:quantity ltd))]
+        {:discount-amount (* pid dq)
+         :discounted-product-id (:product-id ltd)
+         :discounted-cart false
+         :number-discounted-items dq})
+      {:discount-amount 0.00})))
 
 
 (defmethod calculate-discount :amount-product
@@ -281,6 +272,7 @@
       (let [dq (discount-quantity limit-usage-to-x-items (:quantity ltd))]
         {:discount-amount (* amount dq)
          :discounted-product-id (:product-id ltd)
+         :discounted-cart false
          :number-discounted-items dq})
       {:discount-amount 0.00})))
 
