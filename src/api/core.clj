@@ -13,8 +13,9 @@
                              [credentials :as creds])
             [api.db :as db]
             [api.middleware :refer [wrap-exceptions
-                                       wrap-stacktrace
-                                       wrap-request-logging]]
+                                    wrap-stacktrace
+                                    wrap-request-logging
+                                    wrap-json-content-type]]
             [api.routes :as routes]
             [api.state]
             [api.env :as env]
@@ -37,6 +38,7 @@
       (wrap-exceptions)
       (wrap-stacktrace)
       (wrap-request-logging)
+      (wrap-json-content-type)
       (wrap-content-type)))
 
 (defn init-app

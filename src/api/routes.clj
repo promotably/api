@@ -12,7 +12,7 @@
             [api.controllers.accounts :refer [create-new-account!]]
             [api.controllers.rules :refer [create-new-rule!
                                            show-rule]]
-            [api.controllers.email_subscribers :refer [create-email-subscriber!]]))
+            [api.controllers.email-subscribers :refer [create-email-subscriber!]]))
 
 (def js-content-type "text/javascript; charset=utf-8")
 (def promo-code-regex #"[a-zA-Z0-9]{1,}")
