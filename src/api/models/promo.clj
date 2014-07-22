@@ -97,8 +97,7 @@
                            (where {:sites.uuid site-uuid
                                    :promos.code (clojure.string/upper-case
                                                  promo-code)})))]
-    (println (class (:product_ids row)))
-    (db-to-promo row)))
+    (when row (db-to-promo row))))
 
 (defn- before-incept?
   [{:keys [incept-date] :as the-promo}]
