@@ -1,6 +1,4 @@
-(ns api.views.email-subscribers
-  (:require [api.views.helper :refer [view-value-helper]]
-            [clojure.data.json :refer [write-str]]))
+(ns api.views.email-subscribers)
 
 (defn render-create
   [create-result]
@@ -10,5 +8,4 @@
               (= (:error create-result) :email-already-exists)) 409
          (:success create-result) 201
          :else 500)]
-    {:status status-code :body (write-str create-result
-                                          :value-fn view-value-helper)}))
+    {:status status-code :body (pr-str create-result) :headers {"Content-Type" "application/edn; charset=UTF-8"}}))

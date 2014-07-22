@@ -70,7 +70,9 @@
         (let [v (promo/valid? the-promo coerced-params)
               resp (merge v {:uuid (:uuid the-promo)
                              :code code})]
-          {:status 201 :body (shape-validate resp)}))))
+          {:status 201
+           :headers {"Content-Type" "application/json; charset=UTF-8"}
+           :body (shape-validate resp)}))))
 
   (defn calculate-promo
     [{:keys [params body] :as request}]
@@ -87,6 +89,7 @@
           (println (:type the-promo))
           (println (class (:type the-promo)))
           {:status 201
+           :headers {"Content-Type" "application/json; charset=UTF-8"}
            :body (shape-calculate (merge v
                                          (promo/calculate-discount the-promo
                                                                    coerced-params)))})))))
