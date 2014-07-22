@@ -9,3 +9,5 @@ pom.xml.asc
 /.nrepl-port
 /src/ns_api/version.clj
 *~
+
+/src/api/version.clj
