@@ -46,13 +46,3 @@
                       (pst t)
                       (println "\n\nREQUEST:\n")
                       (pprint request)))}))))
-
-(defn wrap-json-content-type
-  [handler]
-  (fn [request]
-    (let [response (handler request)]
-      ;;TODO There's a better way to do this, I'm sure
-      (assoc-in response
-                [:headers "Content-Type"]
-                (get-in response [:headers "Content-Type"]
-                        "application/json; charset=UTF-8")))))
