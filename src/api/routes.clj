@@ -39,6 +39,7 @@
                                     (content-type js-content-type))
                                 (throw (ex-info "Error recording event." {:reason "Cache insert failed."}))))
            (POST "/email-subscribers" [] create-email-subscriber!)
+           (POST "/accounts" [] create-new-account!)
            promo-routes))
 
 (defroutes anonymous-routes
@@ -49,8 +50,7 @@
 
 (defroutes authenticated-routes
   (GET "/auth-required" req (friend/authenticated (format "<h1>Authenticated %s</h1>"
-                                                          (friend/current-authentication))))
-  (POST "/accounts" [] create-new-account!))
+                                                          (friend/current-authentication)))))
 
 (defroutes all-routes
   (-> anonymous-routes

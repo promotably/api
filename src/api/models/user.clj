@@ -10,11 +10,13 @@
             [schema.core :as s]
             [schema.macros :as sm]))
 
-(def BaseUserSchema {(s/required-key :username) s/Str
+(def BaseUserSchema {(s/required-key :username) (s/maybe s/Str)
                      (s/required-key :email) s/Str
                      (s/optional-key :company-name) (s/maybe s/Str)
                      (s/optional-key :phone) (s/maybe s/Str)
-                     (s/optional-key :job-title) (s/maybe s/Str)})
+                     (s/optional-key :job-title) (s/maybe s/Str)
+                     (s/optional-key :first-name) (s/maybe s/Str)
+                     (s/optional-key :last-name) (s/maybe s/Str)})
 
 (def InboundUserSchema (merge BaseUserSchema
                               {(s/required-key :password) s/Str
@@ -25,7 +27,8 @@
                                {(s/required-key :created-at) s/Inst
                                 (s/required-key :last-logged-in-at) s/Inst
                                 (s/required-key :id) s/Int
-                                (s/required-key :account-id) (s/maybe s/Int)}))
+                                (s/required-key :account-id) (s/maybe s/Int)
+                                (s/required-key :user-id) s/Uuid}))
 
 (defn- safe-db-to-user
   "Translates a database result to a map that obeys UserSchema. Of

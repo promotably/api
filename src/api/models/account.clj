@@ -2,7 +2,7 @@
   (:require [clojure.set :refer [rename-keys]]
             [korma.core :refer :all]
             [api.entities :refer [accounts users]]
-            [api.models.user :refer [assign-user-to-account!]]
+            [api.models.user :as u]
             [api.util :refer [hyphenify-key]]
             [schema.macros :as sm]
             [schema.core :as s]))
@@ -19,18 +19,22 @@
   (let [ks (keys r)]
     (rename-keys r (zipmap ks (map hyphenify-key ks)))))
 
-(sm/defn ^:always-validate new-account! :- AccountSchema
-  "Creates a new account in the database. The user-id passed in is
-  assigned to the account"
-  [user-id :- s/Int
-   params :- AccountSchema]
-  (let [{:keys [company-name]} params
-        a (insert accounts
-                  (values {:company_name company-name
-                           :created_at (sqlfn now)
-                           :updated_at (sqlfn now)}))]
-    (assign-user-to-account! user-id (:id a))
-    (db-to-account a)))
+(defn new-account!
+  "Creates a new account in the database."
+  [{:keys [email first-name last-name] :as params}]
+  (if-not (u/find-by-email email)
+    (let [a (insert accounts
+                    (values {:created_at (sqlfn now)
+                             :updated_at (sqlfn now)}))
+          user (insert users
+                       (values {:account_id (:id a)
+                                :email email
+                                :first_name first-name
+                                :last_name last-name}))]
+      {:success true
+       :user (dissoc user :id)
+       :account (dissoc a :id)})
+    {:success false :error :email-already-exists}))
 
 (sm/defn ^:always-validate find-by-id :- (s/maybe AccountSchema)
   [id :- s/Int]
