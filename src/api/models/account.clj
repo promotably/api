@@ -31,10 +31,10 @@
                                 :email email
                                 :first_name first-name
                                 :last_name last-name}))]
-      {:success true
+      {:status :created
        :user (dissoc user :id)
        :account (dissoc a :id)})
-    {:success false :error :email-already-exists}))
+    {:status :error :error :email-already-exists}))
 
 (sm/defn ^:always-validate find-by-id :- (s/maybe AccountSchema)
   [id :- s/Int]
