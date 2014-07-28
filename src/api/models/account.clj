@@ -32,11 +32,13 @@
                                 :email email
                                 :first_name first-name
                                 :last_name last-name
-                                :user_social_id user-social-id}))]
+                                :user_social_id user-social-id
+                                :created_at (sqlfn now)}))]
       {:status :created
        :user (dissoc user :id)
        :account (dissoc a :id)})
     {:status :error :error :email-already-exists}))
+
 
 (sm/defn ^:always-validate find-by-id :- (s/maybe AccountSchema)
   [id :- s/Int]
@@ -44,3 +46,11 @@
    (first
     (select accounts
             (where {:id id})))))
+
+
+(sm/defn ^:always-validate find-by-account-id :- (s/maybe AccountSchema)
+  [account-id :- s/Uuid]
+  (db-to-account
+   (first
+    (select accounts
+            (where {:account_id account-id})))))

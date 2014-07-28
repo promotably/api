@@ -1,18 +1,31 @@
 (ns api.controllers.users
-  (:require [clojure.tools.logging :as log]
+  (:require [api.lib.coercion-helper :refer [custom-matcher]]
             [api.models.user :as user]
             [api.models.account :as account]
-            [api.views.accounts :refer [shape-get-user]]))
+            [api.views.accounts :refer [shape-get-user shape-create-user]]
+            [clojure.tools.logging :as log]
+            [schema.core :as s]
+            [schema.coerce :as c]))
 
-(defn create-new-user!
-  [{:keys [params] :as request}]
-  (try
-    (let [u (user/new-user! params)]
-      u)
-    (catch clojure.lang.ExceptionInfo ex
-      (let [exdata (ex-data ex)]
-        (throw (ex-info (.getMessage ex) {:error (:error exdata)
-                                          :response {:status 400}}))))))
+(let [inbound-schema {(s/required-key :email) s/Str
+                      (s/required-key :user-social-id) s/Str
+                      (s/required-key :account-id) s/Uuid
+                      (s/optional-key :username) s/Str
+                      (s/optional-key :phone) s/Str
+                      (s/optional-key :job-title) s/Str
+                      (s/optional-key :first-name) s/Str
+                      (s/optional-key :last-name) s/Str}]
+  (defn create-new-user!
+    [{:keys [body] :as request}]
+    (let [input-edn (clojure.edn/read-string (slurp body))
+          coerced-params ((c/coercer
+                           inbound-schema
+                           (c/first-matcher [custom-matcher
+                                             c/string-coercion-matcher]))
+                          input-edn)
+          result (user/new-user! coerced-params)]
+      (println result)
+      (shape-create-user result))))
 
 (defn get-user
   [{:keys [params] :as request}]

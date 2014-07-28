@@ -9,61 +9,55 @@
             [schema.core :as s]
             [schema.macros :as sm]))
 
-(def BaseUserSchema {(s/required-key :username) (s/maybe s/Str)
-                     (s/required-key :email) s/Str
-                     (s/optional-key :company-name) (s/maybe s/Str)
+(def BaseUserSchema {(s/required-key :email) s/Str
+                     (s/optional-key :username) (s/maybe s/Str)
                      (s/optional-key :phone) (s/maybe s/Str)
                      (s/optional-key :job-title) (s/maybe s/Str)
                      (s/optional-key :first-name) (s/maybe s/Str)
                      (s/optional-key :last-name) (s/maybe s/Str)})
 
 (def InboundUserSchema (merge BaseUserSchema
-                              {(s/required-key :password) s/Str
-                               (s/required-key :password-confirmation) s/Str
-                               (s/optional-key :account-id) s/Int}))
+                              {(s/required-key :user-social-id) s/Str
+                               (s/optional-key :account-id) s/Uuid}))
 
 (def OutboundUserSchema (merge BaseUserSchema
                                {(s/required-key :created-at) s/Inst
-                                (s/required-key :last-logged-in-at) s/Inst
                                 (s/required-key :account-id) (s/maybe s/Int)
                                 (s/required-key :user-id) s/Uuid
-                                (s/required-key :user-social-id) s/Str}))
+                                (s/required-key :user-social-id) s/Str
+                                (s/required-key :id) s/Int}))
 
 (defn- safe-db-to-user
-  "Translates a database result to a map that obeys UserSchema. Of
-  particular note, the crypted_password is removed in this step"
+  "Translates a database result to a map that obeys UserSchema."
   [r]
   (let [ks (keys r)]
     (rename-keys r (zipmap ks (map hyphenify-key ks)))))
 
-(defn- db-to-user
-  [r]
-  (assoc (safe-db-to-user r) :crypted_password (:crypted_password r)))
-
-
-(sm/defn ^:always-validate new-user! :- OutboundUserSchema
+(sm/defn new-user!
   "Creates a new user in the database"
   [params :- InboundUserSchema]
-  (let [{:keys [username email password password-confirmation
-                company-name phone job-title]} params]
-    (when-not (= password password-confirmation)
-      (throw (ex-info "Error while attempting to create user" {:error :passwords-dont-match})))
+  (let [{:keys [username email company-name phone job-title
+                user-social-id account-id]} params]
     (try
-      (db-to-user
-       (insert users
-               ;;TODO: There's got to be a better way than spelling out
-               ;;every single field? What happens when I want to add
-               ;;more fields?
-               (values {:username username
-                        :email email
-                        :company_name company-name
-                        :phone phone
-                        :job_title job-title
-                        :created_at (sqlfn now)
-                        :last_logged_in_at (sqlfn now)})))
+      {:status :success
+       :user (safe-db-to-user
+              (let [a (first (select accounts
+                                     (fields :id)
+                                     (where {:account_id account-id})))]
+                (insert users
+                        ;;TODO: There's got to be a better way than spelling out
+                        ;;every single field? What happens when I want to add
+                        ;;more fields?
+                        (values {:username username
+                                 :email email
+                                 :user_social_id user-social-id
+                                 :phone phone
+                                 :job_title job-title
+                                 :created_at (sqlfn now)
+                                 :account_id (:id a)}))))}
       (catch org.postgresql.util.PSQLException ex
-        (let [error (or (parse-sql-exception ex) (.getMessage ex))]
-          (throw (ex-info "Error while attempting to create user" {:error error})))))))
+        {:status :error
+         :error (or (parse-sql-exception ex) (.getMessage ex))}))))
 
 (defn- lookup-single-by
   "Lookup a single row by where map passed in"
@@ -82,9 +76,9 @@
   [email :- s/Str]
   (safe-db-to-user (lookup-single-by {:email email})))
 
-(defn find-by-user-social-id
+(sm/defn find-by-user-social-id :- OutboundUserSchema
   "Lookup a user by their user social id"
-  [uid]
+  [uid :- s/Str]
   (safe-db-to-user (first (select users
                                   (where {:user_social_id uid})))))
 
