@@ -14,5 +14,7 @@
   [result]
   (let [sc (if (:user result) 200 404)]
     {:status sc
-     :body (pr-str result)
+     :body (pr-str (-> result
+                       (assoc-in [:user] (dissoc (:user result) :id :account-id))
+                       (assoc-in [:account] (dissoc (:account result) :id))))
      :headers {"Content-Type" "application/edn; charset=UTF-8"}}))
