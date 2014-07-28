@@ -9,9 +9,10 @@
 
 
 (def AccountSchema {(s/optional-key :id) s/Int
-                    (s/optional-key :company-name) s/Str
+                    (s/optional-key :company-name) (s/maybe s/Str)
                     (s/optional-key :created-at) s/Inst
-                    (s/optional-key :updated-at) s/Inst})
+                    (s/optional-key :updated-at) s/Inst
+                    (s/optional-key :account-id) s/Uuid})
 
 (defn- db-to-account
   "Translates a database result to a map that obeys AccountSchema"
@@ -21,7 +22,7 @@
 
 (defn new-account!
   "Creates a new account in the database."
-  [{:keys [email first-name last-name] :as params}]
+  [{:keys [email first-name last-name user-social-id] :as params}]
   (if-not (u/find-by-email email)
     (let [a (insert accounts
                     (values {:created_at (sqlfn now)
@@ -30,7 +31,8 @@
                        (values {:account_id (:id a)
                                 :email email
                                 :first_name first-name
-                                :last_name last-name}))]
+                                :last_name last-name
+                                :user_social_id user-social-id}))]
       {:status :created
        :user (dissoc user :id)
        :account (dissoc a :id)})

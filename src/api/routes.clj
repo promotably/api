@@ -1,12 +1,11 @@
 (ns api.routes
   (:require [clojure.tools.logging :as log]
             [compojure.core :refer [defroutes context GET POST]]
-            [cemerick.friend :as friend]
             [ring.util.response :refer [response content-type]]
             [ring.middleware.permacookie :refer [wrap-permacookie]]
             [api.cache :as cache]
             [api.events :as events]
-            [api.controllers.users :refer [create-new-user! authenticate-user]]
+            [api.controllers.users :refer [create-new-user! get-user]]
             [api.controllers.promos :refer [create-new-promo! show-promo query-promo
                                             validate-promo calculate-promo]]
             [api.controllers.accounts :refer [create-new-account!]]
@@ -40,20 +39,14 @@
                                 (throw (ex-info "Error recording event." {:reason "Cache insert failed."}))))
            (POST "/email-subscribers" [] create-email-subscriber!)
            (POST "/accounts" [] create-new-account!)
+           (GET "/users/:user-social-id" [] get-user)
+           (POST "/users" [] create-new-user!)
            promo-routes))
 
 (defroutes anonymous-routes
   (GET "/health-check" [] "<h1>I'm here</h1>")
-  (POST "/users" [] create-new-user!)
-
   api-routes)
-
-(defroutes authenticated-routes
-  (GET "/auth-required" req (friend/authenticated (format "<h1>Authenticated %s</h1>"
-                                                          (friend/current-authentication)))))
 
 (defroutes all-routes
   (-> anonymous-routes
-      (wrap-permacookie {:name "promotably"}))
-  (-> authenticated-routes
-      (friend/wrap-authorize #{::api})))
+      (wrap-permacookie {:name "promotably"})))

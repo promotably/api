@@ -8,9 +8,6 @@
             [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.middleware.session :as session]
             [clj-logging-config.log4j :as log-config]
-            [cemerick.friend :as friend]
-            (cemerick.friend [workflows :as wf]
-                             [credentials :as creds])
             [api.db :as db]
             [api.middleware :refer [wrap-exceptions
                                     wrap-stacktrace
@@ -19,8 +16,7 @@
             [api.state]
             [api.env :as env]
             [api.cache :as cache]
-            [api.lib.protocols :refer (EventCache init shutdown)]
-            [api.controllers.users :refer [authenticate-user]]))
+            [api.lib.protocols :refer (EventCache init shutdown)]))
 
 (def ns-servlet-handler (atom nil))
 
@@ -30,10 +26,6 @@
       (wrap-params)
       (wrap-keyword-params)
       (session/wrap-session)
-      (friend/authenticate
-       {:credential-fn authenticate-user
-        :workflows [(wf/interactive-form)]
-        :allow-anon? true})
       (wrap-exceptions)
       (wrap-stacktrace)
       (wrap-request-logging)

@@ -6,7 +6,6 @@
             [api.lib.user :refer [salted-pass parse-sql-exception]]
             [api.util :refer [hyphenify-key]]
             [korma.core :refer :all]
-            [cemerick.friend.credentials :as creds]
             [schema.core :as s]
             [schema.macros :as sm]))
 
@@ -26,17 +25,16 @@
 (def OutboundUserSchema (merge BaseUserSchema
                                {(s/required-key :created-at) s/Inst
                                 (s/required-key :last-logged-in-at) s/Inst
-                                (s/required-key :id) s/Int
                                 (s/required-key :account-id) (s/maybe s/Int)
-                                (s/required-key :user-id) s/Uuid}))
+                                (s/required-key :user-id) s/Uuid
+                                (s/required-key :user-social-id) s/Str}))
 
 (defn- safe-db-to-user
   "Translates a database result to a map that obeys UserSchema. Of
   particular note, the crypted_password is removed in this step"
   [r]
   (let [ks (keys r)]
-    (dissoc (rename-keys r (zipmap ks (map hyphenify-key ks)))
-            :crypted-password)))
+    (rename-keys r (zipmap ks (map hyphenify-key ks)))))
 
 (defn- db-to-user
   [r]
@@ -61,7 +59,6 @@
                         :company_name company-name
                         :phone phone
                         :job_title job-title
-                        :crypted_password (creds/hash-bcrypt (salted-pass password))
                         :created_at (sqlfn now)
                         :last_logged_in_at (sqlfn now)})))
       (catch org.postgresql.util.PSQLException ex
@@ -75,11 +72,6 @@
                  (with accounts)
                  (where m))))
 
-(defn get-auth-record
-  "Get a user record sufficient for authentication."
-  [username]
-  (db-to-user (lookup-single-by {:username username})))
-
 (sm/defn find-by-username :- OutboundUserSchema
   "Lookup a user by username"
   [username :- s/Str]
@@ -89,6 +81,12 @@
   "Lookup a user by email"
   [email :- s/Str]
   (safe-db-to-user (lookup-single-by {:email email})))
+
+(defn find-by-user-social-id
+  "Lookup a user by their user social id"
+  [uid]
+  (safe-db-to-user (first (select users
+                                  (where {:user_social_id uid})))))
 
 (defn assign-user-to-account!
   "Assign a user to an account"

@@ -1,8 +1,8 @@
 (ns api.controllers.users
   (:require [clojure.tools.logging :as log]
-            [api.lib.user :refer [salted-pass]]
             [api.models.user :as user]
-            [cemerick.friend.credentials :as creds]))
+            [api.models.account :as account]
+            [api.views.accounts :refer [shape-get-user]]))
 
 (defn create-new-user!
   [{:keys [params] :as request}]
@@ -14,9 +14,9 @@
         (throw (ex-info (.getMessage ex) {:error (:error exdata)
                                           :response {:status 400}}))))))
 
-(defn authenticate-user
-  "Authenticates a user"
-  [{:keys [username password]}]
-  (when-let [u (user/get-auth-record username)]
-    (when (creds/bcrypt-verify (salted-pass password) (:crypted_password u))
-      (dissoc u :crypted_password))))
+(defn get-user
+  [{:keys [params] :as request}]
+  (let [u (user/find-by-user-social-id (:user-social-id params))]
+    (shape-get-user
+     {:user u
+      :account (when u (account/find-by-id (:account-id u)))})))

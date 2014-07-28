@@ -17,7 +17,8 @@
 (let [inbound-schema {(s/required-key :email) s/Str
                       :browser-id s/Uuid
                       (s/required-key :first-name) s/Str
-                      (s/required-key :last-name) s/Str}]
+                      (s/required-key :last-name) s/Str
+                      (s/required-key :user-social-id) s/Str}]
   (defn create-new-account!
     "Creates a new account in the database. Also creates a user"
     [{:keys [params body] :as request}]
