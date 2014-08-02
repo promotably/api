@@ -10,6 +10,16 @@
      :body (pr-str create-response)
      :headers {"Content-Type" "application/edn; charset=UTF-8"}}))
 
+(defn shape-update
+  [update-response]
+  (let [sc (condp = (:status update-response)
+             :updated 200
+             :does-not-exist 404)]
+    {:status sc
+     :body (pr-str (-> update-response
+                       (assoc-in [:account] (dissoc (:account update-response) :id))))
+     :headers {"Content-Type" "application/edn; charset=UTF-8"}}))
+
 (defn shape-get-user
   [result]
   (let [sc (if (:user result) 200 404)]

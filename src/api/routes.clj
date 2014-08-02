@@ -1,6 +1,7 @@
 (ns api.routes
   (:require [clojure.tools.logging :as log]
-            [compojure.core :refer [defroutes context GET POST]]
+            [compojure.core :refer [defroutes context GET POST PUT]]
+            [compojure.route :refer [not-found]]
             [ring.util.response :refer [response content-type]]
             [ring.middleware.permacookie :refer [wrap-permacookie]]
             [api.cache :as cache]
@@ -8,7 +9,7 @@
             [api.controllers.users :refer [create-new-user! get-user]]
             [api.controllers.promos :refer [create-new-promo! show-promo query-promo
                                             validate-promo calculate-promo]]
-            [api.controllers.accounts :refer [create-new-account!]]
+            [api.controllers.accounts :refer [create-new-account! update-account!]]
             [api.controllers.rules :refer [create-new-rule!
                                            show-rule]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]))
@@ -39,13 +40,15 @@
                                 (throw (ex-info "Error recording event." {:reason "Cache insert failed."}))))
            (POST "/email-subscribers" [] create-email-subscriber!)
            (POST "/accounts" [] create-new-account!)
+           (PUT "/accounts/:account-id" [] update-account!)
            (GET "/users/:user-social-id" [] get-user)
            (POST "/users" [] create-new-user!)
            promo-routes))
 
 (defroutes anonymous-routes
   (GET "/health-check" [] "<h1>I'm here</h1>")
-  api-routes)
+  api-routes
+  (not-found "<h1>4-oh-4</h1>"))
 
 (defroutes all-routes
   (-> anonymous-routes
