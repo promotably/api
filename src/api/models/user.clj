@@ -3,6 +3,7 @@
             [clojure.tools.logging :as log]
             [api.db :refer :all]
             [api.entities :refer [users accounts]]
+            [api.lib.coercion-helper :refer [dash-to-underscore-keys]]
             [api.lib.user :refer [salted-pass parse-sql-exception]]
             [api.util :refer [hyphenify-key]]
             [korma.core :refer :all]
@@ -58,6 +59,12 @@
       (catch org.postgresql.util.PSQLException ex
         {:status :error
          :error (or (parse-sql-exception ex) (.getMessage ex))}))))
+
+(defn update-user!
+  [{:keys [user-id] :as params}]
+  (update users
+          (set-fields (dash-to-underscore-keys params))
+          (where {:user_id user-id})))
 
 (defn- lookup-single-by
   "Lookup a single row by where map passed in"

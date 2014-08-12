@@ -54,3 +54,13 @@
    (first
     (select accounts
             (where {:account_id account-id})))))
+
+(defn update!
+  [{:keys [account-id company-name] :as params}]
+  (let [the-account (find-by-account-id account-id)]
+    (if the-account
+      {:status :updated
+       :account (update accounts
+                        (set-fields {:company_name company-name})
+                        (where {:account_id account-id}))}
+      {:status :does-not-exist :account nil})))
