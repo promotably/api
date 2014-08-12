@@ -39,3 +39,11 @@
     {:status sc
      :body (pr-str result)
      :headers {"Content-Type" "application/edn; charset=UTF-8"}}))
+
+(defn shape-update-user
+  [result]
+  (let [sc (if result
+             204
+             404)]
+    {:status sc
+     :headers {"Content-Type" "application/edn; charset=UTF-8"}}))

@@ -1,5 +1,6 @@
 (ns api.lib.coercion-helper
-  (:require [clj-time.format :refer [formatters parse]]
+  (:require [clojure.walk :refer [postwalk]]
+            [clj-time.format :refer [formatters parse]]
             [schema.coerce :refer [safe]]
             [schema.core :as s]))
 
@@ -11,3 +12,15 @@
      and long and doubles (JVM only) from strings."
     [schema]
     (coercions schema)))
+
+(defn underscore-to-dash-keys
+  [form]
+  (postwalk (fn [x] (if (keyword? x)
+                      (keyword (clojure.string/replace (name x) "_" "-"))
+                      x)) form))
+
+(defn dash-to-underscore-keys
+  [form]
+  (postwalk (fn [x] (if (keyword? x)
+                      (keyword (clojure.string/replace (name x) "-" "_"))
+                      x)) form))

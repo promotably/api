@@ -1,18 +1,10 @@
 (ns api.controllers.accounts
-  (:use clojure.walk)
-  (:require [api.lib.coercion-helper :refer [custom-matcher]]
+  (:require [api.lib.coercion-helper :refer [custom-matcher
+                                             underscore-to-dash-keys]]
             [api.models.account :as account]
             [api.views.accounts :refer [shape-create shape-update]]
             [schema.core :as s]
             [schema.coerce :as c]))
-
-(defn underscore-to-dash-keys
-  [form]
-  (postwalk (fn [x] (if (keyword? x)
-                      (keyword (clojure.string/replace (name x) "_" "-"))
-                      x)) form))
-
-;; (underscore-to-dash-keys {:team_fortress {:bad_thing 1}})
 
 (let [inbound-schema {(s/required-key :email) s/Str
                       (s/optional-key :browser-id) s/Uuid
