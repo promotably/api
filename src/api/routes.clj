@@ -6,7 +6,8 @@
             [ring.middleware.permacookie :refer [wrap-permacookie]]
             [api.cache :as cache]
             [api.events :as events]
-            [api.controllers.users :refer [create-new-user! get-user update-user!]]
+            [api.controllers.users :refer [create-new-user! get-user update-user!
+                                           lookup-user]]
             [api.controllers.promos :refer [create-new-promo! show-promo query-promo
                                             validate-promo calculate-promo]]
             [api.controllers.accounts :refer [create-new-account! update-account!]]
@@ -41,7 +42,8 @@
            (POST "/email-subscribers" [] create-email-subscriber!)
            (POST "/accounts" [] create-new-account!)
            (PUT "/accounts/:account-id" [] update-account!)
-           (GET "/users/:user-social-id" [] get-user)
+           (GET "/users" [] lookup-user)
+           (GET "/users/:user-id" [] get-user)
            (POST "/users" [] create-new-user!)
            (PUT "/users/:user-id" [] update-user!)
            promo-routes))

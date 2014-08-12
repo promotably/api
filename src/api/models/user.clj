@@ -73,6 +73,13 @@
                  (with accounts)
                  (where m))))
 
+(sm/defn find-by-user-id :- OutboundUserSchema
+  "Lookup a user by user id"
+  [user-id]
+  (safe-db-to-user (lookup-single-by {:user_id (if (= (class user-id) java.util.UUID)
+                                                 user-id
+                                                 (java.util.UUID/fromString user-id))})))
+
 (sm/defn find-by-username :- OutboundUserSchema
   "Lookup a user by username"
   [username :- s/Str]

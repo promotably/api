@@ -47,8 +47,15 @@
       (shape-update-user (user/update-user! coerced-params)))))
 
 (defn get-user
-  [{:keys [params] :as request}]
-  (let [u (user/find-by-user-social-id (:user-social-id params))]
+  [{{:keys [user-id]} :params}]
+  (let [u (user/find-by-user-id user-id)]
+    (shape-get-user
+     {:user u
+      :account (when u (account/find-by-id (:account-id u)))})))
+
+(defn lookup-user
+  [{{:keys [user-social-id]} :params}]
+  (let [u (user/find-by-user-social-id user-social-id)]
     (shape-get-user
      {:user u
       :account (when u (account/find-by-id (:account-id u)))})))
