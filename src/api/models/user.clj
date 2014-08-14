@@ -60,11 +60,16 @@
         {:status :error
          :error (or (parse-sql-exception ex) (.getMessage ex))}))))
 
-(defn update-user!
-  [{:keys [user-id] :as params}]
-  (update users
-          (set-fields (dash-to-underscore-keys params))
-          (where {:user_id user-id})))
+(let [allowed-keys #{:first-name :last-name
+                     :email :username :phone :job-title
+                     :user-social-id}]
+  (defn update-user!
+    [{:keys [user-id] :as params}]
+    (let [params-for-update (dash-to-underscore-keys
+                             (into {} (filter #(contains? allowed-keys (first %)) params)))]
+      (update users
+              (set-fields params-for-update)
+              (where {:user_id user-id})))))
 
 (defn- lookup-single-by
   "Lookup a single row by where map passed in"

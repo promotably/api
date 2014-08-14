@@ -35,7 +35,8 @@
                       (s/optional-key :job-title) s/Str
                       (s/optional-key :first-name) s/Str
                       (s/optional-key :last-name) s/Str
-                      (s/optional-key :user-social-id) s/Str}]
+                      (s/optional-key :user-social-id) s/Str
+                      (s/optional-key :browser-id) s/Uuid}]
   (defn update-user!
     [{body :body {:keys [user-id]} :params :as request}]
     (let [input-edn (clojure.edn/read-string (slurp body))
