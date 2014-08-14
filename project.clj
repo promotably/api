@@ -25,7 +25,7 @@
                  [clj-time "0.7.0"]
                  [clojure.joda-time "0.1.0"]
                  [com.cemerick/friend "0.2.1"]
-                 [cider/cider-nrepl "0.7.0-SNAPSHOT"]
+                 [cider/cider-nrepl "0.7.0"]
                  [org.clojure/tools.nrepl "0.2.3"]]
   :resource-paths ["resources"]
   :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC"]
