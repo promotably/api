@@ -23,3 +23,8 @@
        (select sites
                (where {:account_id account-id}))))
 
+(defn find-by-site-uuid
+  [site-uuid]
+  (db-to-site (first (select sites
+                             (where {:uuid site-uuid})))))
+

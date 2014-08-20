@@ -7,6 +7,7 @@
             [api.entities :refer :all]
             [api.lib.coercion-helper :refer [custom-matcher]]
             [api.models.redemption :as rd]
+            [api.models.site :as site]
             [api.util :refer [hyphenify-key]]
             [korma.core :refer :all]
             [schema.core :as s]
@@ -20,16 +21,16 @@
                   (s/optional-key :created-at) s/Inst
                   (s/optional-key :updated-at) s/Inst
                   (s/required-key :uuid) s/Uuid
-                  (s/optional-key :incept-date) s/Inst
-                  (s/optional-key :expiry-date) s/Inst
-                  (s/optional-key :individual-use) s/Bool
-                  (s/optional-key :exclude-sale-items) s/Bool
+                  (s/optional-key :incept-date) (s/maybe s/Inst)
+                  (s/optional-key :expiry-date) (s/maybe s/Inst)
+                  (s/optional-key :individual-use) (s/maybe s/Bool)
+                  (s/optional-key :exclude-sale-items) (s/maybe s/Bool)
                   (s/optional-key :max-usage-count) (s/maybe s/Int)
-                  (s/optional-key :current-usage-count) s/Int
-                  (s/required-key :type) (s/enum :percent-product
-                                                 :amount-product
-                                                 :percent-cart
-                                                 :amount-cart)
+                  (s/optional-key :current-usage-count) (s/maybe s/Int)
+                  (s/required-key :type) (s/maybe (s/enum :percent-product
+                                                          :amount-product
+                                                          :percent-cart
+                                                          :amount-cart))
                   (s/required-key :active) s/Bool
                   (s/optional-key :amount) s/Num
                   (s/optional-key :apply-before-tax) s/Bool
@@ -64,7 +65,7 @@
              :exclude-product-ids (jdbc-array->seq exclude-product-ids)
              :exclude-product-categories (jdbc-array->seq exclude-product-categories)}))))
 
-(sm/defn new-promo! :- PromoSchema
+(sm/defn new-promo!
   "Creates a new promo in the database"
   [params :- PromoSchema]
   (let [{:keys [site-id name code]} params]

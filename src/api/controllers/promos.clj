@@ -1,21 +1,48 @@
 (ns api.controllers.promos
-  (:require [clojure.data.json :refer [read-str]]
-            [clojure.tools.logging :as log]
-            [api.lib.coercion-helper :refer [custom-matcher]]
+  (:require [api.lib.coercion-helper :refer [custom-matcher]]
             [api.models.promo :as promo]
+            [api.models.site :as site]
             [api.views.promos :refer [shape-promo
-                                         shape-validate
-                                         shape-calculate]]
-            [cemerick.friend :as friend]
-            [schema.core :as s]
-            [schema.coerce :as c]))
+                                      shape-validate
+                                      shape-calculate]]
+            [clojure.data.json :refer [read-str]]
+            [clojure.tools.logging :as log]
+            [schema.coerce :as c]
+            [schema.core :as s]))
 
-(defn create-new-promo!
-  [{:keys [params] :as request}]
-  (log/debug params)
-  (comment
-    (let [user (friend/current-authentication)]
-      (promo/new-promo! (:account_id user) params))))
+(let [inbound-schema {(s/required-key :site-id) s/Uuid
+                      (s/optional-key :name) s/Str
+                      (s/optional-key :code) s/Str
+                      (s/optional-key :incept-date) s/Inst
+                      (s/optional-key :expiry-date) s/Inst
+                      (s/optional-key :individual-use) s/Bool
+                      (s/optional-key :exclude-sale-items) s/Bool
+                      (s/optional-key :max-usage-count) s/Int
+                      (s/optional-key :type) s/Str
+                      (s/optional-key :active) s/Bool
+                      (s/optional-key :amount) s/Num
+                      (s/optional-key :apply-before-tax) s/Bool
+                      (s/optional-key :free-shipping) s/Bool
+                      (s/optional-key :minimum-cart-amount) s/Num
+                      (s/optional-key :minimum-product-amount) s/Num
+                      (s/optional-key :usage-limit-per-user) s/Int
+                      (s/optional-key :product-ids) [s/Str]
+                      (s/optional-key :exclude-product-ids) [s/Str]
+                      (s/optional-key :product-categories) [s/Str]
+                      (s/optional-key :exclude-product-categories) [s/Str]
+                      (s/optional-key :limit-usage-to-x-items) s/Int}]
+
+  (defn create-new-promo!
+    [{:keys [params body] :as request}]
+    (let [input-edn (clojure.edn/read-string (slurp body))
+          coerced-params ((c/coercer inbound-schema
+                                     (c/first-matcher [custom-matcher
+                                                       c/string-coercion-matcher]))
+                          input-edn)
+          the-site (site/find-by-site-uuid (:site-id coerced-params))
+          the-promo (promo/new-promo! (assoc coerced-params :site-id (:id the-site)))]
+      (println the-promo)
+      (shape-promo the-promo))))
 
 (defn show-promo
   [params]
