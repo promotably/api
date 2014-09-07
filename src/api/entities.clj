@@ -33,11 +33,3 @@
 (defentity conditions
   (table "conditions")
   (belongs-to promos {:fk :promo_id}))
-
-(defentity time-frame-rules
-  (table "time_frame_rules")
-  (belongs-to promos {:fk :promo_id}))
-
-(defentity time-frames
-  (table "time_frames")
-  (belongs-to time-frame-rules))
