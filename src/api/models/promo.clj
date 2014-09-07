@@ -45,7 +45,7 @@
                           :updated_at (sqlfn now)
                           :uuid (java.util.UUID/randomUUID)})))]
     (assoc the-promo :conditions
-           (c/create-conditions (map (fn [c] (assoc c :promo-id (:id the-promo))))))))
+           (c/create-conditions! (map (fn [c] (assoc c :promo-id (:id the-promo))))))))
 
 (sm/defn find-by-site-uuid
   "Finds all promos for a given site id. Returns a collection (empty
