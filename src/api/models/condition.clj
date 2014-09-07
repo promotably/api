@@ -1,15 +1,15 @@
 (ns api.models.condition
   (:require [api.entities :refer :all]
-            [api.lib.schema :refer :all]
             [api.lib.coercion-helper :refer [custom-matcher]]
             [api.lib.schema :refer :all]
             [api.util :refer [hyphenify-key]]
             [korma.core :refer :all]
             [clojure.set :refer [rename-keys intersection]]
+            [clj-time.core :refer [before? after? now]]
             [schema.core :as s]
-            [schema.coerce :as sc]))=
+            [schema.coerce :as sc]))
 
-(defn db-to-condition
+(defn- db-to-condition
   [r]
   (let [ks (keys r)
         hyphenified-params (rename-keys r (zipmap ks (map hyphenify-key ks)))]
@@ -18,7 +18,8 @@
                                     sc/string-coercion-matcher]))
      hyphenified-params)))
 
-(defn condition-to-db
+
+(defn- condition-to-db
   [{:keys [promo-id type start-date end-date start-time end-time
            usage-count total-discounts product-ids product-categories
            not-product-ids not-product-categories combo-product-ids
@@ -45,3 +46,15 @@
   (db-to-condition
    (insert conditions
            (values (map condition-to-db conditions)))))
+
+
+(defmulti validate
+  (fn [{:keys [type]} context] type))
+
+(defmethod validate :dates
+  [{:keys [] :as condition} context]
+  )
+
+(defn validate-condition
+  [condition context]
+  )

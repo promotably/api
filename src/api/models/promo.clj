@@ -71,5 +71,10 @@
     (when row (db-to-promo row))))
 
 (defn validate-promo
-  [promo context]
-  {:valid false :message "Not implemented yet"})
+  [{:keys [active conditions] :as promo}
+   {:keys [cart-contents] :as context}]
+  (when-not active
+    {:valid false :message "That promo code is currently inactive"})
+  (let [condition-validations (map #(condition/validate-condition % context)
+                                   conditions)]
+    ))
