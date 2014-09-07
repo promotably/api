@@ -11,8 +11,6 @@
             [api.controllers.promos :refer [create-new-promo! show-promo query-promo
                                             validate-promo calculate-promo]]
             [api.controllers.accounts :refer [create-new-account! update-account!]]
-            [api.controllers.rules :refer [create-new-rule!
-                                           show-rule]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]))
 
 (def js-content-type "text/javascript; charset=utf-8")
@@ -28,10 +26,7 @@
         [promo-code] validate-promo)
     (POST ["/calculation/:promo-code", :promo-code promo-code-regex]
           [promo-code] calculate-promo))
-  (context ["/promos/:promo-id", :promo-id #"[0-9]+"] [promo-id]
-    (context "/rules" []
-      (POST "/" [promo-id] create-new-rule!)
-      (GET ["/:rule-id", :rule-id #"[0-9]+"] [promo-id rule-id] show-rule))))
+  (context ["/promos/:promo-id", :promo-id #"[0-9]+"] [promo-id]))
 
 (defroutes api-routes
   (context "/v1" []
