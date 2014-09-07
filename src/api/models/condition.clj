@@ -2,6 +2,7 @@
   (:require [api.entities :refer :all]
             [api.lib.coercion-helper :refer [custom-matcher]]
             [api.lib.schema :refer :all]
+            [api.models.redemption :as redemption]
             [api.util :refer [hyphenify-key]]
             [korma.core :refer :all]
             [clojure.set :refer [rename-keys intersection]]
@@ -57,3 +58,11 @@
    (before? (now) start-date) {:valid false :message "That promo hasn't started yet"}
    (after? (now) end-date) {:valid false :message "That promo has ended"}
    :else {:valid true}))
+
+(defmethod validate :usage-count
+  [{:keys [usage-count id] :as condition}
+   {:keys [shopper-email] :as context}]
+  (let [rc (redemption/count-by-promo-and-shopper-email id shopper-email)]
+    (if (> rc usage-count)
+      {:valid false :message "That promo is no longer available"}
+      {:valid true})))

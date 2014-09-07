@@ -25,3 +25,13 @@
                                  :end-date (minus (now) (months 1))}]}]
     (valid? the-promo anything) => (just {:valid false
                                           :messages ["That promo has ended"]})))
+
+(fact "Promos with a usage-count condition are validated correctly"
+  (let [the-promo {:active true
+                   :conditions [{:type :usage-count
+                                 :usage-count 100}]}]
+    (valid? the-promo anything) => (just {:valid false
+                                          :messages ["That promo is no longer available"]})
+    (provided (api.models.redemption/count-by-promo-and-shopper-email anything anything) => 101)
+    (valid? the-promo anything) => (just {:valid true})
+    (provided (api.models.redemption/count-by-promo-and-shopper-email anything anything) => 99)))
