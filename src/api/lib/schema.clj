@@ -40,17 +40,24 @@
 
 ;; Promos ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def BasePromo {(s/required-key :site-id) s/Int
-                (s/required-key :name) s/Str
+(def BasePromo {(s/required-key :name) s/Str
                 (s/required-key :code) s/Str
-                (s/required-key :description) s/Str
+                (s/required-key :description) (s/maybe s/Str)
+                (s/optional-key :active) s/Bool
                 (s/required-key :reward-amount) (s/maybe s/Num)
                 (s/required-key :reward-type) (s/maybe (s/enum :dollar :percent))
                 (s/required-key :reward-tax) (s/maybe (s/enum :after-tax :before-tax))
                 (s/required-key :reward-applied-to) (s/maybe
                                                      (s/enum :cart :all-items :one-item))
                 (s/optional-key :exceptions) [s/Str]
-                (s/required-key :conditions) [Condition]})
+                (s/required-key :conditions) [Condition]
+                (s/optional-key :created-at) s/Inst
+                (s/optional-key :updated-at) s/Inst})
+
+(def OutboundPromo (merge BasePromo
+                          {(s/required-key :id) s/Int
+                           (s/required-key :site-id) s/Int
+                           (s/required-key :uuid) s/Uuid}))
 
 (def NewPromo (merge BasePromo
                      {(s/required-key :site-id) s/Uuid}))

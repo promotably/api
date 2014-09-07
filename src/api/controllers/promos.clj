@@ -76,7 +76,7 @@
           the-promo (promo/find-by-site-uuid-and-code site-id code)]
       (if-not the-promo
         {:status 404 :body "Can't find that promo"}
-        (let [v false
+        (let [v (promo/validate-promo the-promo coerced-params)
               resp (merge v {:uuid (:uuid the-promo)
                              :code code})]
           {:status 201

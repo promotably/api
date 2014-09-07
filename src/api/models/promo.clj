@@ -14,7 +14,7 @@
             [korma.core :refer :all]
             [schema.core :as s]
             [schema.macros :as sm]
-            [schema.coerce :as sc]))=
+            [schema.coerce :as sc]))
 
 (defn- jdbc-array->seq
   [^org.postgresql.jdbc4.Jdbc4Array jdbc-array]
@@ -25,11 +25,12 @@
   "Convert a database result to a promo that obeys the PromoSchema"
   [r]
   (let [ks (keys r)
-        hyphenified-params (rename-keys r (zipmap ks (map hyphenify-key ks)))]
-    ((sc/coercer BasePromo
+        hyphenified-params (rename-keys r (zipmap ks (map hyphenify-key ks)))
+        safe-params (merge {:conditions []} hyphenified-params)]
+    ((sc/coercer OutboundPromo
                  (sc/first-matcher [custom-matcher
                                     sc/string-coercion-matcher]))
-     hyphenified-params)))
+     safe-params)))
 
 (sm/defn new-promo!
   "Creates a new promo in the database"
@@ -65,3 +66,7 @@
                                    :promos.code (clojure.string/upper-case
                                                  promo-code)})))]
     (when row (db-to-promo row))))
+
+(defn validate-promo
+  [promo context]
+  {:valid false :message "Not implemented yet"})
