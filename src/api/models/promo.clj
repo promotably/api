@@ -7,7 +7,7 @@
             [api.entities :refer :all]
             [api.lib.coercion-helper :refer [custom-matcher]]
             [api.lib.schema :refer :all]
-            [api.models.condition :as condition]
+            [api.models.condition :as c]
             [api.models.redemption :as rd]
             [api.models.site :as site]
             [api.util :refer [hyphenify-key]]
@@ -44,7 +44,8 @@
                           :created_at (sqlfn now)
                           :updated_at (sqlfn now)
                           :uuid (java.util.UUID/randomUUID)})))]
-    ))
+    (assoc the-promo :conditions
+           (c/create-conditions (map (fn [c] (assoc c :promo-id (:id the-promo))))))))
 
 (sm/defn find-by-site-uuid
   "Finds all promos for a given site id. Returns a collection (empty
