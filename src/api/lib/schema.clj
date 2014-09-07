@@ -22,20 +22,20 @@
   {(s/optional-key :id) s/Int
    (s/optional-key :promo-id) s/Int
    (s/required-key :type) ConditionType
-   (s/optional-key :start-date) s/Inst
-   (s/optional-key :end-date) s/Inst
-   (s/optional-key :start-time) s/Inst
-   (s/optional-key :end-time) s/Inst
-   (s/optional-key :usage-count) s/Int
-   (s/optional-key :total-discounts) s/Num
+   (s/optional-key :start-date) (s/maybe org.joda.time.DateTime)
+   (s/optional-key :end-date) (s/maybe org.joda.time.DateTime)
+   (s/optional-key :start-time) (s/maybe org.joda.time.DateTime)
+   (s/optional-key :end-time) (s/maybe org.joda.time.DateTime)
+   (s/optional-key :usage-count) (s/maybe s/Int)
+   (s/optional-key :total-discounts) (s/maybe s/Num)
    (s/optional-key :product-ids) [s/Str]
    (s/optional-key :product-categories) [s/Str]
    (s/optional-key :not-product-ids) [s/Str]
    (s/optional-key :not-product-categories) [s/Str]
    (s/optional-key :combo-product-ids) [s/Str]
-   (s/optional-key :item-count) s/Int
-   (s/optional-key :item-value) s/Num
-   (s/optional-key :order-min-value) s/Num})
+   (s/optional-key :item-count) (s/maybe s/Int)
+   (s/optional-key :item-value) (s/maybe s/Num)
+   (s/optional-key :order-min-value) (s/maybe s/Num)})
 
 
 ;; Promos ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

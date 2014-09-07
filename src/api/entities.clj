@@ -4,40 +4,40 @@
 (declare accounts users sites promos redemptions)
 
 (defentity email-subscribers
-  (table "public.email_subscribers"))
+  (table "email_subscribers"))
 
 (defentity accounts
-  (table "public.accounts")
+  (table "accounts")
   (has-many users)
   (has-many sites))
 
 (defentity users
-  (table "public.users")
+  (table "users")
   (belongs-to accounts {:fk :account_id}))
 
 (defentity sites
-  (table "public.sites")
+  (table "sites")
   (has-many promos {:fk :site_id})
   (belongs-to accounts {:fk :account_id}))
 
 (defentity promos
-  (table "public.promos")
+  (table "promos")
   (belongs-to sites {:fk :site_id})
   (has-many conditions {:fk :promo_id})
   (has-many redemptions {:fk :promo_id}))
 
 (defentity redemptions
-  (table "public.redemptions")
+  (table "redemptions")
   (belongs-to promos {:fk :promo_id}))
 
 (defentity conditions
-  (table "public.conditions")
+  (table "conditions")
   (belongs-to promos {:fk :promo_id}))
 
 (defentity time-frame-rules
-  (table "public.time_frame_rules")
+  (table "time_frame_rules")
   (belongs-to promos {:fk :promo_id}))
 
 (defentity time-frames
-  (table "public.time_frames")
+  (table "time_frames")
   (belongs-to time-frame-rules))

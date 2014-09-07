@@ -5,7 +5,7 @@
             [clojure.set :refer [rename-keys intersection]]
             [api.db :refer :all]
             [api.entities :refer :all]
-            [api.lib.coercion-helper :refer [custom-matcher]]
+            [api.lib.coercion-helper :refer [custom-matcher underscore-to-dash-keys]]
             [api.lib.schema :refer :all]
             [api.models.condition :as c]
             [api.models.redemption :as rd]
@@ -24,13 +24,11 @@
 (defn db-to-promo
   "Convert a database result to a promo that obeys the PromoSchema"
   [r]
-  (let [ks (keys r)
-        hyphenified-params (rename-keys r (zipmap ks (map hyphenify-key ks)))
-        safe-params (merge {:conditions []} hyphenified-params)]
+  (let [hyphenified-params (underscore-to-dash-keys r)]
     ((sc/coercer OutboundPromo
                  (sc/first-matcher [custom-matcher
                                     sc/string-coercion-matcher]))
-     safe-params)))
+     hyphenified-params)))
 
 (sm/defn new-promo!
   "Creates a new promo in the database"
@@ -75,6 +73,9 @@
    {:keys [cart-contents] :as context}]
   (when-not active
     {:valid false :message "That promo code is currently inactive"})
-  (let [condition-validations (map #(condition/validate-condition % context)
+  (let [condition-validations (map #(condition/validate % context)
                                    conditions)]
-    ))
+    (if (not-every? true? (map #(:valid %) condition-validations))
+      {:valid false :messages (map #(:message %)
+                                   (filter #(false? (:valid %)) condition-validations))}
+      {:valid true})))

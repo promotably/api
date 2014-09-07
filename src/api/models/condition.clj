@@ -52,9 +52,8 @@
   (fn [{:keys [type]} context] type))
 
 (defmethod validate :dates
-  [{:keys [] :as condition} context]
-  )
-
-(defn validate-condition
-  [condition context]
-  )
+  [{:keys [start-date end-date] :as condition} context]
+  (cond
+   (before? (now) start-date) {:valid false :message "This promo hasn't started yet"}
+   (after? (now) end-date) {:valid false :message "This promo has ended"}
+   :else {:valid true}))

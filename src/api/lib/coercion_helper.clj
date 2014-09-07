@@ -1,11 +1,19 @@
 (ns api.lib.coercion-helper
   (:require [clojure.walk :refer [postwalk]]
+            [clj-time.coerce :refer [from-sql-date from-sql-time]]
             [clj-time.format :refer [formatters parse]]
             [schema.coerce :refer [safe]]
             [schema.core :as s]))
 
-(let [date-formatter (formatters :date-time-no-ms)
-      coercions {org.joda.time.DateTime (safe #(parse date-formatter %))
+(let [date-formatter (formatters :date-time-no-ms)]
+  (defn coerce-joda-date-time
+    [thing]
+    (condp = (class thing)
+      java.lang.String (parse date-formatter thing)
+      java.sql.Date (from-sql-date thing)
+      java.sql.Timestamp (from-sql-time thing))))
+
+(let [coercions {org.joda.time.DateTime (safe #(coerce-joda-date-time %))
                  java.util.UUID (safe #(java.util.UUID/fromString %))}]
   (defn custom-matcher
     "A matcher that coerces keywords, keyword enums, s/Num and s/Int,
