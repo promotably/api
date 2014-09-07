@@ -43,13 +43,14 @@
                           :code code
                           :created_at (sqlfn now)
                           :updated_at (sqlfn now)
-                          :uuid (java.util.UUID/randomUUID)})))]))
+                          :uuid (java.util.UUID/randomUUID)})))]
+    ))
 
 (sm/defn find-by-site-uuid
   "Finds all promos for a given site id. Returns a collection (empty
   array if no results found)"
   [site-uuid :- s/Uuid]
-  (let [results (select promos
+  (let [results (select promos (with conditions)
                         (join sites (= :sites.id :site_id))
                         (where {:sites.uuid site-uuid}))]
     (map db-to-promo results)))
@@ -61,6 +62,7 @@
   [site-uuid :- s/Uuid
    promo-code :- s/Str]
   (let [row (first (select promos
+                           (with conditions)
                            (join sites (= :sites.id :site_id))
                            (where {:sites.uuid site-uuid
                                    :promos.code (clojure.string/upper-case

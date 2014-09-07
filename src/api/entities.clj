@@ -23,6 +23,7 @@
 (defentity promos
   (table "public.promos")
   (belongs-to sites {:fk :site_id})
+  (has-many conditions {:fk :promo_id})
   (has-many redemptions {:fk :promo_id}))
 
 (defentity redemptions
