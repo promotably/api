@@ -59,6 +59,8 @@
                            (s/required-key :site-id) s/Int
                            (s/required-key :uuid) s/Uuid}))
 
+(def DatabasePromo (dissoc OutboundPromo :conditions))
+
 (def NewPromo (merge BasePromo
                      {(s/required-key :site-id) s/Uuid}))
 

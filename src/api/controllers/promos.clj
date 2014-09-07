@@ -4,6 +4,7 @@
             [api.models.promo :as promo]
             [api.models.site :as site]
             [api.views.promos :refer [shape-promo
+                                      shape-new-promo
                                       shape-validate
                                       shape-calculate]]
             [clojure.data.json :refer [read-str]]
@@ -14,17 +15,14 @@
 (defn create-new-promo!
   [{:keys [params body] :as request}]
   (let [input-edn (clojure.edn/read-string (slurp body))
-        _ (println input-edn)
         coerced-params ((c/coercer NewPromo
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
                         input-edn)
-        _ (println coerced-params)
         ;; TODO: Handle the site not being found
-        the-site (site/find-by-site-uuid (:site-id coerced-params))
-        the-promo (promo/new-promo! (assoc coerced-params :site-id (:id the-site)))]
-    (println the-promo)
-    (shape-promo the-promo)))
+        the-site (site/find-by-site-uuid (:site-id coerced-params))]
+    (shape-new-promo
+     (promo/new-promo! (assoc coerced-params :site-id (:id the-site))))))
 
 (defn show-promo
   [params]

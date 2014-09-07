@@ -12,6 +12,7 @@
             [api.models.site :as site]
             [api.util :refer [hyphenify-key]]
             [korma.core :refer :all]
+            [korma.db :as kdb]
             [schema.core :as s]
             [schema.macros :as sm]
             [schema.coerce :as sc]))
@@ -25,7 +26,7 @@
   "Convert a database result to a promo that obeys the PromoSchema"
   [r]
   (let [hyphenified-params (underscore-to-dash-keys r)]
-    ((sc/coercer OutboundPromo
+    ((sc/coercer DatabasePromo
                  (sc/first-matcher [custom-matcher
                                     sc/string-coercion-matcher]))
      hyphenified-params)))
@@ -33,17 +34,18 @@
 (sm/defn new-promo!
   "Creates a new promo in the database"
   [{:keys [site-id name code conditions] :as params}]
-  (let [the-promo
-        (db-to-promo
-         (insert promos
-                 (values {:site_id site-id
-                          :name name
-                          :code code
-                          :created_at (sqlfn now)
-                          :updated_at (sqlfn now)
-                          :uuid (java.util.UUID/randomUUID)})))]
-    (assoc the-promo :conditions
-           (c/create-conditions! (map (fn [c] (assoc c :promo-id (:id the-promo))))))))
+  (kdb/transaction
+   (let [the-promo
+         (db-to-promo
+          (insert promos
+                  (values {:site_id site-id
+                           :name name
+                           :code code
+                           :created_at (sqlfn now)
+                           :updated_at (sqlfn now)
+                           :uuid (java.util.UUID/randomUUID)})))]
+     (c/create-conditions! (map (fn [c] (assoc c :promo-id (:id the-promo))) conditions)))
+   (not (kdb/is-rollback?))))
 
 (sm/defn find-by-site-uuid
   "Finds all promos for a given site id. Returns a collection (empty

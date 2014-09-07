@@ -7,6 +7,12 @@
   (write-str p
              :value-fn view-value-helper))
 
+(defn shape-new-promo
+  [created?]
+  (if created?
+    {:status 201}
+    {:status 500}))
+
 (defn shape-validate
   [r]
   (write-str r
