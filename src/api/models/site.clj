@@ -25,6 +25,9 @@
 
 (defn find-by-site-uuid
   [site-uuid]
-  (db-to-site (first (select sites
-                             (where {:uuid site-uuid})))))
+  (let [u (condp = (class site-uuid)
+            java.lang.String (java.util.UUID/fromString site-uuid)
+            java.util.UUID site-uuid)]
+    (db-to-site (first (select sites
+                               (where {:uuid u}))))))
 

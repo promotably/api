@@ -29,6 +29,10 @@
   (table "public.redemptions")
   (belongs-to promos {:fk :promo_id}))
 
+(defentity conditions
+  (table "public.conditions")
+  (belongs-to promos {:fk :promo_id}))
+
 (defentity time-frame-rules
   (table "public.time_frame_rules")
   (belongs-to promos {:fk :promo_id}))
