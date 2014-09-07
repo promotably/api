@@ -1,7 +1,7 @@
 (ns api.entities
   (:require [korma.core :refer :all]))
 
-(declare accounts users sites promos redemptions)
+(declare accounts users sites promos redemptions conditions)
 
 (defentity email-subscribers
   (table "email_subscribers"))

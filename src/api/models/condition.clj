@@ -54,6 +54,6 @@
 (defmethod validate :dates
   [{:keys [start-date end-date] :as condition} context]
   (cond
-   (before? (now) start-date) {:valid false :message "This promo hasn't started yet"}
-   (after? (now) end-date) {:valid false :message "This promo has ended"}
+   (before? (now) start-date) {:valid false :message "That promo hasn't started yet"}
+   (after? (now) end-date) {:valid false :message "That promo has ended"}
    :else {:valid true}))

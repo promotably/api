@@ -68,14 +68,14 @@
                                                  promo-code)})))]
     (when row (db-to-promo row))))
 
-(defn validate-promo
+(defn valid?
   [{:keys [active conditions] :as promo}
    {:keys [cart-contents] :as context}]
-  (when-not active
-    {:valid false :message "That promo code is currently inactive"})
-  (let [condition-validations (map #(condition/validate % context)
-                                   conditions)]
-    (if (not-every? true? (map #(:valid %) condition-validations))
-      {:valid false :messages (map #(:message %)
-                                   (filter #(false? (:valid %)) condition-validations))}
-      {:valid true})))
+  (if-not active
+    {:valid false :messages ["That promo is currently inactive"]}
+    (let [condition-validations (map #(c/validate % context)
+                                     conditions)]
+      (if (not-every? true? (map #(:valid %) condition-validations))
+        {:valid false :messages (vec (map #(:message %)
+                                          (filter #(false? (:valid %)) condition-validations)))}
+        {:valid true}))))
