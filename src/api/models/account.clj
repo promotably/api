@@ -22,10 +22,12 @@
 
 (defn new-account!
   "Creates a new account in the database."
-  [{:keys [email first-name last-name user-social-id site-code api-secret] :as params}]
+  [{:keys [email first-name last-name user-social-id
+           site-code site-url api-secret company-name] :as params}]
   (if-not (u/find-by-email email)
     (let [a (insert accounts
-                    (values {:created_at (sqlfn now)
+                    (values {:company_name company-name
+                             :created_at (sqlfn now)
                              :updated_at (sqlfn now)}))
           user (insert users
                        (values {:account_id (:id a)
@@ -37,6 +39,7 @@
           site (insert sites
                        (values {:account_id (:id a)
                                 :site_code site-code
+                                :site_url site-url
                                 :api_secret api-secret
                                 :created_at (sqlfn now)
                                 :updated_at (sqlfn now)}))]

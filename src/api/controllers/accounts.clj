@@ -12,7 +12,9 @@
                       (s/required-key :last-name) s/Str
                       (s/required-key :user-social-id) s/Str
                       (s/optional-key :site-code) s/Str
-                      (s/optional-key :api-secret) s/Uuid}]
+                      (s/optional-key :api-secret) s/Uuid
+                      (s/optional-key :site-url) s/Str
+                      (s/optional-key :company-name) s/Str}]
   (defn create-new-account!
     "Creates a new account in the database. Also creates a user"
     [{:keys [params body] :as request}]
@@ -22,6 +24,7 @@
                            (c/first-matcher [custom-matcher
                                              c/string-coercion-matcher]))
                           input-edn)
+          _ (println coerced-params)
           results (account/new-account! coerced-params)]
       (shape-create (underscore-to-dash-keys results)))))
 
