@@ -31,21 +31,30 @@
                                     sc/string-coercion-matcher]))
      hyphenified-params)))
 
+(defn exists?
+  [site-id code]
+  (seq (select promos
+               (where {:site_id site-id :code code}))))
+
 (sm/defn new-promo!
   "Creates a new promo in the database"
   [{:keys [site-id name code conditions] :as params}]
-  (kdb/transaction
-   (let [the-promo
-         (db-to-promo
-          (insert promos
-                  (values {:site_id site-id
-                           :name name
-                           :code code
-                           :created_at (sqlfn now)
-                           :updated_at (sqlfn now)
-                           :uuid (java.util.UUID/randomUUID)})))]
-     (c/create-conditions! (map (fn [c] (assoc c :promo-id (:id the-promo))) conditions)))
-   (not (kdb/is-rollback?))))
+  (if (seq (exists? site-id code))
+    {:success false
+     :error :already-exists
+     :message (format "A promo with code %s already exists" code)}
+    (kdb/transaction
+     (let [the-promo
+           (db-to-promo
+            (insert promos
+                    (values {:site_id site-id
+                             :name name
+                             :code code
+                             :created_at (sqlfn now)
+                             :updated_at (sqlfn now)
+                             :uuid (java.util.UUID/randomUUID)})))]
+       (c/create-conditions! (map (fn [c] (assoc c :promo-id (:id the-promo))) conditions)))
+     {:success (not (kdb/is-rollback?))})))
 
 (sm/defn find-by-site-uuid
   "Finds all promos for a given site id. Returns a collection (empty

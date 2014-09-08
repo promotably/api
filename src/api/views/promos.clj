@@ -8,10 +8,11 @@
              :value-fn view-value-helper))
 
 (defn shape-new-promo
-  [created?]
-  (if created?
-    {:status 201}
-    {:status 500}))
+  [{:keys [success error message] :as response}]
+  (cond
+   (true? success) {:status 201}
+   (and (false? success) (= error :already-exists)) {:status 409 :body message}
+   :else {:status 500}))
 
 (defn shape-validate
   [r]
