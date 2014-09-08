@@ -1,7 +1,7 @@
 (ns api.models.account
   (:require [clojure.set :refer [rename-keys]]
             [korma.core :refer :all]
-            [api.entities :refer [accounts users]]
+            [api.entities :refer [accounts users sites]]
             [api.models.user :as u]
             [api.util :refer [hyphenify-key]]
             [schema.macros :as sm]
@@ -22,7 +22,7 @@
 
 (defn new-account!
   "Creates a new account in the database."
-  [{:keys [email first-name last-name user-social-id] :as params}]
+  [{:keys [email first-name last-name user-social-id site-code api-secret] :as params}]
   (if-not (u/find-by-email email)
     (let [a (insert accounts
                     (values {:created_at (sqlfn now)
@@ -33,7 +33,13 @@
                                 :first_name first-name
                                 :last_name last-name
                                 :user_social_id user-social-id
-                                :created_at (sqlfn now)}))]
+                                :created_at (sqlfn now)}))
+          site (insert sites
+                       (values {:account_id (:id a)
+                                :site_code site-code
+                                :api_secret api-secret
+                                :created_at (sqlfn now)
+                                :updated_at (sqlfn now)}))]
       {:status :created
        :user (dissoc user :id)
        :account (dissoc a :id)})
