@@ -2,6 +2,7 @@
   (:require [api.lib.coercion-helper :refer [custom-matcher]]
             [api.models.user :as user]
             [api.models.account :as account]
+            [api.models.site :as site]
             [api.views.accounts :refer [shape-get-user shape-create-user shape-update-user]]
             [clojure.tools.logging :as log]
             [schema.core :as s]
@@ -56,7 +57,10 @@
 
 (defn lookup-user
   [{{:keys [user-social-id]} :params}]
-  (let [u (user/find-by-user-social-id user-social-id)]
+  (let [u (user/find-by-user-social-id user-social-id)
+        a (when u (account/find-by-id (:account-id u)))
+        s (when a (first (site/find-by-account-id (:account-id u))))]
     (shape-get-user
      {:user u
-      :account (when u (account/find-by-id (:account-id u)))})))
+      :account a
+      :site s})))

@@ -2,20 +2,24 @@
   (:require [clojure.set :refer [rename-keys]]
             [korma.core :refer :all]
             [api.entities :refer :all]
-            [api.util :refer [hyphenify-key]]
+            [api.lib.coercion-helper :refer [underscore-to-dash-keys]]
             [schema.core :as s]
             [schema.macros :as sm]))
 
-(def SiteSchema {(s/required-key :id) s/Int
-                 (s/required-key :account-id) s/Int
+(def SiteSchema {(s/optional-key :id) s/Int
+                 (s/optional-key :account-id) s/Int
                  (s/required-key :created-at) s/Inst
-                 (s/required-key :updated-at) s/Inst})
+                 (s/required-key :updated-at) s/Inst
+                 (s/optional-key :name) (s/maybe s/Str)
+                 (s/required-key :site-id) s/Uuid
+                 (s/optional-key :site-code) (s/maybe s/Str)
+                 (s/optional-key :api-secret) (s/maybe s/Uuid)})
 
 (defn- db-to-site
   "Translates a database result to a map that obeys SiteSchema"
   [r]
-  (let [ks (keys r)]
-    (rename-keys r (zipmap ks (map hyphenify-key ks)))))
+  (let [hyphenated (underscore-to-dash-keys r)]
+    (dissoc (assoc hyphenated :site-id (:uuid hyphenated)) :uuid :id :account-id)))
 
 (sm/defn ^:always-validate find-by-account-id :- [SiteSchema]
   [account-id :- s/Int]
