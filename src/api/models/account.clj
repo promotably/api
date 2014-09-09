@@ -45,7 +45,8 @@
                                 :updated_at (sqlfn now)}))]
       {:status :created
        :user (dissoc user :id)
-       :account (dissoc a :id)})
+       :account (dissoc a :id)
+       :site site})
     {:status :error :error :email-already-exists}))
 
 

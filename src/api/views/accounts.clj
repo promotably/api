@@ -22,7 +22,11 @@
                  (= (:error create-response) :email-already-exists)) 409)]
     (merge default-response
            {:status sc
-            :body (pr-str create-response)})))
+            :body (pr-str (-> create-response
+                              (assoc-in [:site]
+                                        (assoc (dissoc (:site create-response)
+                                                       :id :account-id :uuid)
+                                          :site-id (:uuid (:site create-response))))))})))
 
 (defn shape-update
   [update-response]

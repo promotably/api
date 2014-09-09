@@ -42,7 +42,6 @@
                            (c/first-matcher [custom-matcher
                                              c/string-coercion-matcher]))
                           input-edn)
-          _ (println coerced-params)
           results (account/new-account! coerced-params)]
       (shape-create (underscore-to-dash-keys results)))))
 
