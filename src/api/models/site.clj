@@ -13,6 +13,7 @@
                  (s/optional-key :name) (s/maybe s/Str)
                  (s/required-key :site-id) s/Uuid
                  (s/optional-key :site-code) (s/maybe s/Str)
+                 (s/optional-key :site-url) (s/maybe s/Str)
                  (s/optional-key :api-secret) (s/maybe s/Uuid)})
 
 (defn- db-to-site

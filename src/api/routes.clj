@@ -10,7 +10,8 @@
                                            lookup-user]]
             [api.controllers.promos :refer [create-new-promo! show-promo query-promo
                                             validate-promo calculate-promo]]
-            [api.controllers.accounts :refer [create-new-account! update-account!]]
+            [api.controllers.accounts :refer [lookup-account create-new-account!
+                                              update-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]))
 
 (def js-content-type "text/javascript; charset=utf-8")
@@ -35,6 +36,7 @@
                                     (content-type js-content-type))
                                 (throw (ex-info "Error recording event." {:reason "Cache insert failed."}))))
            (POST "/email-subscribers" [] create-email-subscriber!)
+           (GET "/accounts" [] lookup-account)
            (POST "/accounts" [] create-new-account!)
            (PUT "/accounts/:account-id" [] update-account!)
            (GET "/users" [] lookup-user)
