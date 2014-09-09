@@ -24,7 +24,8 @@
                       (s/optional-key :site-code) s/Str
                       (s/optional-key :api-secret) s/Uuid
                       (s/optional-key :site-url) s/Str
-                      (s/optional-key :company-name) s/Str}]
+                      (s/optional-key :company-name) s/Str
+                      (s/optional-key :account-id) s/Uuid}]
 
   (defn lookup-account
     [{{:keys [user-social-id]} :params}]
@@ -34,7 +35,7 @@
       (shape-lookup-account {:user u :account a :site s})))
 
   (defn create-new-account!
-    "Creates a new account in the database. Also creates a user"
+    "Creates a new account in the database. Also creates a user and a site"
     [{:keys [params body] :as request}]
     (let [input-edn (clojure.edn/read-string (slurp body))
           coerced-params ((c/coercer
@@ -43,10 +44,8 @@
                                              c/string-coercion-matcher]))
                           input-edn)
           results (account/new-account! coerced-params)]
-      (shape-create (underscore-to-dash-keys results)))))
+      (shape-create (underscore-to-dash-keys results))))
 
-(let [inbound-schema {(s/required-key :account-id) s/Uuid
-                      (s/optional-key :company-name) s/Str}]
   (defn update-account!
     [{body :body {:keys [account-id]} :params}]
     (let [input-edn (clojure.edn/read-string (slurp body))
@@ -56,5 +55,4 @@
                                              c/string-coercion-matcher]))
                           (merge input-edn {:account-id account-id}))
           result (account/update! coerced-params)]
-      (println result)
       (shape-update (underscore-to-dash-keys result)))))

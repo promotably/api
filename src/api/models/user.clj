@@ -101,6 +101,11 @@
   (safe-db-to-user (first (select users
                                   (where {:user_social_id uid})))))
 
+(defn find-by-account-id
+  [account-id]
+  (safe-db-to-user (select users
+                           (where {:account_id account-id}))))
+
 (defn assign-user-to-account!
   "Assign a user to an account"
   [user-id account-id]

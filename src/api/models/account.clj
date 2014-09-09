@@ -2,8 +2,9 @@
   (:require [clojure.set :refer [rename-keys]]
             [korma.core :refer :all]
             [api.entities :refer [accounts users sites]]
-            [api.models.user :as u]
-            [api.util :refer [hyphenify-key]]
+            [api.models.site :as site]
+            [api.models.user :as user]
+            [api.util :refer [hyphenify-key assoc*]]
             [schema.macros :as sm]
             [schema.core :as s]))
 
@@ -24,7 +25,7 @@
   "Creates a new account in the database."
   [{:keys [email first-name last-name user-social-id
            site-code site-url api-secret company-name] :as params}]
-  (if-not (u/find-by-email email)
+  (if-not (user/find-by-email email)
     (let [a (insert accounts
                     (values {:company_name company-name
                              :created_at (sqlfn now)
@@ -66,11 +67,28 @@
             (where {:account_id account-id})))))
 
 (defn update!
-  [{:keys [account-id company-name] :as params}]
-  (let [the-account (find-by-account-id account-id)]
+  [{:keys [account-id company-name first-name last-name
+           user-social-id site-code api-secret site-url] :as params}]
+  (let [the-account (find-by-account-id account-id)
+        site-update (assoc* {} :site_code site-code
+                               :api_secret api-secret
+                               :site_url site-url)
+        user-update (assoc* {} :first_name first-name
+                               :last_name last-name
+                               :user_social_id user-social-id)]
     (if the-account
       {:status :updated
        :account (update accounts
                         (set-fields {:company_name company-name})
-                        (where {:account_id account-id}))}
+                        (where {:account_id account-id}))
+       :site (if (empty? site-update)
+               (first (site/find-by-account-id (:id the-account)))
+               (update sites
+                       (set-fields site-update)
+                       (where {:account_id (:id the-account)})))
+       :user (if (empty? user-update)
+               (first (user/find-by-account-id (:id the-account)))
+               (update users
+                       (set-fields user-update)
+                       (where {:account_id (:id the-account)})))}
       {:status :does-not-exist :account nil})))
