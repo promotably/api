@@ -7,6 +7,15 @@
   (write-str p
              :value-fn view-value-helper))
 
+(defn shape-lookup
+  [r]
+  {:status 200 :body (pr-str (vec (map #(-> %
+                                            (assoc :conditions
+                                              (map (fn [c] (dissoc c :id :promo-id))
+                                                   (:conditions %))
+                                              :promo-id (:uuid %))
+                                            (dissoc :id :uuid :site-id)) r)))})
+
 (defn shape-new-promo
   [{:keys [success error message] :as response}]
   (cond

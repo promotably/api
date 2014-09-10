@@ -26,7 +26,7 @@
   "Convert a database result to a promo that obeys the PromoSchema"
   [r]
   (let [hyphenified-params (underscore-to-dash-keys r)]
-    ((sc/coercer DatabasePromo
+    ((sc/coercer OutboundPromo
                  (sc/first-matcher [custom-matcher
                                     sc/string-coercion-matcher]))
      hyphenified-params)))

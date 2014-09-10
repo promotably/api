@@ -36,3 +36,8 @@
     (db-to-site (first (select sites
                                (where {:uuid u}))))))
 
+(defn get-id-by-site-uuid
+  [site-uuid]
+  (:id (first (select sites
+                      (fields [:id])
+                      (where {:uuid site-uuid})))))

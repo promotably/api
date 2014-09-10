@@ -9,7 +9,8 @@
             [api.controllers.users :refer [create-new-user! get-user update-user!
                                            lookup-user]]
             [api.controllers.promos :refer [create-new-promo! show-promo query-promo
-                                            validate-promo calculate-promo]]
+                                            validate-promo calculate-promo
+                                            lookup-promos]]
             [api.controllers.accounts :refer [lookup-account create-new-account!
                                               update-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]))
@@ -19,15 +20,15 @@
 
 (defroutes promo-routes
   (context "/promos" []
-    (POST "/" [] create-new-promo!)
-    (GET ["/:promo-id", :promo-id #"[0-9]+"] [promo-id] show-promo)
-    (GET ["/query/:promo-code", :promo-code promo-code-regex]
-        [promo-code] query-promo)
-    (POST ["/validation/:promo-code", :promo-code promo-code-regex]
-        [promo-code] validate-promo)
-    (POST ["/calculation/:promo-code", :promo-code promo-code-regex]
-          [promo-code] calculate-promo))
-  (context ["/promos/:promo-id", :promo-id #"[0-9]+"] [promo-id]))
+           (POST "/" [] create-new-promo!)
+           (GET "/" [] lookup-promos)
+           (GET ["/:promo-id", :promo-id #"[0-9]+"] [promo-id] show-promo)
+           (GET ["/query/:promo-code", :promo-code promo-code-regex]
+                [promo-code] query-promo)
+           (POST ["/validation/:promo-code", :promo-code promo-code-regex]
+                 [promo-code] validate-promo)
+           (POST ["/calculation/:promo-code", :promo-code promo-code-regex]
+                 [promo-code] calculate-promo)))
 
 (defroutes api-routes
   (context "/v1" []

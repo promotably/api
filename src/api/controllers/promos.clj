@@ -4,6 +4,7 @@
             [api.models.promo :as promo]
             [api.models.site :as site]
             [api.views.promos :refer [shape-promo
+                                      shape-lookup
                                       shape-new-promo
                                       shape-validate
                                       shape-calculate]]
@@ -11,6 +12,15 @@
             [clojure.tools.logging :as log]
             [schema.coerce :as c]
             [schema.core :as s]))
+
+(defn lookup-promos
+  [{:keys [params] :as request}]
+  (let [{:keys [site-id] :as coerced-params}
+        ((c/coercer PromoLookup
+                    (c/first-matcher [custom-matcher
+                                      c/string-coercion-matcher]))
+         params)]
+    (shape-lookup (promo/find-by-site-uuid site-id))))
 
 (defn create-new-promo!
   [{:keys [params body] :as request}]
@@ -20,9 +30,9 @@
                                                      c/string-coercion-matcher]))
                         input-edn)
         ;; TODO: Handle the site not being found
-        the-site (site/find-by-site-uuid (:site-id coerced-params))]
+        id (site/get-id-by-site-uuid (:site-id coerced-params))]
     (shape-new-promo
-     (promo/new-promo! (assoc coerced-params :site-id (:id the-site))))))
+     (promo/new-promo! (assoc coerced-params :site-id id)))))
 
 (defn show-promo
   [params]
