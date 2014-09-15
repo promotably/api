@@ -37,6 +37,20 @@
    (s/optional-key :item-value) (s/maybe s/Num)
    (s/optional-key :order-min-value) (s/maybe s/Num)})
 
+(def InboundCondition (merge Condition
+                             {(s/optional-key :start-date) org.joda.time.DateTime
+                              (s/optional-key :end-date) org.joda.time.DateTime
+                              (s/optional-key :start-time) org.joda.time.DateTime
+                              (s/optional-key :end-time) org.joda.time.DateTime}))
+
+
+;; Products ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def Product {(s/optional-key :seo-copy) s/Str
+              (s/optional-key :original-price) s/Num
+              (s/optional-key :name) s/Str
+              (s/optional-key :photo-url) s/Str
+              (s/optional-key :url) s/Str})
 
 ;; Promos ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -49,17 +63,20 @@
                 (s/required-key :reward-tax) (s/maybe (s/enum :after-tax :before-tax))
                 (s/required-key :reward-applied-to) (s/maybe
                                                      (s/enum :cart :all-items :one-item))
-                (s/optional-key :exceptions) [s/Str]
+                (s/optional-key :exceptions) (s/maybe (s/enum :sale-items))
                 (s/required-key :conditions) [Condition]
                 (s/optional-key :created-at) s/Inst
                 (s/optional-key :updated-at) s/Inst})
 
-(def OutboundPromo (merge BasePromo
+(def OutboundPromo (merge (dissoc BasePromo :conditions)
                           {(s/required-key :id) s/Int
                            (s/required-key :site-id) s/Int
-                           (s/required-key :uuid) s/Uuid}))
+                           (s/required-key :uuid) s/Uuid
+                           (s/optional-key :conditions) [Condition]}))
 
 (def NewPromo (merge BasePromo
-                     {(s/required-key :site-id) s/Uuid}))
+                     {(s/required-key :site-id) s/Uuid
+                      (s/optional-key :linked-products) [Product]
+                      (s/required-key :conditions) [InboundCondition]}))
 
 (def PromoLookup {(s/optional-key :site-id) s/Uuid})

@@ -20,14 +20,38 @@
      hyphenified-params)))
 
 
+(def DatabaseCondition
+  {(s/optional-key :id) s/Int
+   (s/optional-key :promo-id) s/Int
+   (s/required-key :type) s/Str
+   (s/optional-key :start-date) (s/maybe java.sql.Date)
+   (s/optional-key :end-date) (s/maybe java.sql.Date)
+   (s/optional-key :start-time) (s/maybe java.sql.Timestamp)
+   (s/optional-key :end-time) (s/maybe java.sql.Timestamp)
+   (s/optional-key :usage-count) (s/maybe s/Int)
+   (s/optional-key :total-discounts) (s/maybe s/Num)
+   (s/optional-key :product-ids) [s/Str]
+   (s/optional-key :product-categories) [s/Str]
+   (s/optional-key :not-product-ids) [s/Str]
+   (s/optional-key :not-product-categories) [s/Str]
+   (s/optional-key :combo-product-ids) [s/Str]
+   (s/optional-key :item-count) (s/maybe s/Int)
+   (s/optional-key :item-value) (s/maybe s/Num)
+   (s/optional-key :order-min-value) (s/maybe s/Num)})
+
 (defn- condition-to-db
   [{:keys [type] :as condition}]
-  (dash-to-underscore-keys (merge condition {:type (name type)})))
+  (dash-to-underscore-keys
+   ((sc/coercer DatabaseCondition
+                (sc/first-matcher [custom-matcher
+                                   sc/string-coercion-matcher]))
+    (merge condition {:type (name type)}))))
 
 (defn create-conditions!
   [c]
-  (db-to-condition (insert conditions
-                           (values (map condition-to-db c)))))
+  (let [coerced-conditions (map condition-to-db c)]
+    (db-to-condition (insert conditions
+                             (values (map condition-to-db c))))))
 
 
 (defmulti validate
