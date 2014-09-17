@@ -15,8 +15,20 @@ Make sure your ~/.lein/profiles.clj has at least:
      {:user {:plugins [[lein-midje "3.0.0"]
                       [cider/cider-nrepl "0.7.0-SNAPSHOT"]]}}
 
-### Database
+### Up and Running with Vagrant
 
+API requires several different services to function properly. There's a vagrant config in API that will setup a virtual machine on your development machine, which will have all the requisite services installed and running.
+
+Install Vagrant [from here](http://docs.vagrantup.com/v2/installation/index.html)
+
+From the root project directory (api), run the following command:
+
+```
+vagrant up
+```
+
+### Database
+* NOTE: You don't have to do this if you followed the vagrant setup
 * This server uses PostgreSQL 9.3. If you're looking for a really easy way to run a postgresql database on your mac, checkout [postgres.app](http://postgresapp.com/)
 * Also, the postgresql extension uuid-ossp is required. Once you have your database up, do the following setup:
 ```
