@@ -17,7 +17,7 @@
                  [log4j/log4j "1.2.17"]
                  [org.postgresql/postgresql "9.3-1100-jdbc4"]
                  [org.clojars.cvillecsteele/ring-permacookie-middleware "1.0.0-SNAPSHOT"]
-                 [korma "0.3.2"]
+                 [korma "0.4.0"]
                  [clj-logging-config "1.9.10"]
                  [ring/ring-core "1.3.0"]
                  [compojure "1.1.8"]
