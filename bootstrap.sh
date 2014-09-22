@@ -38,8 +38,4 @@ ln -s /usr/local/jdk1.7.0_67/bin/java /usr/local/bin/java
 # Kafka & Zookeeper
 wget http://apache.mirrors.pair.com/kafka/0.8.1.1/kafka_2.10-0.8.1.1.tgz -O /usr/local/kafka_2.10-0.8.1.1.tgz
 cd /usr/local && tar -xzvf kafka_2.10-0.8.1.1.tgz
-
-nohup /usr/local/kafka_2.10-0.8.1.1/bin/zookeeper-server-start.sh /usr/local/kafka_2.10-0.8.1.1/config/zookeeper.properties &
-sleep 5
-nohup /usr/local/kafka_2.10-0.8.1.1/bin/kafka-server-start.sh /usr/local/kafka_2.10-0.8.1.1/config/server.properties &
-
+ln -s /usr/local/kafka_2.10-0.8.1.1/ /usr/local/kafka

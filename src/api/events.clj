@@ -2,7 +2,16 @@
   (:require [clojure.set :as set]
             [clojure.tools.logging :as log]
             [api.state :as state]
-            [api.lib.protocols :refer (EventCache insert query)]))
+            [api.kafka :as kafka]
+            [api.lib.protocols :refer (EventCache insert query)]
+            [schema.core :as s]))
+
+(def EventTypes
+  (s/enum :trackProductView
+          :trackProductAdd
+          :trackCartView
+          :trackCheckout
+          :trackThankYou))
 
 (def event-types
   [:trackProductView
@@ -55,4 +64,5 @@
 (defn record-event
   [request]
   (when-let [cache (state/events-cache)]
-    (insert cache (:params request))))
+    (insert cache (:params request)))
+  (kafka/record! (:params request)))
