@@ -43,18 +43,18 @@
     {:success false
      :error :already-exists
      :message (format "A promo with code %s already exists" code)}
-    (kdb/transaction
-     (let [the-promo
-           (db-to-promo
-            (insert promos
-                    (values {:site_id site-id
-                             :name name
-                             :code code
-                             :created_at (sqlfn now)
-                             :updated_at (sqlfn now)
-                             :uuid (java.util.UUID/randomUUID)})))]
-       (c/create-conditions! (map (fn [c] (assoc c :promo-id (:id the-promo))) conditions)))
-     {:success (not (kdb/is-rollback?))})))
+    (let [the-promo
+          (db-to-promo
+           (insert promos
+                   (values {:site_id site-id
+                            :name name
+                            :code code
+                            :created_at (sqlfn now)
+                            :updated_at (sqlfn now)
+                            :uuid (java.util.UUID/randomUUID)})))]
+      (when (seq conditions)
+        (c/create-conditions! (map (fn [c] (assoc c :promo-id (:id the-promo))) conditions)))
+      {:success true})))
 
 (sm/defn find-by-site-uuid
   "Finds all promos for a given site id. Returns a collection (empty
