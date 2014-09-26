@@ -8,11 +8,12 @@
             [api.lib.coercion-helper :refer [custom-matcher underscore-to-dash-keys]]
             [api.lib.schema :refer :all]
             [api.models.condition :as c]
+            [api.models.linked-products :as lp]
             [api.models.redemption :as rd]
             [api.models.site :as site]
             [api.util :refer [hyphenify-key]]
             [korma.core :refer :all]
-            [korma.db :as kdb]
+            [korma.db :refer [transaction] :as kdb]
             [schema.core :as s]
             [schema.macros :as sm]
             [schema.coerce :as sc]))
@@ -36,35 +37,98 @@
   (seq (select promos
                (where {:site_id site-id :code code}))))
 
+(defn by-promo-id
+  [site-id promo-id]
+  (seq (select promos
+               (where {:site_id site-id :promo-id promo-id}))))
+
 (sm/defn new-promo!
   "Creates a new promo in the database"
-  [{:keys [site-id name code conditions] :as params}]
-  (if (seq (exists? site-id code))
-    {:success false
-     :error :already-exists
-     :message (format "A promo with code %s already exists" code)}
-    (let [the-promo
-          (db-to-promo
-           (insert promos
-                   (values {:site_id site-id
-                            :name name
-                            :code code
-                            :created_at (sqlfn now)
-                            :updated_at (sqlfn now)
-                            :uuid (java.util.UUID/randomUUID)})))]
-      (when (seq conditions)
-        (c/create-conditions! (map (fn [c] (assoc c :promo-id (:id the-promo))) conditions)))
-      {:success true})))
+  [{:keys [description name code exceptions
+           reward-type reward-applied-to reward-tax reward-amount
+           site-id linked-products conditions promo-id] :as params}]
+  (prn "PARAMS" params)
+  (transaction
+   (if (seq (exists? site-id code))
+     {:success false
+      :error :already-exists
+      :message (format "A promo with code %s already exists" code)}
+     (let [new-values {:active true
+                       :site_id site-id
+                       :name name
+                       :description description
+                       :exceptions (clojure.core/name exceptions)
+                       :reward_applied_to (clojure.core/name reward-applied-to)
+                       :reward_tax (clojure.core/name reward-tax)
+                       :reward_type (clojure.core/name reward-type)
+                       :reward_amount reward-amount
+                       :code code
+                       :created_at (sqlfn now)
+                       :updated_at (sqlfn now)
+                       :uuid (java.util.UUID/randomUUID)}
+           the-promo (db-to-promo (insert promos (values new-values)))]
+       (when (seq conditions)
+         (c/create-conditions! (map #(-> %
+                                         (assoc :uuid (java.util.UUID/randomUUID))
+                                         (assoc :promo-id (:id the-promo)))
+                                    conditions)))
+       (when (seq linked-products)
+         (lp/create! (map #(-> %
+                               (assoc :uuid (java.util.UUID/randomUUID))
+                               (assoc :promo-id (:id the-promo)))
+                          linked-products)))
+       {:success true}))))
+
+(sm/defn update-promo!
+  "Updates a promo in the database"
+  [{:keys [description name code exceptions
+           reward-type reward-applied-to reward-tax reward-amount
+           site-id conditions linked-products promo-id] :as params}]
+  (prn promo-id)
+  (let [found (first (by-promo-id site-id promo-id))]
+    (if-not found
+      {:success false
+       :error :not-found
+       :message (format "Promo id %s does not exist." promo-id)}
+      (let [new-values {:active true
+                        :site_id site-id
+                        :name name
+                        :description description
+                        :exceptions (clojure.core/name exceptions)
+                        :reward_applied_to (clojure.core/name reward-applied-to)
+                        :reward_tax (clojure.core/name reward-tax)
+                        :reward_type (clojure.core/name reward-type)
+                        :reward_amount reward-amount
+                        :code code
+                        :updated_at (sqlfn now)
+                        :uuid promo-id}
+            the-promo (db-to-promo (update promos (values new-values)
+                                           (where {:id (:id found)})))]
+        (prn "update" the-promo)
+        (if (seq conditions)
+          (c/update-conditions! (:id found)
+                                (map #(-> %
+                                          (assoc :uuid (java.util.UUID/randomUUID))
+                                          (assoc :promo-id (:id found)))
+                                     conditions)))
+        (if (seq linked-products)
+          (lp/update! (:id found)
+                      (map #(-> %
+                                (assoc :uuid (java.util.UUID/randomUUID))
+                                (assoc :promo-id (:id found)))
+                           linked-products)))
+        {:success true}))))
 
 (sm/defn find-by-site-uuid
   "Finds all promos for a given site id. Returns a collection (empty
   array if no results found)"
   [site-uuid :- s/Uuid]
-  (let [results (select promos (with conditions)
+  (let [results (select promos
+                        (with conditions)
+                        ;; (with linked-products)
                         (join sites (= :sites.id :site_id))
                         (where {:sites.uuid site-uuid}))]
     (map db-to-promo results)))
-
 
 (sm/defn ^:always-validate find-by-site-uuid-and-code
   "Finds a promo with the given site id and code combination.
@@ -77,7 +141,7 @@
                            (where {:sites.uuid site-uuid
                                    :promos.code (clojure.string/upper-case
                                                  promo-code)})))]
-    (when row (db-to-promo row))))
+    (if row (db-to-promo row))))
 
 (defn valid?
   [{:keys [active conditions] :as promo}

@@ -10,6 +10,7 @@
                                            lookup-user]]
             [api.controllers.promos :refer [create-new-promo! show-promo query-promo
                                             validate-promo calculate-promo
+                                            update-promo!
                                             lookup-promos]]
             [api.controllers.accounts :refer [lookup-account create-new-account!
                                               update-account!]]
@@ -22,7 +23,8 @@
   (context "/promos" []
            (POST "/" [] create-new-promo!)
            (GET "/" [] lookup-promos)
-           (GET ["/:promo-id", :promo-id #"[0-9]+"] [promo-id] show-promo)
+           (GET ["/:promo-id", :promo-id #"[A-Za-z0-9-]+"] [promo-id] show-promo)
+           (PUT ["/:promo-id", :promo-id #"[A-Za-z0-9-]+"] [promo-id] update-promo!)
            (GET ["/query/:promo-code", :promo-code promo-code-regex]
                 [promo-code] query-promo)
            (POST ["/validation/:promo-code", :promo-code promo-code-regex]

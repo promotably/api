@@ -57,8 +57,8 @@
 
   ;; start nrepl
   (env/when-env "dev"
-                (log/info "Starting cider (nrepl) on 55555")
-                (nrepl-server/start-server :port 55555 :handler cider-nrepl-handler))
+                (let [s (nrepl-server/start-server :handler cider-nrepl-handler)]
+                  (log/info (str "Started cider (nrepl) on " (:port s)))))
 
   (log/info :STARTING "NS Servlet")
   (db/init!)

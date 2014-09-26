@@ -1,6 +1,18 @@
 (ns api.lib.schema
   (:require [schema.core :as s]))
 
+;; Linked Products ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def Linked
+  {(s/optional-key :id) s/Int
+   (s/optional-key :promo-id) s/Int
+   (s/required-key :uuid) s/Uuid
+   (s/required-key :url) s/Str
+   (s/required-key :photo-url) s/Str
+   (s/required-key :name) s/Str
+   (s/required-key :original-price) s/Num
+   (s/required-key :seo-copy) s/Str})
+
 ;; Conditions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def ConditionType
@@ -21,6 +33,7 @@
 (def Condition
   {(s/optional-key :id) s/Int
    (s/optional-key :promo-id) s/Int
+   (s/required-key :uuid) s/Uuid
    (s/required-key :type) ConditionType
    (s/optional-key :start-date) (s/maybe org.joda.time.DateTime)
    (s/optional-key :end-date) (s/maybe org.joda.time.DateTime)
@@ -37,12 +50,21 @@
    (s/optional-key :item-value) (s/maybe s/Num)
    (s/optional-key :order-min-value) (s/maybe s/Num)})
 
-(def InboundCondition (merge Condition
-                             {(s/optional-key :start-date) org.joda.time.DateTime
-                              (s/optional-key :end-date) org.joda.time.DateTime
-                              (s/optional-key :start-time) org.joda.time.DateTime
-                              (s/optional-key :end-time) org.joda.time.DateTime}))
+(def InboundCondition (-> Condition
+                          (dissoc (s/required-key :uuid))
+                          (assoc (s/optional-key :start-date) org.joda.time.DateTime)
+                          (assoc (s/optional-key :end-date) org.joda.time.DateTime)
+                          (assoc (s/optional-key :start-time) org.joda.time.DateTime)
+                          (assoc (s/optional-key :end-time) org.joda.time.DateTime)
+                          (assoc (s/optional-key :uuid) s/Uuid)))
 
+(def OutboundCondition (-> Condition
+                           (dissoc (s/required-key :uuid))
+                           (assoc (s/optional-key :start-date) (s/maybe java.util.Date))
+                           (assoc (s/optional-key :end-date) (s/maybe java.util.Date))
+                           (assoc (s/optional-key :start-time) (s/maybe java.util.Date))
+                           (assoc (s/optional-key :end-time) (s/maybe java.util.Date))
+                           (assoc (s/optional-key :uuid) s/Uuid)))
 
 ;; Products ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -72,10 +94,11 @@
                           {(s/required-key :id) s/Int
                            (s/required-key :site-id) s/Int
                            (s/required-key :uuid) s/Uuid
-                           (s/optional-key :conditions) [Condition]}))
+                           (s/optional-key :conditions) [OutboundCondition]}))
 
 (def NewPromo (merge BasePromo
                      {(s/required-key :site-id) s/Uuid
+                      (s/optional-key :uuid) s/Uuid
                       (s/optional-key :linked-products) [Product]
                       (s/required-key :conditions) [InboundCondition]}))
 

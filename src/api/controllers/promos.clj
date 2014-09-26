@@ -13,17 +13,59 @@
             [schema.coerce :as c]
             [schema.core :as s]))
 
+(def query-schema {:site-id s/Uuid
+                   (s/optional-key :promotably-auth) s/Str
+                   :promo-code s/Str})
+
+(def inbound-schema
+  {(s/required-key :site-id) s/Uuid
+   (s/required-key :code) s/Str
+   (s/optional-key :promotably-auth) [s/Str]
+   (s/required-key :shopper-id) (s/maybe s/Str)
+   (s/required-key :shopper-email) s/Str
+   (s/optional-key :applied-coupons) [s/Str]
+   (s/optional-key :cart-contents) [{(s/required-key :product-id) s/Str
+                                     (s/optional-key :product-title) s/Str
+                                     (s/optional-key :product-type) s/Str
+                                     (s/optional-key :product-categories) [s/Str]
+                                     (s/optional-key :variation-id) s/Str
+                                     (s/optional-key :variation) s/Str
+                                     (s/optional-key :quantity) s/Int
+                                     (s/optional-key :line-total) s/Num
+                                     (s/optional-key :line-subtotal) s/Num
+                                     (s/optional-key :line-tax) s/Num
+                                     (s/optional-key :line-subtotal-tax) s/Num}]
+   (s/optional-key :product-ids-on-sale) [s/Str]})
+
 (defn lookup-promos
   [{:keys [params] :as request}]
   (let [{:keys [site-id] :as coerced-params}
         ((c/coercer PromoLookup
                     (c/first-matcher [custom-matcher
                                       c/string-coercion-matcher]))
-         params)]
-    (shape-lookup (promo/find-by-site-uuid site-id))))
+         params)
+        found (promo/find-by-site-uuid site-id)]
+    (prn (shape-lookup found))
+    (shape-lookup found)))
 
 (defn create-new-promo!
   [{:keys [params body] :as request}]
+  (let [input-edn (clojure.edn/read-string (slurp body))
+        _ (prn input-edn)
+        site-id (:site-id input-edn)
+        ;; TODO: Handle the site not being found
+        id (site/get-id-by-site-uuid site-id)
+        _ (prn id)
+        coerced-params ((c/coercer NewPromo
+                                   (c/first-matcher [custom-matcher
+                                                     c/string-coercion-matcher]))
+                        input-edn)]
+    (prn (assoc coerced-params :site-id id))
+    (shape-new-promo
+     (promo/new-promo! (assoc coerced-params :site-id id)))))
+
+(defn update-promo!
+  [{:keys [promo-id params body] :as request}]
   (let [input-edn (clojure.edn/read-string (slurp body))
         coerced-params ((c/coercer NewPromo
                                    (c/first-matcher [custom-matcher
@@ -32,80 +74,61 @@
         ;; TODO: Handle the site not being found
         id (site/get-id-by-site-uuid (:site-id coerced-params))]
     (shape-new-promo
-     (promo/new-promo! (assoc coerced-params :site-id id)))))
+     (promo/update-promo! (assoc coerced-params :site-id id)))))
 
 (defn show-promo
-  [params]
-  (log/debug params))
+  [{:keys [promo-id params body] :as request}]
+  (let [promos (promo/by-promo-id promo-id)]
+    (prn promos)
+    (shape-new-promo (first promos))))
 
-(let [inbound-schema {:site-id s/Uuid
-                      (s/optional-key :promotably-auth) s/Str
-                      :promo-code s/Str}]
-  (defn query-promo
-    [{:keys [params] :as request}]
-    (let [{:keys [site-id promo-code] :as coerced-params}
-          ((c/coercer inbound-schema
-                      (c/first-matcher [custom-matcher
-                                        c/string-coercion-matcher]))
-           params)
-          the-promo (promo/find-by-site-uuid-and-code site-id
-                                                      promo-code)]
-      (if-not the-promo
-        {:status 404 :body "Can't find that promo"}
-        (do
-          {:body (shape-promo the-promo)})))))
+(defn query-promo
+  [{:keys [params] :as request}]
+  (let [{:keys [site-id promo-code] :as coerced-params}
+        ((c/coercer query-schema
+                    (c/first-matcher [custom-matcher
+                                      c/string-coercion-matcher]))
+         params)
+        the-promo (promo/find-by-site-uuid-and-code site-id
+                                                    promo-code)]
+    (if-not the-promo
+      {:status 404 :body "Can't find that promo"}
+      (do
+        {:body (shape-promo the-promo)}))))
 
-(let [inbound-schema {(s/required-key :site-id) s/Uuid
-                      (s/required-key :code) s/Str
-                      (s/optional-key :promotably-auth) [s/Str]
-                      (s/required-key :shopper-id) (s/maybe s/Str)
-                      (s/required-key :shopper-email) s/Str
-                      (s/optional-key :applied-coupons) [s/Str]
-                      (s/optional-key :cart-contents) [{(s/required-key :product-id) s/Str
-                                                        (s/optional-key :product-title) s/Str
-                                                        (s/optional-key :product-type) s/Str
-                                                        (s/optional-key :product-categories) [s/Str]
-                                                        (s/optional-key :variation-id) s/Str
-                                                        (s/optional-key :variation) s/Str
-                                                        (s/optional-key :quantity) s/Int
-                                                        (s/optional-key :line-total) s/Num
-                                                        (s/optional-key :line-subtotal) s/Num
-                                                        (s/optional-key :line-tax) s/Num
-                                                        (s/optional-key :line-subtotal-tax) s/Num}]
-                      (s/optional-key :product-ids-on-sale) [s/Str]}]
-  (defn validate-promo
-    [{:keys [params body] :as request}]
-    (let [input-json (read-str (slurp body) :key-fn keyword)
-          {:keys [site-id code] :as coerced-params}
-            ((c/coercer inbound-schema
-                        (c/first-matcher [custom-matcher
-                                          c/string-coercion-matcher]))
-             input-json)
-          the-promo (promo/find-by-site-uuid-and-code site-id code)]
-      (if-not the-promo
-        {:status 404 :body "Can't find that promo"}
-        (let [v (promo/valid? the-promo coerced-params)
-              resp (merge v {:uuid (:uuid the-promo)
-                             :code code})]
-          {:status 201
-           :headers {"Content-Type" "application/json; charset=UTF-8"}
-           :body (shape-validate resp)}))))
+(defn validate-promo
+  [{:keys [params body] :as request}]
+  (let [input-json (read-str (slurp body) :key-fn keyword)
+        {:keys [site-id code] :as coerced-params}
+        ((c/coercer inbound-schema
+                    (c/first-matcher [custom-matcher
+                                      c/string-coercion-matcher]))
+         input-json)
+        the-promo (promo/find-by-site-uuid-and-code site-id code)]
+    (if-not the-promo
+      {:status 404 :body "Can't find that promo"}
+      (let [v (promo/valid? the-promo coerced-params)
+            resp (merge v {:uuid (:uuid the-promo)
+                           :code code})]
+        {:status 201
+         :headers {"Content-Type" "application/json; charset=UTF-8"}
+         :body (shape-validate resp)}))))
 
-  (defn calculate-promo
-    [{:keys [params body] :as request}]
-    (let [input-json (read-str (slurp body) :key-fn keyword)
-          {:keys [site-id code] :as coerced-params}
-          ((c/coercer inbound-schema
-                        (c/first-matcher [custom-matcher
-                                          c/string-coercion-matcher]))
-           input-json)
-          the-promo (promo/find-by-site-uuid-and-code site-id code)]
-      (if-not the-promo
-        {:status 404 :body "Can't find that promo"}
-        (let [v false]
-          (println (:type the-promo))
-          (println (class (:type the-promo)))
-          {:status 201
-           :headers {"Content-Type" "application/json; charset=UTF-8"}
-           :body (shape-calculate (merge v
-                                         {:discount 0}))})))))
+(defn calculate-promo
+  [{:keys [params body] :as request}]
+  (let [input-json (read-str (slurp body) :key-fn keyword)
+        {:keys [site-id code] :as coerced-params}
+        ((c/coercer inbound-schema
+                    (c/first-matcher [custom-matcher
+                                      c/string-coercion-matcher]))
+         input-json)
+        the-promo (promo/find-by-site-uuid-and-code site-id code)]
+    (if-not the-promo
+      {:status 404 :body "Can't find that promo"}
+      (let [v false]
+        (println (:type the-promo))
+        (println (class (:type the-promo)))
+        {:status 201
+         :headers {"Content-Type" "application/json; charset=UTF-8"}
+         :body (shape-calculate (merge v
+                                       {:discount 0}))}))))

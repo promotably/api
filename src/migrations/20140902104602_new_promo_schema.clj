@@ -18,6 +18,7 @@
      (jdbc/create-table-ddl :conditions
                             [:id "serial8 primary key"]
                             [:promo_id "INTEGER REFERENCES promos (id)"]
+                            [:uuid "uuid NOT NULL"]
                             [:type "TEXT NOT NULL"]
                             [:start_date "DATE"]
                             [:end_date "DATE"]
@@ -42,9 +43,9 @@
     (jdbc/db-do-commands
      db-con
      (jdbc/drop-table-ddl :conditions)
-     "ALTER TABLE promos RENAME COLUMN reward_amount TO amount,
-                         DROP COLUMN reward_type,
-                         DROP COLUMN exceptions,
-                         DROP COLUMN reward_tax,
-                         ADD COLUMN apply_before_tax BOOLEAN DEFAULT false,
-                         DROP COLUMN reward_applied_to")))
+     "ALTER TABLE promos RENAME COLUMN reward_amount TO amount"
+     "ALTER TABLE promos DROP COLUMN reward_type"
+     "ALTER TABLE promos DROP COLUMN exceptions"
+     "ALTER TABLE promos DROP COLUMN reward_tax"
+     "ALTER TABLE promos ADD COLUMN apply_before_tax BOOLEAN DEFAULT false"
+     "ALTER TABLE promos DROP COLUMN reward_applied_to")))

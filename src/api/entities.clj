@@ -33,3 +33,7 @@
 (defentity conditions
   (table "conditions")
   (belongs-to promos {:fk :promo_id}))
+
+(defentity linked-products
+  (table "linked_products")
+  (belongs-to promos {:fk :promo_id}))
