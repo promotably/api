@@ -20,7 +20,7 @@ echo "host    all             all             all                     md5" >> "$
 # Restart so that all new config is loaded:
 service postgresql restart
 
-sudo -u postgres psql -f /vagrant/bootstrap.sql
+sudo -u postgres psql -f /vagrant/vagrant-bootstrap/bootstrap.sql
 
 wget https://bootstrap.pypa.io/get-pip.py
 python get-pip.py
@@ -31,15 +31,17 @@ export AWS_SECRET_ACCESS_KEY=zDluEJvgJuUYjRV3p7yCwIWvJzU8Q7TDT3wQPkUo
 
 # Java
 aws s3 cp s3://promotably-java-stash/jdk-7u67-linux-x64.gz /usr/local/
-
 cd /usr/local && tar -xzvf jdk-7u67-linux-x64.gz
 ln -s /usr/local/jdk1.7.0_67/bin/java /usr/local/bin/java
+rm /usr/local/jdk-7u67-linux-x64.gz
 
 # Kafka & Zookeeper
+useradd kafka-zookeeper
 wget http://apache.mirrors.pair.com/kafka/0.8.1.1/kafka_2.10-0.8.1.1.tgz -O /usr/local/kafka_2.10-0.8.1.1.tgz
 cd /usr/local && tar -xzvf kafka_2.10-0.8.1.1.tgz
+ln -s /usr/local/kafka_2.10-0.8.1.1 /usr/local/kafka
+chown -R kafka-zookeeper /usr/local/kafka
+rm /usr/local/kafka_2.10-0.8.1.1.tgz
+cp /vagrant/vagrant-bootstrap/*.conf /etc/init/
 
-nohup /usr/local/kafka_2.10-0.8.1.1/bin/zookeeper-server-start.sh /usr/local/kafka_2.10-0.8.1.1/config/zookeeper.properties &
-sleep 5
-nohup /usr/local/kafka_2.10-0.8.1.1/bin/kafka-server-start.sh /usr/local/kafka_2.10-0.8.1.1/config/server.properties &
-
+start zookeeper
