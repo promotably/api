@@ -1,6 +1,6 @@
 (ns api.routes
   (:require [clojure.tools.logging :as log]
-            [compojure.core :refer [defroutes context GET POST PUT]]
+            [compojure.core :refer [defroutes context GET POST PUT DELETE]]
             [compojure.route :refer [not-found]]
             [ring.util.response :refer [response content-type]]
             [ring.middleware.permacookie :refer [wrap-permacookie]]
@@ -10,19 +10,22 @@
                                            lookup-user]]
             [api.controllers.promos :refer [create-new-promo! show-promo query-promo
                                             validate-promo calculate-promo
+                                            update-promo! delete-promo!
                                             lookup-promos]]
             [api.controllers.accounts :refer [lookup-account create-new-account!
                                               update-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]))
 
 (def js-content-type "text/javascript; charset=utf-8")
-(def promo-code-regex #"[a-zA-Z0-9]{1,}")
+(def promo-code-regex #"[a-zA-Z0-9-]{1,}")
 
 (defroutes promo-routes
   (context "/promos" []
            (POST "/" [] create-new-promo!)
            (GET "/" [] lookup-promos)
-           (GET ["/:promo-id", :promo-id #"[0-9]+"] [promo-id] show-promo)
+           (DELETE ["/:promo-id", :promo-id promo-code-regex] [promo-id] delete-promo!)
+           (GET ["/:promo-id", :promo-id promo-code-regex] [promo-id] show-promo)
+           (PUT ["/:promo-id", :promo-id promo-code-regex] [promo-id] update-promo!)
            (GET ["/query/:promo-code", :promo-code promo-code-regex]
                 [promo-code] query-promo)
            (POST ["/validation/:promo-code", :promo-code promo-code-regex]

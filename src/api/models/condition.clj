@@ -5,6 +5,7 @@
             [api.models.redemption :as redemption]
             [api.util :refer [hyphenify-key]]
             [korma.core :refer :all]
+            [korma.db :refer [transaction]]
             [clojure.set :refer [rename-keys intersection]]
             [clj-time.core :refer [before? after? now]]
             [schema.core :as s]
@@ -23,6 +24,7 @@
 (def DatabaseCondition
   {(s/optional-key :id) s/Int
    (s/optional-key :promo-id) s/Int
+   (s/required-key :uuid) s/Uuid
    (s/required-key :type) s/Str
    (s/optional-key :start-date) (s/maybe java.sql.Date)
    (s/optional-key :end-date) (s/maybe java.sql.Date)
@@ -50,9 +52,21 @@
 (defn create-conditions!
   [c]
   (let [coerced-conditions (map condition-to-db c)]
+    (prn "coerced conditions" coerced-conditions)
     (db-to-condition (insert conditions
                              (values (map condition-to-db c))))))
 
+(defn delete-conditions!
+  [promo-id]
+  (delete conditions (where {:promo_id promo-id})))
+
+(defn update-conditions!
+  [promo-id c]
+  (transaction
+   (delete-conditions! promo-id)
+   (when-let [coerced-conditions (seq (map condition-to-db c))]
+     (db-to-condition (insert conditions
+                              (values (map condition-to-db c)))))))
 
 (defmulti validate
   (fn [{:keys [type]} context] type))
