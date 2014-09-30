@@ -45,36 +45,45 @@
                                       c/string-coercion-matcher]))
          params)
         found (promo/find-by-site-uuid site-id)]
-    (prn (shape-lookup found))
     (shape-lookup found)))
+
+;; TODO: enforce ownership
+(defn delete-promo!
+  [{:keys [params body] :as request}]
+  (let [{:keys [promo-id]} params
+        promo-uuid (java.util.UUID/fromString promo-id)
+        found (promo/find-by-uuid promo-uuid)]
+    (if found
+      (do
+        (promo/delete-by-uuid promo-uuid)
+        {:status 200})
+      {:status 404})))
 
 (defn create-new-promo!
   [{:keys [params body] :as request}]
   (let [input-edn (clojure.edn/read-string (slurp body))
-        _ (prn input-edn)
         site-id (:site-id input-edn)
         ;; TODO: Handle the site not being found
         id (site/get-id-by-site-uuid site-id)
-        _ (prn id)
         coerced-params ((c/coercer NewPromo
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
                         input-edn)]
-    (prn (assoc coerced-params :site-id id))
     (shape-new-promo
      (promo/new-promo! (assoc coerced-params :site-id id)))))
 
 (defn update-promo!
-  [{:keys [promo-id params body] :as request}]
-  (let [input-edn (clojure.edn/read-string (slurp body))
+  [{:keys [params body] :as request}]
+  (let [{:keys [promo-id]} params
+        input-edn (clojure.edn/read-string (slurp body))
         coerced-params ((c/coercer NewPromo
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
-                        input-edn)
+                        (dissoc input-edn :promo-id))
         ;; TODO: Handle the site not being found
         id (site/get-id-by-site-uuid (:site-id coerced-params))]
     (shape-new-promo
-     (promo/update-promo! (assoc coerced-params :site-id id)))))
+     (promo/update-promo! promo-id (assoc coerced-params :site-id id)))))
 
 (defn show-promo
   [{:keys [promo-id params body] :as request}]

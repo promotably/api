@@ -58,13 +58,13 @@
 
 (defn delete-conditions!
   [promo-id]
-  (delete conditions (where {:promo-id promo-id})))
+  (delete conditions (where {:promo_id promo-id})))
 
 (defn update-conditions!
   [promo-id c]
   (transaction
    (delete-conditions! promo-id)
-   (let [coerced-conditions (map condition-to-db c)]
+   (when-let [coerced-conditions (seq (map condition-to-db c))]
      (db-to-condition (insert conditions
                               (values (map condition-to-db c)))))))
 

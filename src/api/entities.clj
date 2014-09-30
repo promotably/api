@@ -1,7 +1,7 @@
 (ns api.entities
   (:require [korma.core :refer :all]))
 
-(declare accounts users sites promos redemptions conditions)
+(declare accounts users sites promos redemptions conditions linked-products)
 
 (defentity email-subscribers
   (table "email_subscribers"))
@@ -24,6 +24,7 @@
   (table "promos")
   (belongs-to sites {:fk :site_id})
   (has-many conditions {:fk :promo_id})
+  (has-many linked-products {:fk :promo_id})
   (has-many redemptions {:fk :promo_id}))
 
 (defentity redemptions

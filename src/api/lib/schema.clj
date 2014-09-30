@@ -13,6 +13,13 @@
    (s/required-key :original-price) s/Num
    (s/required-key :seo-copy) s/Str})
 
+(def OutboundLinked (-> Linked
+                        (dissoc (s/required-key :uuid))
+                        (dissoc (s/optional-key :id))
+                        (assoc (s/optional-key :created-at) s/Inst)
+                        (assoc (s/optional-key :uuid) s/Uuid)
+                        (assoc (s/optional-key :id) s/Int)))
+
 ;; Conditions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def ConditionType
@@ -84,8 +91,11 @@
                 (s/required-key :reward-type) (s/maybe (s/enum :dollar :percent))
                 (s/required-key :reward-tax) (s/maybe (s/enum :after-tax :before-tax))
                 (s/required-key :reward-applied-to) (s/maybe
-                                                     (s/enum :cart :all-items :one-item))
-                (s/optional-key :exceptions) (s/maybe (s/enum :sale-items))
+                                                     (s/enum :cart
+                                                             :all-items
+                                                             :delivery
+                                                             :one-item))
+                (s/required-key :exceptions) (s/maybe (s/enum :sale-items))
                 (s/required-key :conditions) [Condition]
                 (s/optional-key :created-at) s/Inst
                 (s/optional-key :updated-at) s/Inst})
@@ -94,6 +104,7 @@
                           {(s/required-key :id) s/Int
                            (s/required-key :site-id) s/Int
                            (s/required-key :uuid) s/Uuid
+                           (s/optional-key :linked-products) [OutboundLinked]
                            (s/optional-key :conditions) [OutboundCondition]}))
 
 (def NewPromo (merge BasePromo
