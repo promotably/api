@@ -10,7 +10,8 @@
                              [lein-beanstalk "0.2.7"]
                              [lein-midje "3.0.0"]]}}
   :global-vars {*warn-on-reflection* true}
-  :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.1"]]
+  :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.1"]
+            [cider/cider-nrepl "0.7.0-SNAPSHOT"]]
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.0"]
                  [org.clojure/data.json "0.2.5"]
@@ -24,7 +25,6 @@
                  [prismatic/schema "0.2.6"]
                  [clj-time "0.8.0"]
                  [clojure.joda-time "0.2.0"]
-                 [cider/cider-nrepl "0.7.0"]
                  [org.clojure/tools.nrepl "0.2.6"]]
   :resource-paths ["resources"]
   :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC"]
