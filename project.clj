@@ -11,7 +11,9 @@
                              [lein-midje "3.0.0"]]}}
   :global-vars {*warn-on-reflection* true}
   :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.1"]
-            [cider/cider-nrepl "0.7.0-SNAPSHOT"]]
+            [cider/cider-nrepl "0.7.0-20140711.132954-36"]
+            ;; [cider/cider-nrepl "0.7.0-SNAPSHOT"]
+            ]
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.0"]
                  [org.clojure/data.json "0.2.5"]
