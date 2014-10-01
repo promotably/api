@@ -1,0 +1,431 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "A promo model",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "A unique identifier (UUID) for the promo."
+    },
+    "code": {
+      "type": "string",
+      "description": "An alphanumeric promo code",
+      "pattern": "^[a-zA-Z0-9]$"
+    },
+    "description": {
+      "type": "string",
+      "description": "A description for the promo"
+    },
+    "reward": {
+      "type": "number",
+      "description": "An amount or percentage discount"
+    },
+    "reward-type": {
+      "type": "string",
+      "enum": [
+        "percent",
+        "amount"
+      ]
+    },
+    "apply-before-tax": {
+      "type": "boolean",
+      "description": "Whether reward should be applied before tax. Defaults to false (i.e. by default reward is applied after tax)."
+    },
+    "apply-after-shipping": {
+      "type": "boolean",
+      "description": "Whether reward should be applied after shipping. Defaults to false (i.e. by default reward is applied before shipping)."
+    },
+    "apply-to-products": {
+      "type": "array",
+      "description": "An array of product codes signifying the products to which the reward can be applied",
+      "items": {
+        "type": "string",
+        "description": "A product code"
+      }
+    },
+    "apply-to-categories": {
+      "type": "array",
+      "description": "An array of category codes signifying the product categories to which the reward can be applied",
+      "items": {
+        "type": "string",
+        "description": "A category code"
+      }
+    },
+    "apply-to-shipping-only": {
+      "type": "boolean",
+      "description": "If true, reward applies only to shipping. All cart contents are not discounted Defaults to false if omitted."
+    },
+    "current-usage-count": {
+      "type": "integer",
+      "description": "The number of times the promo code has been applied to a completed order"
+    },
+    "current-usage-amount": {
+      "type": "number",
+      "description": "The total of discounts redeemed using promo code"
+    },
+    "rules": {
+      "type": "array",
+      "description": "An array of rules and exceptions applied to the promo",
+      "items": {
+        "type": "object",
+        "oneOf": [
+          {
+            "title": "Date Range",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "date-range"
+                ]
+              },
+              "from": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "to": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          {
+            "title": "Repeating Days",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "repeating-days"
+                ]
+              },
+              "month": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "jan",
+                  "feb",
+                  "mar",
+                  "apr",
+                  "may",
+                  "jun",
+                  "jul",
+                  "aug",
+                  "sep",
+                  "oct",
+                  "nov",
+                  "dec"
+                ]
+              },
+              "start-day": {
+                "type": "integer",
+                "min": 1,
+                "max": 31
+              },
+              "end-day": {
+                "type": "integer",
+                "min": 1,
+                "max": 31
+              }
+            }
+          },
+          {
+            "title": "Repeating Times",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "repeating-times"
+                ]
+              },
+              "day": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "mon",
+                  "tue",
+                  "wed",
+                  "thu",
+                  "fri",
+                  "day1",
+                  "day2",
+                  "day3",
+                  "day4",
+                  "day5",
+                  "day6",
+                  "day7",
+                  "day8",
+                  "day9",
+                  "day10",
+                  "day11",
+                  "day12",
+                  "day13",
+                  "day14",
+                  "day15",
+                  "day16",
+                  "day17",
+                  "day18",
+                  "day19",
+                  "day20",
+                  "day21",
+                  "day22",
+                  "day23",
+                  "day24",
+                  "day25",
+                  "day26",
+                  "day27",
+                  "day28",
+                  "day29",
+                  "day30",
+                  "day31"
+                ]
+              },
+              "start-time": {
+                "type": "string",
+                "format": "time"
+              },
+              "end-time": {
+                "type": "string",
+                "format": "time"
+              }
+            }
+          },
+          {
+            "title": "Product Count",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "product-count"
+                ]
+              },
+              "products": {
+                "type": "array",
+                "description": "An array of product codes signifying the products to which the promo is tied",
+                "items": {
+                  "type": "string",
+                  "description": "A product code"
+                }
+              },
+              "min": {
+                "type": "integer",
+                "description": "Promo is only valid if the user orders at least this number of the specified products."
+              }
+            }
+          },
+          {
+            "title": "Category Count",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "category-count"
+                ]
+              },
+              "categories": {
+                "type": "array",
+                "description": "An array of category codes signifying the product categories to which the promo is tied",
+                "items": {
+                  "type": "string",
+                  "description": "A category code"
+                }
+              },
+              "min": {
+                "type": "integer",
+                "description": "Promo is only valid if the user orders at least this number of products from the specified categories."
+              }
+            }
+          },
+          {
+            "title": "Product Amount",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "product-amount"
+                ]
+              },
+              "products": {
+                "type": "array",
+                "description": "An array of product codes signifying the products to which the promo is tied",
+                "items": {
+                  "type": "string",
+                  "description": "A product code"
+                }
+              },
+              "min": {
+                "type": "number",
+                "description": "Promo is only valid if the user orders at least this value of the specified products."
+              }
+            }
+          },
+          {
+            "title": "Category Amount",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "category-amount"
+                ]
+              },
+              "categories": {
+                "type": "array",
+                "description": "An array of category codes signifying the product categories to which the promo is tied",
+                "items": {
+                  "type": "string",
+                  "description": "A category code"
+                }
+              },
+              "min": {
+                "type": "number",
+                "description": "Promo is only valid if the user orders at least this value of products from the specified categories"
+              }
+            }
+          },
+          {
+            "title": "Cap Spend",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "cap-spend"
+                ]
+              },
+              "max": {
+                "type": "number",
+                "description": "Automatically disable the promo once this value or more has been redeemed"
+              }
+            }
+          },
+          {
+            "title": "Cap Usage",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "cap-usage"
+                ]
+              },
+              "max-usage": {
+                "type": "integer",
+                "description": "Automatically disable the promo once it has been used more than the specified number of times"
+              },
+              "cap-applies-to": {
+                "type": "string",
+                "description": "Whether the cap applies to nay customer or to a single customer only",
+                "enum": [
+                  "any",
+                  "single"
+                ]
+              }
+            }
+          },
+          {
+            "title": "Order Value",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "order-value"
+                ]
+              },
+              "min": {
+                "type": "number",
+                "description": "Promo is only valid if the user's order is at least this value"
+              }
+            }
+          },
+          {
+            "title": "Exception: Product",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "exception-product"
+                ]
+              },
+              "products": {
+                "type": "array",
+                "description": "An array of one or more product codes representing the excepted products",
+                "items": {
+                  "type": "string",
+                  "description": "A product code"
+                }
+              }
+            }
+          },
+          {
+            "title": "Exception: Product Category",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "exception-category"
+                ]
+              },
+              "products": {
+                "type": "array",
+                "description": "An array of one or more category codes representing the excepted product categories",
+                "items": {
+                  "type": "string",
+                  "description": "A category code"
+                }
+              }
+            }
+          },
+          {
+            "title": "Exception: Items on Sale",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "exception-on-sale"
+                ]
+              }
+            }
+          },
+          {
+            "title": "Exception: Items below a certain price",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "exception-min-product-price"
+                ]
+              },
+              "min": {
+                "type": "number",
+                "description": "Any product whose price is less than this amount is excluded from the promo"
+              }
+            }
+          },
+          {
+            "title": "Exception: Items above a certain price",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "exception-max-product-price"
+                ]
+              },
+              "max": {
+                "type": "number",
+                "description": "Any product whose price is greater than this amount is excluded from the promo"
+              }
+            }
+          },
+          {
+            "title": "Exception: Items with promo discount already applied",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "exception-existing-promo-discount"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "required": ["id", "code", "description", "reward", "reward-type"]
+}
