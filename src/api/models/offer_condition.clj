@@ -21,7 +21,7 @@
      hyphenified-params)))
 
 
-(def DatabaseCondition
+(def DatabaseOfferCondition
   {(s/optional-key :id) s/Int
    (s/optional-key :offer-id) s/Int
    (s/required-key :uuid) s/Uuid
@@ -51,7 +51,7 @@
 (defn- condition-to-db
   [{:keys [type] :as condition}]
   (dash-to-underscore-keys
-   ((sc/coercer DatabaseCondition
+   ((sc/coercer DatabaseOfferCondition
                 (sc/first-matcher [custom-matcher
                                    sc/string-coercion-matcher]))
     (merge condition {:type (name type)}))))

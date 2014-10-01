@@ -141,7 +141,6 @@
         offer-uuid (java.util.UUID/fromString offer-uuid)
         offer (first (by-offer-uuid site-id offer-uuid))
         promo (first (promo/find-by-site-and-uuid site-id promo-id))
-        _ (prn site-id promo-id promo)
         id (:id offer)]
     (cond
 
