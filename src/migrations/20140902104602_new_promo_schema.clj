@@ -33,7 +33,7 @@
                             [:combo_product_ids "TEXT[]"]
                             [:item_count "INTEGER"]
                             [:item_value "NUMERIC(16,4)"]
-                            [:order_min_value "NUMERIC(16,4)"]))))
+                            [:min_order_value "NUMERIC(16,4)"]))))
 
 (defn down
   "Migrates the database down from version 20140902104602."

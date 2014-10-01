@@ -7,7 +7,7 @@
             [api.entities :refer :all]
             [api.lib.coercion-helper :refer [custom-matcher underscore-to-dash-keys]]
             [api.lib.schema :refer :all]
-            [api.models.condition :as c]
+            [api.models.promo-condition :as c]
             [api.models.linked-products :as lp]
             [api.models.redemption :as rd]
             [api.models.site :as site]
@@ -37,11 +37,11 @@
                                 %
                                 (for [[k v] % :when (nil? v)] k))
                          (dissoc :uuid)
-                         (->> ((sc/coercer OutboundCondition
+                         (->> ((sc/coercer OutboundPromoCondition
                                            (sc/first-matcher
                                             [custom-matcher
                                              sc/string-coercion-matcher])))))
-                    (:conditions cleaned))
+                    (:promo-conditions cleaned))
         lps (map
              #(-> (apply dissoc
                          %
@@ -53,6 +53,7 @@
                                       sc/string-coercion-matcher])))))
              (:linked-products cleaned))
         cleaned (-> cleaned
+                    (dissoc :promo-conditions)
                     (assoc :conditions conditions)
                     (assoc :linked-products lps))]
     ((sc/coercer OutboundPromo
@@ -65,17 +66,25 @@
   (seq (select promos
                (where {:site_id site-id :code code}))))
 
-(defn by-promo-id
+(defn find-by-id
+  [promo-id]
+  (seq (select promos
+               (where {:id promo-id}))))
+
+(defn find-by-site-and-uuid
   [site-id promo-id]
   (seq (select promos
                (where {:site_id site-id :uuid promo-id}))))
+
+(defn by-promo-id
+  [site-id promo-id]
+  (find-by-site-and-uuid site-id promo-id))
 
 (sm/defn new-promo!
   "Creates a new promo in the database"
   [{:keys [description name code exceptions
            reward-type reward-applied-to reward-tax reward-amount
            site-id linked-products conditions promo-id] :as params}]
-  (prn "PARAMS" params)
   (transaction
    (if (seq (exists? site-id code))
      {:success false
@@ -153,7 +162,7 @@
   array if no results found)"
   [site-uuid :- s/Uuid]
   (let [results (select promos
-                        (with conditions)
+                        (with promo-conditions)
                         (with linked-products)
                         (join sites (= :sites.id :site_id))
                         (where {:sites.uuid site-uuid}))]
@@ -163,7 +172,7 @@
   "Finds a promo by uuid."
   [promo-uuid :- s/Uuid]
   (let [results (select promos
-                        (with conditions)
+                        (with promo-conditions)
                         (with linked-products)
                         (where {:promos.uuid promo-uuid}))]
     (first (map db-to-promo results))))
@@ -179,7 +188,7 @@
   [site-uuid :- s/Uuid
    promo-code :- s/Str]
   (let [row (first (select promos
-                           (with conditions)
+                           (with promo-conditions)
                            (with linked-products)
                            (join sites (= :sites.id :site_id))
                            (where {:sites.uuid site-uuid
