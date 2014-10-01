@@ -8,7 +8,8 @@
                    :plugins [[drift "1.5.2"]
                              [lein-ring "0.8.10"]
                              [lein-beanstalk "0.2.7"]
-                             [lein-midje "3.0.0"]]}}
+                             [lein-midje "3.0.0"]]
+                   :jvm-opts ["-DKAFKA_BROKERS=localhost:9092"]}}
   :global-vars {*warn-on-reflection* true}
   :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.1"]]
   :dependencies [[cider/cider-nrepl "0.7.0"]
