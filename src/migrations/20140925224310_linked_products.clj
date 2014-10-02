@@ -18,8 +18,8 @@
                             [:original_price "NUMERIC(16,4) DEFAULT 0"]
                             [:seo_copy "varchar(1024) NOT NULL"]
                             [:created_at "timestamp"])
-     "CREATE UNIQUE INDEX uuid_idx ON linked_products ( uuid )"
-     "CREATE UNIQUE INDEX promo_idx ON linked_products ( promo_id )"
+     "CREATE UNIQUE INDEX lp_uuid_idx ON linked_products ( uuid )"
+     "CREATE UNIQUE INDEX lp_promo_idx ON linked_products ( promo_id )"
      ))
   (println "migrations.20140925224310-linked-products up..."))
 

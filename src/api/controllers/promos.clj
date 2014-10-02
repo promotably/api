@@ -88,7 +88,6 @@
 (defn show-promo
   [{:keys [promo-id params body] :as request}]
   (let [promos (promo/by-promo-id promo-id)]
-    (prn promos)
     (shape-new-promo (first promos))))
 
 (defn query-promo
