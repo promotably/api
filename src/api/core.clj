@@ -16,7 +16,8 @@
             [api.state]
             [api.env :as env]
             [api.cache :as cache]
-            [api.lib.protocols :refer (EventCache init shutdown)]))
+            [api.lib.protocols :refer (EventCache init shutdown)]
+            [api.kafka :as kafka]))
 
 (def ns-servlet-handler (atom nil))
 
@@ -66,7 +67,8 @@
     @(init events-cache)
     (alter-var-root #'api.state/*global-state*
                     (constantly {:events-cache events-cache})))
-  (reset! ns-servlet-handler (app {})))
+  (reset! ns-servlet-handler (app {}))
+  (kafka/init!))
 
 (defn current-app [context]
   (@ns-servlet-handler context))

@@ -44,4 +44,9 @@ chown -R kafka-zookeeper /usr/local/kafka
 rm /usr/local/kafka_2.10-0.8.1.1.tgz
 cp /vagrant/vagrant-bootstrap/*.conf /etc/init/
 
+KAFKA_CONFIG="/usr/local/kafka/config/server.properties"
+
+# Edit postgresql.conf to change listen address to '*':
+sed -i "s/#advertised.host.name=<hostname routable by clients>/advertised.host.name=127.0.0.1/" "$KAFKA_CONFIG"
+
 start zookeeper
