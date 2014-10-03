@@ -180,42 +180,38 @@
 (def Reward
   (s/conditional #(= (:type %) :dynamic-promo)
                  (merge BaseReward {:promo-id s/Uuid
-                                           :expiry-in-minutes s/Int})
+                                    :expiry-in-minutes s/Int})
                  #(= (:type %) :promo)
                  (merge BaseReward {:promo-id s/Uuid})))
 (def BaseOfferCondition
-  {(s/required-key :type) (apply s/enum (vec valid-types))})
+  {(s/required-key :type) (apply s/enum (vec valid-types))
+   s/Keyword s/Any})
 (def OfferCondition
   (s/conditional #(= (:type %) :dates)
                  (merge BaseOfferCondition {:start-date s/Inst
-                                                   :end-date s/Inst})
+                                            :end-date s/Inst})
 
                  #(= (:type %) :times)
                  (merge BaseOfferCondition {:start-time s/Inst
-                                                   :end-time s/Inst})
+                                            :end-time s/Inst})
 
                  #(= (:type %) :minutes-since-last-offer)
                  (merge BaseOfferCondition {:minutes-since-last-offer s/Int})
 
                  #(= (:type %) :minutes-on-site)
-                 (merge BaseOfferCondition {:min s/Int
-                                                   :max s/Int})
+                 (merge BaseOfferCondition {:minutes-on-site s/Int})
 
                  #(= (:type %) :minutes-since-last-engagement)
-                 (merge BaseOfferCondition {:min s/Int
-                                                   :max s/Int})
+                 (merge BaseOfferCondition {:minutes-since-last-engagement s/Int})
 
                  #(= (:type %) :product-views)
-                 (merge BaseOfferCondition {:min s/Int
-                                                   :max s/Int})
+                 (merge BaseOfferCondition {:product-views s/Int})
 
                  #(= (:type %) :repeat-product-views)
-                 (merge BaseOfferCondition {:min s/Int
-                                                   :max s/Int})
+                 (merge BaseOfferCondition {:repeat-product-views s/Int})
 
                  #(= (:type %) :items-in-cart)
-                 (merge BaseOfferCondition {:min s/Int
-                                                   :max s/Int})
+                 (merge BaseOfferCondition {:items-in-cart s/Int})
 
                  #(= (:type %) :shipping-zipcode)
                  (merge BaseOfferCondition {:shipping-zipcode s/Str})
@@ -227,7 +223,8 @@
                  (merge BaseOfferCondition {:referer-domain s/Str})
 
                  #(= (:type %) :shopper-device-type)
-                 (merge BaseOfferCondition {:shopper-device-type (apply s/enum (vec valid-devices))})
+                 (merge BaseOfferCondition {:shopper-device-type
+                                            (apply s/enum (vec valid-devices))})
 
                  #(= (:type %) :num-orders-in-period)
                  (merge BaseOfferCondition {:num-orders s/Int
@@ -245,13 +242,14 @@
                  #(= (:type %) :last-order-includes-item-id)
                  (merge BaseOfferCondition {:last-order-includes-item-id s/Str})))
 
-(def InboundOfferCondition (-> OfferCondition
-                          (dissoc (s/required-key :uuid))
-                          (assoc (s/optional-key :start-date) org.joda.time.DateTime)
-                          (assoc (s/optional-key :end-date) org.joda.time.DateTime)
-                          (assoc (s/optional-key :start-time) org.joda.time.DateTime)
-                          (assoc (s/optional-key :end-time) org.joda.time.DateTime)
-                          (assoc (s/optional-key :uuid) s/Uuid)))
+(def InboundOfferCondition
+  (-> OfferCondition
+      (dissoc (s/required-key :uuid))
+      (assoc (s/optional-key :start-date) org.joda.time.DateTime)
+      (assoc (s/optional-key :end-date) org.joda.time.DateTime)
+      (assoc (s/optional-key :start-time) org.joda.time.DateTime)
+      (assoc (s/optional-key :end-time) org.joda.time.DateTime)
+      (assoc (s/optional-key :uuid) s/Uuid)))
 
 (def OutboundOfferCondition
   (-> OfferCondition
@@ -261,6 +259,33 @@
       (assoc (s/optional-key :start-time) (s/maybe java.util.Date))
       (assoc (s/optional-key :end-time) (s/maybe java.util.Date))
       (assoc (s/optional-key :uuid) s/Uuid)))
+
+(def DatabaseOfferCondition
+  {(s/optional-key :id) s/Int
+   (s/optional-key :offer-id) s/Int
+   (s/required-key :uuid) s/Uuid
+   (s/required-key :type) s/Str
+   (s/optional-key :created-at) (s/maybe java.sql.Timestamp)
+   (s/optional-key :start-date) (s/maybe java.sql.Date)
+   (s/optional-key :end-date) (s/maybe java.sql.Date)
+   (s/optional-key :start-time) (s/maybe java.sql.Timestamp)
+   (s/optional-key :end-time) (s/maybe java.sql.Timestamp)
+   (s/optional-key :minutes-since-last-offer) (s/maybe s/Int)
+   (s/optional-key :minutes-on-site) (s/maybe s/Int)
+   (s/optional-key :minutes-since-last-engagement) (s/maybe s/Int)
+   (s/optional-key :product-views) (s/maybe s/Int)
+   (s/optional-key :repeat-product-views) (s/maybe s/Int)
+   (s/optional-key :items-in-cart) (s/maybe s/Int)
+   (s/optional-key :shipping-zipcode) (s/maybe s/Str)
+   (s/optional-key :billing-zipcode) (s/maybe s/Str)
+   (s/optional-key :referer-domain) (s/maybe s/Str)
+   (s/optional-key :shopper-device-type) (s/maybe (s/enum :mobile :desktop :all))
+   (s/optional-key :num-orders) (s/maybe s/Int)
+   (s/optional-key :period-in-days) (s/maybe s/Int)
+   (s/optional-key :num-lifetime-orders) (s/maybe s/Int)
+   (s/optional-key :last-order-total) (s/maybe s/Num)
+   (s/optional-key :last-order-item-count) (s/maybe s/Int)
+   (s/optional-key :last-order-includes-item-id) [s/Str]})
 
 (def BaseOffer
   {(s/required-key :site-id) s/Uuid

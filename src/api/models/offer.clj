@@ -32,9 +32,7 @@
         hyphenified-params (underscore-to-dash-keys r)
         cleaned (apply dissoc
                        hyphenified-params
-                       (filter (complement #{})
-                               (for [[k v] hyphenified-params
-                                     :when (nil? v)] k)))
+                       (for [[k v] hyphenified-params :when (nil? v)] k))
         promo (first (promo/find-by-id (:promo-id cleaned)))
         renamed (-> cleaned
                     (assoc :presentation
@@ -51,12 +49,8 @@
                             :presentation-page
                             :presentation-display-text))
         conditions (map
-                    #(-> (apply dissoc
-                                %
-                                (for [[k v] % :when (nil? v)] k))
-                         (dissoc :uuid)
-                         (->> (coercer matcher)))
-                    (:conditions renamed))
+                    c/db-to-condition
+                    (:offer-conditions renamed))
         done (-> renamed
                  (dissoc :offer-conditions)
                  (assoc :conditions conditions))]

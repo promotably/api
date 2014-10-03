@@ -17,21 +17,27 @@
 
 (defn coerce-sql-date
   [thing]
+  ;; pred is the thing you're trying to coerece FROM
   (condp = (class thing)
+    java.util.Date (to-sql-date thing)
+    java.sql.Timestamp (to-sql-date thing)
     org.joda.time.DateTime (to-sql-date thing)))
 
 (defn coerce-sql-timestamp
   [thing]
+  ;; pred is the thing you're trying to coerece FROM
   (condp = (class thing)
+    java.util.Date (to-sql-time thing)
+    java.sql.Date (to-sql-time thing)
     org.joda.time.DateTime (to-sql-time thing)))
 
+;; Keys are the thing you're trying to coerce TO
 (let [coercions {org.joda.time.DateTime (safe #(coerce-joda-date-time %))
                  java.util.UUID (safe #(java.util.UUID/fromString %))
                  java.sql.Date (safe #(coerce-sql-date %))
                  java.sql.Timestamp (safe #(coerce-sql-timestamp %))}]
   (defn custom-matcher
-    "A matcher that coerces keywords, keyword enums, s/Num and s/Int,
-     and long and doubles (JVM only) from strings."
+    "A matcher that coerces ...."
     [schema]
     (coercions schema)))
 

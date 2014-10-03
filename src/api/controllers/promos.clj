@@ -55,7 +55,7 @@
         found (promo/find-by-uuid promo-uuid)]
     (if found
       (do
-        (promo/delete-by-uuid promo-uuid)
+        (promo/delete-by-uuid (:site-id found) promo-uuid)
         {:status 200})
       {:status 404})))
 

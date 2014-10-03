@@ -179,8 +179,12 @@
 
 (sm/defn delete-by-uuid
   "Deletes a promo by uuid."
-  [promo-uuid :- s/Uuid]
-  (delete promos (where {:promos.uuid promo-uuid})))
+  [site-id promo-uuid :- s/Uuid]
+  (let [found (first (by-promo-id site-id promo-uuid))]
+    (transaction
+     (c/delete-conditions! (:id found))
+     (lp/delete! (:id found))
+     (delete promos (where {:promos.uuid promo-uuid})))))
 
 (sm/defn ^:always-validate find-by-site-uuid-and-code
   "Finds a promo with the given site id and code combination.

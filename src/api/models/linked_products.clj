@@ -41,10 +41,10 @@
 
 (defn create!
   [c]
-  (let [coerced (map linked-to-db c)]
-    (db-to-linked (insert linked-products
-                          (values (assoc coerced
-                                    :updated_at (sqlfn now)))))))
+  (let [coerced (seq (map linked-to-db c))]
+    (doall (map
+            #(insert linked-products (values %))
+            coerced))))
 
 (defn delete!
   [promo-id]
@@ -54,6 +54,4 @@
   [promo-id c]
   (transaction
    (delete! promo-id)
-   (when-let [coerced-linkeds (seq (map linked-to-db c))]
-     (db-to-linked (insert linked-products
-                           (values (map linked-to-db c)))))))
+   (create! c)))

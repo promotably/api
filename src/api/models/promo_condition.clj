@@ -31,9 +31,10 @@
 
 (defn create-conditions!
   [c]
-  (let [coerced-conditions (map condition-to-db c)]
-    (db-to-condition (insert promo-conditions
-                             (values (map condition-to-db c))))))
+  (when-let [coerced (seq (map condition-to-db c))]
+    (doall (map
+            #(insert promo-conditions (values %))
+            coerced))))
 
 (defn delete-conditions!
   [promo-id]
@@ -43,9 +44,7 @@
   [promo-id c]
   (transaction
    (delete-conditions! promo-id)
-   (when-let [coerced-conditions (seq (map condition-to-db c))]
-     (db-to-condition (insert promo-conditions
-                              (values (map condition-to-db c)))))))
+   (create-conditions! c)))
 
 (defmulti validate
   (fn [{:keys [type]} context] type))

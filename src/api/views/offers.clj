@@ -4,7 +4,6 @@
 
 (defn shape-one
   [offer]
-  (prn offer)
   (-> offer
       (assoc :conditions
         (map (fn [c] (dissoc c :id :offer-id))

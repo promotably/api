@@ -53,7 +53,7 @@
                             [:last_order_includes_item_id "TEXT[]"]
                             [:created_at "timestamp"])
      "CREATE UNIQUE INDEX offer_conditions_uuid_idx ON offer_conditions ( uuid )"
-     "CREATE UNIQUE INDEX offer_conditions_offer_idx ON offer_conditions ( offer_id )"
+     "CREATE INDEX offer_conditions_offer_idx ON offer_conditions ( offer_id )"
      ))
   (println "migrations.20140930082420-offers-and-offer-conditions up..."))
 
