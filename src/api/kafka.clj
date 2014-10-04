@@ -1,6 +1,6 @@
 (ns api.kafka
   (:require [clj-kafka.producer :as kafka]
-            [clojure.data.json :as json]
+            [clojure.data.fressian :as fress]
             [clojure.tools.logging :as log]
             [schema.core :as s]
             [schema.macros :as sm]))
@@ -23,12 +23,12 @@
 
 (defn record!
   [attributes]
-  (let [message (json/write-str {:message-id (str (java.util.UUID/randomUUID))
-                                 :attributes attributes})]
+  (let [message (fress/write {:message-id (java.util.UUID/randomUUID)
+                              :attributes attributes})]
     (if @producer
       (do
         (future
-          (try (kafka/send-message @producer (kafka/message topic (.getBytes message)))
+          (try (kafka/send-message @producer (kafka/message topic (.array message)))
                (catch Exception e
                  (log/warn e (str "Failed to send Kafka message: %s" message))))))
       (log/warn "The Kafka producer has not been initialized."))))

@@ -16,6 +16,7 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.0"]
                  [org.clojure/data.json "0.2.5"]
+                 [org.clojure/data.fressian "0.2.0"]
                  [org.clojure/tools.nrepl "0.2.6"]
                  [log4j/log4j "1.2.17"]
                  [org.postgresql/postgresql "9.3-1100-jdbc4"]

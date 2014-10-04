@@ -65,4 +65,5 @@
   [request]
   (when-let [cache (state/events-cache)]
     (insert cache (:params request)))
-  (kafka/record! (:params request)))
+  (kafka/record! (merge (:params request)
+                        {:shopper-id (java.util.UUID/fromString (get-in request [:params :shopper-id]))})))
