@@ -3,6 +3,9 @@
 apt-get update
 apt-get -y upgrade
 
+# Generic Stuff, needed for VirtualBox Guest Addition
+apt-get -y install linux-headers-generic build-essential dkms
+
 PG_VERSION=9.3
 
 apt-get -y install "postgresql-$PG_VERSION" "postgresql-contrib-$PG_VERSION"
