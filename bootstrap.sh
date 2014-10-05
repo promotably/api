@@ -53,3 +53,13 @@ KAFKA_CONFIG="/usr/local/kafka/config/server.properties"
 sed -i "s/#advertised.host.name=<hostname routable by clients>/advertised.host.name=127.0.0.1/" "$KAFKA_CONFIG"
 
 start zookeeper
+
+# Redis
+cd ~/ && wget http://download.redis.io/releases/redis-2.8.17.tar.gz
+tar -xzvf redis-2.8.17.tar.gz
+cd ~/redis-2.8.17 && make
+make install
+
+useradd redis
+
+start redis
