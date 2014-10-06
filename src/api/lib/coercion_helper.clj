@@ -9,6 +9,7 @@
 (let [date-formatter (formatters :date-time-no-ms)]
   (defn coerce-joda-date-time
     [thing]
+    ;; pred is the thing you're trying to coerece FROM
     (condp = (class thing)
       java.lang.String (parse date-formatter thing)
       java.sql.Date (from-sql-date thing)

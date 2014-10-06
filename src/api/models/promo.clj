@@ -3,7 +3,9 @@
             [clj-time.core :refer [before? after? now]]
             [clj-time.coerce :refer [from-sql-date]]
             [clojure.set :refer [rename-keys intersection]]
+            [clojure.walk :refer [postwalk]]
             [api.db :refer :all]
+            [api.models.helper :refer :all]
             [api.entities :refer :all]
             [api.lib.coercion-helper :refer [custom-matcher underscore-to-dash-keys]]
             [api.lib.schema :refer :all]
@@ -18,11 +20,6 @@
             [schema.macros :as sm]
             [schema.coerce :as sc]))
 
-(defn- jdbc-array->seq
-  [^org.postgresql.jdbc4.Jdbc4Array jdbc-array]
-  (when-not (nil? jdbc-array)
-    (seq (.getArray jdbc-array))))
-
 (defn db-to-promo
   "Convert a database result to a promo that obeys the PromoSchema"
   [r]
@@ -32,11 +29,13 @@
                        (filter (complement #{:exceptions})
                                (for [[k v] hyphenified-params
                                      :when (nil? v)] k)))
+
         conditions (map
                     #(-> (apply dissoc
                                 %
                                 (for [[k v] % :when (nil? v)] k))
                          (dissoc :uuid)
+                         (unwrap-jdbc)
                          (->> ((sc/coercer OutboundPromoCondition
                                            (sc/first-matcher
                                             [custom-matcher

@@ -191,7 +191,12 @@
 (sm/defn delete-by-uuid
   "Deletes a offer by uuid."
   [offer-uuid :- s/Uuid]
-  (delete offers (where {:offers.uuid offer-uuid})))
+  (prn offer-uuid)
+  (let [found (find-by-uuid offer-uuid)]
+    (prn found)
+    (transaction
+     (c/delete-conditions! (:id found))
+     (delete offers (where {:offers.uuid offer-uuid})))))
 
 (sm/defn ^:always-validate find-by-site-uuid-and-code
   "Finds a offer with the given site id and code combination.
