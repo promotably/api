@@ -1,7 +1,70 @@
 (ns api.lib.schema
   (:require [schema.core :as s]))
 
-;; Linked Products ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Events ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def EventType (s/enum :trackProductView
+                       :trackProductAdd
+                       :trackCartView
+                       :trackCheckout
+                       :trackThankYou))
+
+(def BaseEvent
+  {(s/required-key :type) EventType
+   (s/optional-key :shopper-id) (s/maybe s/Str)})
+
+;; TODO: WIP
+(def Auth
+  {(s/required-key :schema) s/Str})
+
+;; TODO: WIP
+(def CartItem
+  {})
+
+;; TODO: WIP
+(def AppliedCoupon
+  {(s/required-key :code) s/Str})
+
+(def InboundEvent
+  (s/conditional #(= (:type %) :trackProductView)
+                 (merge BaseEvent
+                        {(s/required-key :promotably-auth) Auth
+                         (s/required-key :product-id) s/Str
+                         (s/optional-key :title) (s/maybe s/Str)
+                         (s/optional-key :description) (s/maybe s/Str)
+                         (s/optional-key :short-description) (s/maybe s/Str)
+                         (s/optional-key :modified-at) (s/maybe s/Inst)
+                         (s/optional-key :variation) (s/maybe s/Str)})
+                 #(= (:type %) :trackProductAdd)
+                 (merge BaseEvent
+                        {(s/required-key :promotably-auth) Auth
+                         (s/required-key :product-id) s/Str
+                         (s/optional-key :category-id) (s/maybe s/Str)
+                         (s/optional-key :quantity) s/Int
+                         (s/optional-key :variation) (s/maybe s/Str)})
+                 #(= (:type %) :trackCartView)
+                 (merge BaseEvent
+                        {(s/required-key :promotably-auth) Auth
+                         (s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
+                         (s/required-key :cart-items) [CartItem]})
+                 #(= (:type %) :trackCheckout)
+                 (merge BaseEvent
+                        {(s/required-key :promotably-auth) Auth
+                         (s/required-key :billing-address) (s/maybe s/Str)
+                         (s/required-key :shipping-address) (s/maybe s/Str)
+                         (s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
+                         (s/required-key :cart-items) [CartItem]})
+                 #(= (:type %) :trackThankYou)
+                 (merge BaseEvent
+                        {(s/required-key :promotably-auth) Auth
+                         (s/required-key :billing-address) (s/maybe s/Str)
+                         (s/required-key :shipping-address) (s/maybe s/Str)
+                         (s/optional-key :shopper-email) (s/maybe s/Str)
+                         (s/optional-key :billing-email) (s/maybe s/Str)
+                         (s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
+                         (s/required-key :cart-items) [CartItem]})))
+
+;; Linked Products ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def Linked
   {(s/optional-key :id) s/Int
@@ -20,7 +83,7 @@
                         (assoc (s/optional-key :uuid) s/Uuid)
                         (assoc (s/optional-key :id) s/Int)))
 
-;; Conditions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Conditions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def PromoConditionType
   (s/enum :dates
