@@ -25,7 +25,11 @@
 (defn create-conditions!
   [conditions]
   (let [matcher (sc/first-matcher [custom-matcher sc/string-coercion-matcher])
-        coercer (sc/coercer DatabaseCondition matcher)]
+        coercer (sc/coercer DatabaseCondition matcher)
+        arrify (fn [m k]
+                 (assoc m k (sqlfn "string_to_array"
+                                   (apply str (interpose "," (map trim (k m))))
+                                   ",")))]
     (if (seq conditions)
       (doall (map
               (fn [c]
@@ -35,10 +39,7 @@
                       undered (dash-to-underscore-keys coerced)
                       fixers (for [[k v] undered :when (vector? v)] k)
                       fixed (reduce
-                             (fn [m k]
-                               (assoc m k (sqlfn "string_to_array"
-                                                 (apply str (interpose "," (map trim (k m))))
-                                                 ",")))
+                             arrify
                              undered
                              fixers)]
                   (insert promo-conditions (values fixed))))

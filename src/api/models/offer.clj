@@ -7,6 +7,7 @@
             [api.entities :refer :all]
             [api.lib.coercion-helper :refer [custom-matcher underscore-to-dash-keys]]
             [api.lib.schema :refer :all]
+            [api.models.helper :refer :all]
             [api.models.offer-condition :as c]
             [api.models.linked-products :as lp]
             [api.models.redemption :as rd]
@@ -18,11 +19,6 @@
             [schema.core :as s]
             [schema.macros :as sm]
             [schema.coerce :as sc]))
-
-(defn- jdbc-array->seq
-  [^org.postgresql.jdbc4.Jdbc4Array jdbc-array]
-  (when-not (nil? jdbc-array)
-    (seq (.getArray jdbc-array))))
 
 (defn db-to-offer
   "Convert a database result to a offer that obeys the OfferSchema"
@@ -49,7 +45,8 @@
                             :presentation-page
                             :presentation-display-text))
         conditions (map
-                    c/db-to-condition
+                    (comp unwrap-jdbc
+                          c/db-to-condition)
                     (:offer-conditions renamed))
         done (-> renamed
                  (dissoc :offer-conditions)
