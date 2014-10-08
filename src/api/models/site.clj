@@ -20,7 +20,8 @@
   "Translates a database result to a map that obeys SiteSchema"
   [r]
   (let [hyphenated (underscore-to-dash-keys r)]
-    (dissoc (assoc hyphenated :site-id (:uuid hyphenated)) :uuid :id :account-id)))
+    (if r
+      (dissoc (assoc hyphenated :site-id (:uuid hyphenated)) :uuid :id :account-id))))
 
 (sm/defn ^:always-validate find-by-account-id :- [SiteSchema]
   [account-id :- s/Int]

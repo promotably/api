@@ -1,5 +1,5 @@
 (ns api.lib.coercion-helper
-  (:require [clojure.walk :refer [postwalk]]
+  (:require [clojure.walk :refer [postwalk prewalk]]
             [clj-time.coerce :refer [from-sql-date from-sql-time
                                      from-date to-sql-date to-sql-time]]
             [clj-time.format :refer [formatters parse]]
@@ -46,10 +46,24 @@
   [form]
   (postwalk (fn [x] (if (keyword? x)
                       (keyword (clojure.string/replace (name x) "_" "-"))
-                      x)) form))
+                      x))
+            form))
 
 (defn dash-to-underscore-keys
   [form]
   (postwalk (fn [x] (if (keyword? x)
                       (keyword (clojure.string/replace (name x) "-" "_"))
-                      x)) form))
+                      x))
+            form))
+
+(defn transform-map
+  [m pred f]
+  (postwalk (fn [x]
+             (if (vector? x)
+               (let [[k v] x]
+                 (if (pred k)
+                   (f k v)
+                   x))
+               x))
+           m))
+

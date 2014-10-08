@@ -7,8 +7,6 @@
   (:import (java.util.concurrent Executors TimeUnit
                                  ScheduledExecutorService)))
 
-;;(defn- export-cache-events [events storage-conn])
-
 (defn- clean-cache [cache window]
   (swap! cache (fn [c]
                  (remove (fn [item]
