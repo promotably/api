@@ -13,35 +13,55 @@
                                              custom-matcher
                                              underscore-to-dash-keys]]
             [api.lib.protocols :refer (EventCache insert query)]
-            [api.lib.seal :refer [hmac-sha1]]
+            [api.lib.seal :refer [hmac-sha1 url-encode]]
             [schema.coerce :as sc]
             [schema.core :as s]))
 
+(def formatter (clj-time.format/formatters :basic-date-time-no-ms))
+
 (defn parse-auth
   [auth-string]
-  (let [parts (clojure.string/split auth-string #"/")
-        [scheme headers qs-fields ts sig] parts]
+  (let [f (partial clj-time.format/parse formatter)
+        parts (clojure.string/split auth-string #"/" 5)
+        [scheme headers qs-fields ts sig] parts
+        headers (filter #(not (or (nil? %) (= "" %)))
+                        (clojure.string/split headers #","))]
     {:scheme scheme
      :qs-fields (clojure.string/split qs-fields #",")
-     :timestamp (-> ts clj-time.format/parse clj-time.coerce/to-date)
+     :timestamp ts
      :signature sig
-     :headers (clojure.string/split headers #",")}))
+     :headers headers}))
 
-(defn validate-auth
+(defn auth-valid?
   [{:keys [api-secret site-id] :as site}
    {:keys [scheme qs-fields timestamp signature headers] :as auth-record}
    {:keys [body query-string params] :as request}]
   (let [request-headers (:headers request)
-        body-hmac (hmac-sha1 (str api-secret) (slurp body))
-        header-values (mapcat #(str % ":" (get % request-headers) "\n") headers)
-        header-str (apply str header-values)]
-    (prn site)
-    (prn params)
-    (prn auth-record)
-    (prn headers)
-    (prn query-string)))
-
-;; (record-event req)
+        slurped (try (slurp body) (catch Throwable t))
+        body-hmac (if-not (or (= "" slurped) (nil? slurped))
+                    (hmac-sha1 (.getBytes ^String (str api-secret))
+                               (.getBytes ^String slurped)))
+        header-values (mapcat #(vector (str % ":" (get request-headers %)))
+                              headers)
+        header-str (apply str (interpose "\n" header-values))
+        qs-fields (filter #(not (or (nil? %) (= "" %))) qs-fields)
+        qs-vals (mapcat #(vector (str % "=" (get params (keyword %))))
+                        qs-fields)
+        qs-str (apply str (interpose "&" qs-vals))
+        sign-me (apply str
+                       site-id "\n"
+                       api-secret "\n"
+                       (:server-name request) "\n"
+                       (-> request
+                           :request-method name clojure.string/upper-case) "\n"
+                       (url-encode (:uri request)) "\n"
+                       timestamp "\n"
+                       body-hmac "\n"
+                       header-str "\n"
+                       qs-str "\n")
+        computed-sig (hmac-sha1 (.getBytes ^String (str api-secret))
+                                (.getBytes ^String sign-me))]
+    (= computed-sig signature)))
 
 (defn make-trans
   [pred f]
@@ -105,15 +125,17 @@
 
 (defn record-event
   [{:keys [params] :as request}]
+  ;; (def x request)
   (let [parsed (parse-event params)]
     (cond
      (nil? (:site parsed))
      {:status 404}
-     (validate-auth (:site parsed) (:auth parsed) request)
+     (not (auth-valid? (:site parsed) (:auth parsed) request))
      {:status 500}
      :else
      (do
        (if-let [cache (state/events-cache)]
          (insert cache parsed))
        (kafka/record! parsed)))))
+
 

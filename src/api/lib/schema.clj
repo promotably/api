@@ -18,7 +18,7 @@
 (def Auth
   {(s/required-key :scheme) s/Str
    (s/required-key :signature) s/Str
-   (s/required-key :timestamp) s/Inst
+   (s/required-key :timestamp) s/Str
    (s/required-key :qs-fields) (s/maybe [s/Str])
    (s/required-key :headers) (s/maybe [s/Str])})
 
