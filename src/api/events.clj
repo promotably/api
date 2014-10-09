@@ -17,12 +17,9 @@
             [schema.coerce :as sc]
             [schema.core :as s]))
 
-(def formatter (clj-time.format/formatters :basic-date-time-no-ms))
-
 (defn parse-auth
   [auth-string]
-  (let [f (partial clj-time.format/parse formatter)
-        parts (clojure.string/split auth-string #"/" 5)
+  (let [parts (clojure.string/split auth-string #"/" 5)
         [scheme headers qs-fields ts sig] parts
         headers (filter #(not (or (nil? %) (= "" %)))
                         (clojure.string/split headers #","))]
@@ -103,11 +100,28 @@
                                (-> %2 java.util.UUID/fromString site/find-by-site-uuid)
                                nil))))
 
+(def fix-cart-items
+  (make-trans
+   #{:cart-item}
+   (fn [k items]
+     [:cart-items
+      (if (seq items)
+        (mapcat #(let [[id title category var-id var q]
+                       (clojure.string/split % #"," 6)]
+                   [{:id id
+                     :title title
+                     :category category
+                     :variation-id var-id
+                     :variation var
+                     :quantity q}])
+                items))])))
+
 (defn prep-incoming
-  [map]
-  (-> map
+  [params]
+  (-> params
       remove-nils
       fix-en
+      fix-cart-items
       fix-auth
       coerce-site-id
       rename-pn
@@ -125,17 +139,29 @@
 
 (defn record-event
   [{:keys [params] :as request}]
-  ;; (def x request)
   (let [parsed (parse-event params)]
     (cond
+
+     (= schema.utils.ErrorContainer (type parsed))
+     {:status 400}
+
      (nil? (:site parsed))
      {:status 404}
+
      (not (auth-valid? (:site parsed) (:auth parsed) request))
-     {:status 500}
+     {:status 403}
+
      :else
      (do
-       (if-let [cache (state/events-cache)]
-         (insert cache parsed))
-       (kafka/record! parsed)))))
-
+       (let [matcher (sc/first-matcher [custom-matcher sc/string-coercion-matcher])
+             coercer (sc/coercer OutboundEvent matcher)
+             out (-> parsed
+                     (dissoc :auth :site)
+                     (assoc :visitor-id (:visitor-id request))
+                     (assoc :site-id (-> parsed :site :site-id))
+                     coercer)]
+         (if-let [cache (state/events-cache)]
+           (insert cache out))
+         (kafka/record! out)
+         {:status 200})))))
 

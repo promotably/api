@@ -19,7 +19,6 @@
                                               update-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]))
 
-(def js-content-type "text/javascript; charset=utf-8")
 (def promo-code-regex #"[a-zA-Z0-9-]{1,}")
 (def offer-code-regex #"[a-zA-Z0-9-]{1,}")
 
@@ -47,11 +46,7 @@
 
 (defroutes api-routes
   (context "/v1" []
-           (GET "/track" req #(if-let [res (events/record-event %)]
-                                (-> (response "{status: 'success'}")
-                                    (content-type js-content-type))
-                                (throw (ex-info "Error recording event."
-                                                {:reason "Cache insert failed."}))))
+           (GET "/track" req events/record-event)
            (POST "/email-subscribers" [] create-email-subscriber!)
            (GET "/accounts" [] lookup-account)
            (POST "/accounts" [] create-new-account!)

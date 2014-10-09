@@ -9,11 +9,6 @@
                        :trackcheckout
                        :trackthankyou))
 
-(def BaseEvent
-  {(s/required-key :event-name) EventType
-   (s/required-key :site) s/Any
-   (s/optional-key :shopper-id) (s/maybe s/Str)})
-
 ;; TODO: WIP
 (def Auth
   {(s/required-key :scheme) s/Str
@@ -22,52 +17,67 @@
    (s/required-key :qs-fields) (s/maybe [s/Str])
    (s/required-key :headers) (s/maybe [s/Str])})
 
-;; TODO: WIP
+(def BaseEvent
+  {(s/required-key :event-name) EventType
+   (s/required-key :auth) Auth
+   (s/optional-key :user-id) s/Str
+   (s/required-key :site) s/Any
+   (s/optional-key :shopper-id) (s/maybe s/Str)})
+
 (def CartItem
-  {})
+  {:id s/Str
+   :title s/Str
+   :category s/Str
+   :variation-id s/Str
+   :variation s/Str
+   :quantity s/Int})
 
 ;; TODO: WIP
 (def AppliedCoupon
   {(s/required-key :code) s/Str})
 
-(def InboundEvent
-  (s/conditional #(= (:event-name %) :trackproductview)
-                 (merge BaseEvent
-                        {(s/required-key :auth) Auth
-                         (s/required-key :product-id) s/Str
-                         (s/optional-key :title) (s/maybe s/Str)
-                         (s/optional-key :description) (s/maybe s/Str)
-                         (s/optional-key :short-description) (s/maybe s/Str)
-                         (s/optional-key :modified-at) (s/maybe s/Inst)
-                         (s/optional-key :variation) (s/maybe s/Str)})
-                 #(= (:event-name %) :trackproductadd)
-                 (merge BaseEvent
-                        {(s/required-key :auth) Auth
-                         (s/required-key :product-id) s/Str
-                         (s/optional-key :category-id) (s/maybe s/Str)
-                         (s/optional-key :quantity) s/Int
-                         (s/optional-key :variation) (s/maybe s/Str)})
-                 #(= (:event-name %) :trackcartview)
-                 (merge BaseEvent
-                        {(s/required-key :auth) Auth
-                         (s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
-                         (s/required-key :cart-items) [CartItem]})
-                 #(= (:event-name %) :trackcheckout)
-                 (merge BaseEvent
-                        {(s/required-key :auth) Auth
-                         (s/required-key :billing-address) (s/maybe s/Str)
-                         (s/required-key :shipping-address) (s/maybe s/Str)
-                         (s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
-                         (s/required-key :cart-items) [CartItem]})
-                 #(= (:event-name %) :trackthankyou)
-                 (merge BaseEvent
-                        {(s/required-key :auth) Auth
-                         (s/required-key :billing-address) (s/maybe s/Str)
-                         (s/required-key :shipping-address) (s/maybe s/Str)
-                         (s/optional-key :shopper-email) (s/maybe s/Str)
-                         (s/optional-key :billing-email) (s/maybe s/Str)
-                         (s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
-                         (s/required-key :cart-items) [CartItem]})))
+(defmacro def-event
+  [the-event base-event & body]
+  `(def ~the-event
+     (s/conditional #(= (:event-name %) :trackproductview)
+                    (merge ~base-event
+                           {(s/required-key :product-id) s/Str
+                            (s/optional-key :title) (s/maybe s/Str)
+                            (s/optional-key :description) (s/maybe s/Str)
+                            (s/optional-key :short-description) (s/maybe s/Str)
+                            (s/optional-key :modified-at) (s/maybe s/Inst)
+                            (s/optional-key :variation) (s/maybe s/Str)})
+                    #(= (:event-name %) :trackproductadd)
+                    (merge ~base-event
+                           {(s/required-key :product-id) s/Str
+                            (s/optional-key :category-id) (s/maybe s/Str)
+                            (s/optional-key :quantity) s/Int
+                            (s/optional-key :variation) (s/maybe s/Str)})
+                    #(= (:event-name %) :trackcartview)
+                    (merge ~base-event
+                           {(s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
+                            (s/required-key :cart-items) [CartItem]})
+                    #(= (:event-name %) :trackcheckout)
+                    (merge ~base-event
+                           {(s/required-key :billing-address) (s/maybe s/Str)
+                            (s/required-key :shipping-address) (s/maybe s/Str)
+                            (s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
+                            (s/required-key :cart-items) [CartItem]})
+                    #(= (:event-name %) :trackthankyou)
+                    (merge ~base-event
+                           {(s/required-key :billing-address) (s/maybe s/Str)
+                            (s/required-key :shipping-address) (s/maybe s/Str)
+                            (s/optional-key :shopper-email) (s/maybe s/Str)
+                            (s/optional-key :billing-email) (s/maybe s/Str)
+                            (s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
+                            (s/required-key :cart-items) [CartItem]}))))
+
+(def-event InboundEvent BaseEvent)
+(def-event OutboundEvent (-> BaseEvent
+                             (assoc (s/required-key :site-id) s/Uuid)
+                             (assoc (s/required-key :visitor-id) s/Uuid)
+                             (dissoc (s/required-key :site)
+                                     (s/required-key :auth))))
 
 ;; Linked Products ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
