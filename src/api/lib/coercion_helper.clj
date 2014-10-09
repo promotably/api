@@ -59,11 +59,11 @@
 (defn transform-map
   [m pred f]
   (postwalk (fn [x]
-             (if (vector? x)
-               (let [[k v] x]
-                 (if (pred k)
-                   (f k v)
-                   x))
-               x))
-           m))
+              (if (and (vector? x) (= 2 (count x)))
+                (let [[k v] x]
+                  (if (pred k)
+                    (f k v)
+                    x))
+                x))
+            m))
 

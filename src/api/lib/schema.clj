@@ -27,10 +27,19 @@
 (def CartItem
   {:id s/Str
    :title s/Str
-   :category s/Str
+   :categories [s/Str]
    :variation-id s/Str
    :variation s/Str
-   :quantity s/Int})
+   :quantity s/Int
+   (s/optional-key :subtotal) (s/maybe s/Num)
+   (s/optional-key :total) (s/maybe s/Num)})
+
+(def LineItem
+  (-> CartItem
+      (dissoc (s/optional-key :subtotal))
+      (dissoc (s/optional-key :total))
+      (assoc :subtotal s/Num)
+      (assoc :total s/Num)))
 
 ;; TODO: WIP
 (def AppliedCoupon
@@ -56,21 +65,54 @@
                     #(= (:event-name %) :trackcartview)
                     (merge ~base-event
                            {(s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
+                            (s/optional-key :billing-address-1) (s/maybe s/Str)
+                            (s/optional-key :billing-city) (s/maybe s/Str)
+                            (s/optional-key :billing-state) (s/maybe s/Str)
+                            (s/optional-key :billing-country) (s/maybe s/Str)
+                            (s/optional-key :billing-postcode) (s/maybe s/Str)
+                            (s/optional-key :billing-email) (s/maybe s/Str)
+                            (s/optional-key :shipping-address-1) (s/maybe s/Str)
+                            (s/optional-key :shipping-city) (s/maybe s/Str)
+                            (s/optional-key :shipping-state) (s/maybe s/Str)
+                            (s/optional-key :shipping-country) (s/maybe s/Str)
+                            (s/optional-key :shipping-postcode) (s/maybe s/Str)
+                            (s/optional-key :shipping-email) (s/maybe s/Str)
                             (s/required-key :cart-items) [CartItem]})
                     #(= (:event-name %) :trackcheckout)
                     (merge ~base-event
-                           {(s/required-key :billing-address) (s/maybe s/Str)
-                            (s/required-key :shipping-address) (s/maybe s/Str)
+                           {(s/optional-key :billing-address-1) (s/maybe s/Str)
+                            (s/optional-key :billing-city) (s/maybe s/Str)
+                            (s/optional-key :billing-state) (s/maybe s/Str)
+                            (s/optional-key :billing-country) (s/maybe s/Str)
+                            (s/optional-key :billing-postcode) (s/maybe s/Str)
+                            (s/optional-key :billing-email) (s/maybe s/Str)
+                            (s/optional-key :shipping-address-1) (s/maybe s/Str)
+                            (s/optional-key :shipping-city) (s/maybe s/Str)
+                            (s/optional-key :shipping-state) (s/maybe s/Str)
+                            (s/optional-key :shipping-country) (s/maybe s/Str)
+                            (s/optional-key :shipping-postcode) (s/maybe s/Str)
+                            (s/optional-key :shipping-email) (s/maybe s/Str)
                             (s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
                             (s/required-key :cart-items) [CartItem]})
                     #(= (:event-name %) :trackthankyou)
                     (merge ~base-event
-                           {(s/required-key :billing-address) (s/maybe s/Str)
-                            (s/required-key :shipping-address) (s/maybe s/Str)
-                            (s/optional-key :shopper-email) (s/maybe s/Str)
+                           {(s/required-key :order-id) (s/maybe s/Str)
+                            (s/required-key :order-date) (s/maybe s/Str)
+                            (s/optional-key :billing-address-1) (s/maybe s/Str)
+                            (s/optional-key :billing-city) (s/maybe s/Str)
+                            (s/optional-key :billing-state) (s/maybe s/Str)
+                            (s/optional-key :billing-country) (s/maybe s/Str)
+                            (s/optional-key :billing-postcode) (s/maybe s/Str)
                             (s/optional-key :billing-email) (s/maybe s/Str)
+                            (s/optional-key :shipping-address-1) (s/maybe s/Str)
+                            (s/optional-key :shipping-city) (s/maybe s/Str)
+                            (s/optional-key :shipping-state) (s/maybe s/Str)
+                            (s/optional-key :shipping-country) (s/maybe s/Str)
+                            (s/optional-key :shipping-postcode) (s/maybe s/Str)
+                            (s/optional-key :shipping-email) (s/maybe s/Str)
+                            (s/optional-key :shopper-email) (s/maybe s/Str)
                             (s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
-                            (s/required-key :cart-items) [CartItem]}))))
+                            (s/required-key :cart-items) [LineItem]}))))
 
 (def-event InboundEvent BaseEvent)
 (def-event OutboundEvent (-> BaseEvent

@@ -106,27 +106,32 @@
    (fn [k items]
      [:cart-items
       (if (seq items)
-        (mapcat #(let [[id title category var-id var q]
-                       (clojure.string/split % #"," 6)]
+        (mapcat #(let [[id title category var-id var q subtotal total]
+                       (clojure.string/split % #"," 8)]
                    [{:id id
                      :title title
-                     :category category
+                     :categories (clojure.string/split category #"\|")
                      :variation-id var-id
                      :variation var
-                     :quantity q}])
+                     :quantity q
+                     :subtotal subtotal
+                     :total total}])
                 items))])))
 
 (defn prep-incoming
   [params]
-  (-> params
-      remove-nils
-      fix-en
-      fix-cart-items
-      fix-auth
-      coerce-site-id
-      rename-pn
-      fix-mod
-      del-f))
+  (let [dbg (partial prn "---")]
+    (-> params
+        del-f
+        underscore-to-dash-keys
+        remove-nils
+        ;; (doto dbg)
+        fix-en
+        fix-cart-items
+        fix-auth
+        coerce-site-id
+        rename-pn
+        fix-mod)))
 
 (defn parse-event
   "Convert an incoming event to a regular data structure."
@@ -139,9 +144,12 @@
 
 (defn record-event
   [{:keys [params] :as request}]
+  ;; for debug
+  ;; (prn "PARAMS" params)
   (let [parsed (parse-event params)]
+    ;; for debug
+    ;;(prn "PARSED" parsed)
     (cond
-
      (= schema.utils.ErrorContainer (type parsed))
      {:status 400}
 
