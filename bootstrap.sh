@@ -39,20 +39,21 @@ ln -s /usr/local/jdk1.7.0_67/bin/java /usr/local/bin/java
 rm /usr/local/jdk-7u67-linux-x64.gz
 
 # Kafka & Zookeeper
-useradd kafka-zookeeper
+useradd --system --shell /bin/bash kafka-zookeeper
 wget http://apache.mirrors.pair.com/kafka/0.8.1.1/kafka_2.10-0.8.1.1.tgz -O /usr/local/kafka_2.10-0.8.1.1.tgz
 cd /usr/local && tar -xzvf kafka_2.10-0.8.1.1.tgz
 ln -s /usr/local/kafka_2.10-0.8.1.1 /usr/local/kafka
 chown -R kafka-zookeeper /usr/local/kafka
 rm /usr/local/kafka_2.10-0.8.1.1.tgz
-cp /vagrant/vagrant-bootstrap/*.conf /etc/init/
+cp /vagrant/vagrant-bootstrap/zookeeper.conf /etc/init/
+cp /vagrant/vagrant-bootstrap/kafka.conf /etc/init/
+
+start zookeeper
 
 KAFKA_CONFIG="/usr/local/kafka/config/server.properties"
 
-# Edit postgresql.conf to change listen address to '*':
+# Edit kafka.conf to change advertised host name to 127.0.0.1:
 sed -i "s/#advertised.host.name=<hostname routable by clients>/advertised.host.name=127.0.0.1/" "$KAFKA_CONFIG"
-
-start zookeeper
 
 # Redis
 cd ~/ && wget http://download.redis.io/releases/redis-2.8.17.tar.gz
@@ -60,6 +61,11 @@ tar -xzvf redis-2.8.17.tar.gz
 cd ~/redis-2.8.17 && make
 make install
 
-useradd redis
+useradd --system --shell /bin/bash redis
 
+mkdir /etc/redis
+cp /vagrant/vagrant-bootstrap/redis-config.conf /etc/redis
+cp /vagrant/vagrant-bootstrap/redis.conf /etc/init/
+
+start kafka
 start redis
