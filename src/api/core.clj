@@ -1,6 +1,7 @@
 (ns api.core
   (:require [clojure.tools.logging :as log]
             [compojure.handler :as handler]
+            [com.stuartsierra.component :as component]
             [clojure.tools.nrepl.server :as nrepl-server]
             [cider.nrepl :refer (cider-nrepl-handler)]
             [ring.middleware.params :refer [wrap-params]]
@@ -8,18 +9,42 @@
             [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.middleware.session :as session]
             [clj-logging-config.log4j :as log-config]
-            [api.db :as db]
+            [api.components.app :as a]
+            [api.components.database :as d]
+            [api.components.producer :as p]
+            [api.config :as config]
             [api.middleware :refer [wrap-exceptions
                                     wrap-stacktrace
                                     wrap-request-logging]]
             [api.routes :as routes]
-            [api.state]
-            [api.env :as env]
-            [api.cache :as cache]
-            [api.lib.protocols :refer (EventCache init shutdown)]
-            [api.kafka :as kafka]))
+            [api.env :as env]))
 
 (def ns-servlet-handler (atom nil))
+
+(defn api-system [app-config]
+  (let [{:keys [kafka-producer cookies postgres]} app-config]
+    (-> (component/system-map
+         :db (d/new-database postgres)
+         :cookies cookies
+         :k-producer (p/kafka-producer kafka-producer)
+         :app (a/api-app app-config))
+        (component/system-using {:app {:db :db
+                                       :k-producer :k-producer}}))))
+
+(defn start []
+  (alter-var-root #'api.system/system component/start))
+
+(defn stop []
+  (alter-var-root #'api.system/system (fn [s] (when s (component/stop s)))))
+
+(defn prepare []
+  (let [app-config (config/lookup)]
+    (alter-var-root #'api.system/system
+                    (constantly (api-system app-config)))))
+
+(defn sys-init! []
+  (prepare)
+  (start))
 
 (defn app
   [options]
@@ -60,15 +85,10 @@
   (env/when-env "dev"
                 (let [s (nrepl-server/start-server :handler cider-nrepl-handler)]
                   (log/info (str "Started cider (nrepl) on " (:port s)))))
-
+  ;;Initialize system components (db, kafka producer, etc)
+  (sys-init!)
   (log/info :STARTING "NS Servlet")
-  (db/init!)
-  (let [events-cache (cache/exporting-event-cache)]
-    @(init events-cache)
-    (alter-var-root #'api.state/*global-state*
-                    (constantly {:events-cache events-cache})))
-  (reset! ns-servlet-handler (app {}))
-  (kafka/init!))
+  (reset! ns-servlet-handler (app {})))
 
 (defn current-app [context]
   (@ns-servlet-handler context))
@@ -76,8 +96,4 @@
 (defn shutdown-app
   []
   (log/info :SHUTTINGDOWN "NS Servlet")
-  (let [{:keys [events-cache]} api.state/*global-state*]
-    (when events-cache @(shutdown events-cache))
-    (alter-var-root #'api.state/*global-state*
-                    (constantly nil))))
-
+  (stop))

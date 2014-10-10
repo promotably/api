@@ -1,15 +1,16 @@
 (ns migrations.20140905214953-drop-superfluos-promo-fields
-  (:require [api.db :as db :refer [$db-config]]
+  (:require [api.system :refer [system]]
             [clojure.java.jdbc :as jdbc]))
 
 (defn up
   "Migrates the database up to version 20140905214953."
   []
-  (println "migrations.20140905214953-drop-superfluos-promo-fields up...")
-  (jdbc/with-db-connection [db-con @$db-config]
-    (jdbc/db-do-commands
-     db-con
-     "ALTER TABLE promos DROP COLUMN incept_date,
+  (let [db-config (get-in system [:app :database])]
+    (println "migrations.20140905214953-drop-superfluos-promo-fields up...")
+    (jdbc/with-db-connection [db-con db-config]
+      (jdbc/db-do-commands
+       db-con
+       "ALTER TABLE promos DROP COLUMN incept_date,
                          DROP COLUMN expiry_date,
                          DROP COLUMN individual_use,
                          DROP COLUMN exclude_sale_items,
@@ -24,16 +25,17 @@
                          DROP COLUMN exclude_product_ids,
                          DROP COLUMN product_categories,
                          DROP COLUMN exclude_product_categories,
-                         DROP COLUMN limit_usage_to_x_items")))
+                         DROP COLUMN limit_usage_to_x_items"))))
 
 (defn down
   "Migrates the database down from version 20140905214953."
   []
-  (println "migrations.20140905214953-drop-superfluos-promo-fields down...")
-  (jdbc/with-db-connection [db-con @$db-config]
-    (jdbc/db-do-commands
-     db-con
-     "ALTER TABLE promos ADD COLUMN incept_date timestamp,
+  (let [db-config (get-in system [:app :database])]
+    (println "migrations.20140905214953-drop-superfluos-promo-fields down...")
+    (jdbc/with-db-connection [db-con db-config]
+      (jdbc/db-do-commands
+       db-con
+       "ALTER TABLE promos ADD COLUMN incept_date timestamp,
                          ADD COLUMN expiry_date timestamp,
                          ADD COLUMN individual_use boolean,
                          ADD COLUMN exclude_sale_items boolean,
@@ -48,4 +50,4 @@
                          ADD COLUMN exclude_product_ids varchar(255)[],
                          ADD COLUMN product_categories varchar(255)[],
                          ADD COLUMN exclude_product_categories varchar(255)[],
-                         ADD COLUMN limit_usage_to_x_items INTEGER")))
+                         ADD COLUMN limit_usage_to_x_items INTEGER"))))

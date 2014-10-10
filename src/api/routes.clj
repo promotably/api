@@ -4,7 +4,6 @@
             [compojure.route :refer [not-found]]
             [ring.util.response :refer [response content-type]]
             [ring.middleware.permacookie :refer [wrap-permacookie]]
-            [api.cache :as cache]
             [api.events :as events]
             [api.controllers.users :refer [create-new-user! get-user update-user!
                                            lookup-user]]

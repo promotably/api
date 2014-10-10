@@ -1,8 +1,13 @@
 (ns config.migrate-config
-  (:require [api.db :as db]))
+  (:require [api.core :as api]
+            [api.env :as e]
+            [api.db :as db]))
 
  (defn migrate-config []
    {:directory "/src/migrations"
-    :ns-content "\n  (:require [api.db :as db :refer [$db-config]] \n            [clojure.java.jdbc :as jdbc])"
+    :ns-content "\n  (:require [clojure.java.jdbc :as jdbc] \n [api.system :refer [system]])"
+    :init (fn [_]
+            (e/init!)
+            (api/sys-init!))
     :current-version db/db-version
     :update-version db/update-db-version})
