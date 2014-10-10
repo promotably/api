@@ -206,12 +206,12 @@
                           (assoc (s/optional-key :uuid) s/Uuid)))
 
 (def OutboundPromoCondition (-> PromoCondition
-                           (dissoc (s/required-key :uuid))
-                           (assoc (s/optional-key :start-date) (s/maybe java.util.Date))
-                           (assoc (s/optional-key :end-date) (s/maybe java.util.Date))
-                           (assoc (s/optional-key :start-time) (s/maybe java.util.Date))
-                           (assoc (s/optional-key :end-time) (s/maybe java.util.Date))
-                           (assoc (s/optional-key :uuid) s/Uuid)))
+                                (dissoc (s/required-key :uuid))
+                                (assoc (s/optional-key :start-date) (s/maybe java.util.Date))
+                                (assoc (s/optional-key :end-date) (s/maybe java.util.Date))
+                                (assoc (s/optional-key :start-time) (s/maybe java.util.Date))
+                                (assoc (s/optional-key :end-time) (s/maybe java.util.Date))
+                                (assoc (s/optional-key :uuid) s/Uuid)))
 
 ;; Products ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -241,9 +241,7 @@
                 (s/optional-key :updated-at) s/Inst})
 
 (def OutboundPromo (merge (dissoc BasePromo :conditions)
-                          {(s/required-key :id) s/Int
-                           (s/required-key :site-id) s/Int
-                           (s/required-key :uuid) s/Uuid
+                          {(s/required-key :uuid) s/Uuid
                            (s/optional-key :linked-products) [OutboundLinked]
                            (s/optional-key :conditions) [OutboundPromoCondition]}))
 

@@ -90,15 +90,15 @@
   (let [promos (promo/by-promo-id promo-id)]
     (shape-new-promo (first promos))))
 
+;; TODO: Check auth
 (defn query-promo
   [{:keys [params] :as request}]
-  (let [{:keys [site-id promo-code] :as coerced-params}
-        ((c/coercer query-schema
-                    (c/first-matcher [custom-matcher
-                                      c/string-coercion-matcher]))
-         params)
+  (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
+        coercer (c/coercer query-schema matcher)
+        {:keys [site-id promo-code] :as coerced-params} (coercer params)
         the-promo (promo/find-by-site-uuid-and-code site-id
                                                     promo-code)]
+    (prn the-promo)
     (if-not the-promo
       {:status 404 :body "Can't find that promo"}
       (do

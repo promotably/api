@@ -1,7 +1,8 @@
 (ns api.lib.coercion-helper
   (:require [clojure.walk :refer [postwalk prewalk]]
             [clj-time.coerce :refer [from-sql-date from-sql-time
-                                     from-date to-sql-date to-sql-time]]
+                                     from-date to-sql-date to-sql-time
+                                     to-date]]
             [clj-time.format :refer [formatters parse]]
             [schema.coerce :refer [safe]]
             [schema.core :as s]))
@@ -24,6 +25,12 @@
     java.sql.Timestamp (to-sql-date thing)
     org.joda.time.DateTime (to-sql-date thing)))
 
+(defn coerce-date
+  [thing]
+  ;; pred is the thing you're trying to coerece FROM
+  (condp = (class thing)
+    java.sql.Date (-> thing from-sql-date to-date)))
+
 (defn coerce-sql-timestamp
   [thing]
   ;; pred is the thing you're trying to coerece FROM
@@ -35,6 +42,7 @@
 ;; Keys are the thing you're trying to coerce TO
 (let [coercions {org.joda.time.DateTime (safe #(coerce-joda-date-time %))
                  java.util.UUID (safe #(java.util.UUID/fromString %))
+                 java.util.Date (safe #(coerce-date %))
                  java.sql.Date (safe #(coerce-sql-date %))
                  java.sql.Timestamp (safe #(coerce-sql-timestamp %))}]
   (defn custom-matcher

@@ -34,7 +34,7 @@
                     #(-> (apply dissoc
                                 %
                                 (for [[k v] % :when (nil? v)] k))
-                         (dissoc :uuid)
+                         (dissoc :uuid :promo-id :id)
                          (unwrap-jdbc)
                          (->> ((sc/coercer OutboundPromoCondition
                                            (sc/first-matcher
@@ -52,13 +52,13 @@
                                       sc/string-coercion-matcher])))))
              (:linked-products cleaned))
         cleaned (-> cleaned
-                    (dissoc :promo-conditions)
+                    (dissoc :promo-conditions :id :site-id)
                     (assoc :conditions conditions)
-                    (assoc :linked-products lps))]
-    ((sc/coercer OutboundPromo
-                 (sc/first-matcher [custom-matcher
-                                    sc/string-coercion-matcher]))
-     cleaned)))
+                    (assoc :linked-products lps))
+        matcher (sc/first-matcher [custom-matcher
+                                   sc/string-coercion-matcher])
+        coercer (sc/coercer OutboundPromo matcher)]
+    (coercer cleaned)))
 
 (defn exists?
   [site-id code]
@@ -188,15 +188,13 @@
 (sm/defn ^:always-validate find-by-site-uuid-and-code
   "Finds a promo with the given site id and code combination.
   Returns nil if no results found"
-  [site-uuid :- s/Uuid
-   promo-code :- s/Str]
+  [site-uuid :- s/Uuid promo-code :- s/Str]
   (let [row (first (select promos
                            (with promo-conditions)
                            (with linked-products)
                            (join sites (= :sites.id :site_id))
                            (where {:sites.uuid site-uuid
-                                   :promos.code (clojure.string/upper-case
-                                                 promo-code)})))]
+                                   :promos.code promo-code})))]
     (if row (db-to-promo row))))
 
 (defn valid?
