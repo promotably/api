@@ -75,3 +75,10 @@
                 x))
             m))
 
+(defn make-trans
+  [pred f]
+  (fn [m] (transform-map m pred f)))
+
+(def remove-nils
+  (make-trans (constantly true)
+              #(if (nil? %2) nil [%1 %2])))

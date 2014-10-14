@@ -29,12 +29,12 @@
            (DELETE ["/:promo-id", :promo-id promo-code-regex] [promo-id] delete-promo!)
            (GET ["/:promo-id", :promo-id promo-code-regex] [promo-id] show-promo)
            (PUT ["/:promo-id", :promo-id promo-code-regex] [promo-id] update-promo!)
-           (GET ["/query/:promo-code", :promo-code promo-code-regex]
-                [promo-code] query-promo)
-           (POST ["/validation/:promo-code", :promo-code promo-code-regex]
-                 [promo-code] validate-promo)
-           (POST ["/calculation/:promo-code", :promo-code promo-code-regex]
-                 [promo-code] calculate-promo)))
+           (GET ["/query/:code", :code promo-code-regex]
+                [code] query-promo)
+           (POST ["/validation/:code", :code promo-code-regex]
+                 [code] validate-promo)
+           (POST ["/calculation/:code", :code promo-code-regex]
+                 [code] calculate-promo)))
 
 (defroutes offer-routes
   (context "/offers" []

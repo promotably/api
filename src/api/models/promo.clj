@@ -202,8 +202,7 @@
    {:keys [cart-contents] :as context}]
   (if-not active
     {:valid false :messages ["That promo is currently inactive"]}
-    (let [condition-validations (map #(c/validate % context)
-                                     conditions)]
+    (let [condition-validations (map #(c/validate % context) conditions)]
       (if (not-every? true? (map #(:valid %) condition-validations))
         {:valid false :messages (vec (map #(:message %)
                                           (filter #(false? (:valid %)) condition-validations)))}

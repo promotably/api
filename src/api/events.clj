@@ -10,80 +10,26 @@
             [api.models.site :as site]
             [api.lib.schema :refer :all]
             [api.lib.coercion-helper :refer [transform-map
+                                             make-trans
+                                             remove-nils
                                              custom-matcher
                                              underscore-to-dash-keys]]
             [api.lib.protocols :refer (EventCache insert query)]
-            [api.lib.seal :refer [hmac-sha1 url-encode]]
+            [api.lib.auth :refer [parse-auth-string auth-valid? transform-auth]]
             [schema.coerce :as sc]
             [schema.core :as s]))
-
-(defn parse-auth
-  [auth-string]
-  (let [parts (clojure.string/split auth-string #"/" 5)
-        [scheme headers qs-fields ts sig] parts
-        headers (filter #(not (or (nil? %) (= "" %)))
-                        (clojure.string/split headers #","))]
-    {:scheme scheme
-     :qs-fields (clojure.string/split qs-fields #",")
-     :timestamp ts
-     :signature sig
-     :headers headers}))
-
-(defn auth-valid?
-  [{:keys [api-secret site-id] :as site}
-   {:keys [scheme qs-fields timestamp signature headers] :as auth-record}
-   {:keys [body query-string params] :as request}]
-  (let [request-headers (:headers request)
-        slurped (try (slurp body) (catch Throwable t))
-        body-hmac (if-not (or (= "" slurped) (nil? slurped))
-                    (hmac-sha1 (.getBytes ^String (str api-secret))
-                               (.getBytes ^String slurped)))
-        header-values (mapcat #(vector (str % ":" (get request-headers %)))
-                              headers)
-        header-str (apply str (interpose "\n" header-values))
-        qs-fields (filter #(not (or (nil? %) (= "" %))) qs-fields)
-        qs-vals (mapcat #(vector (str % "=" (get params (keyword %))))
-                        qs-fields)
-        qs-str (apply str (interpose "&" qs-vals))
-        sign-me (apply str
-                       site-id "\n"
-                       api-secret "\n"
-                       (:server-name request) "\n"
-                       (-> request
-                           :request-method name clojure.string/upper-case) "\n"
-                       (url-encode (:uri request)) "\n"
-                       timestamp "\n"
-                       body-hmac "\n"
-                       header-str "\n"
-                       qs-str "\n")
-        computed-sig (hmac-sha1 (.getBytes ^String (str api-secret))
-                                (.getBytes ^String sign-me))]
-    (= computed-sig signature)))
-
-(defn make-trans
-  [pred f]
-  (fn [m] (transform-map m pred f)))
-
-(def remove-nils
-  (make-trans (constantly true)
-              #(if (nil? %2) nil [%1 %2])))
 
 (def rename-pn
   (make-trans #{:product-name}
               (fn [k v]
                 [:title v])))
 
-(def fix-auth
-  (make-trans #{:promotably-auth}
-              (fn [k v]
-                [:auth (parse-auth v)])))
-
 (def fix-mod
   (make-trans #{:modified-at}
               (fn [k v]
                 [k (-> v clj-time.format/parse clj-time.coerce/to-date)])))
 
-(def del-f
+(def del-unused
   (make-trans #{:_ :callback} (constantly nil)))
 
 (def fix-en
@@ -93,6 +39,12 @@
                                 (subs 1)
                                 clojure.string/lower-case
                                 keyword)))))
+
+(def fix-applied-coupons
+  (make-trans #{:applied-coupons}
+              #(do
+                 ;; (prn %1 %2 (mapcat (fn [c] [{:code c}]) %2))
+                 (vector %1 (mapcat (fn [c] [{:code c}]) %2)))))
 
 (def coerce-site-id
   (make-trans #{:site-id}
@@ -122,13 +74,14 @@
   [params]
   (let [dbg (partial prn "---")]
     (-> params
-        del-f
+        del-unused
         underscore-to-dash-keys
         remove-nils
         ;; (doto dbg)
         fix-en
         fix-cart-items
-        fix-auth
+        transform-auth
+        fix-applied-coupons
         coerce-site-id
         rename-pn
         fix-mod)))
@@ -148,7 +101,7 @@
   ;; (prn "PARAMS" params)
   (let [parsed (parse-event params)]
     ;; for debug
-    ;;(prn "PARSED" parsed)
+    ;; (prn "PARSED" parsed)
     (cond
      (= schema.utils.ErrorContainer (type parsed))
      {:status 400}
@@ -156,7 +109,10 @@
      (nil? (:site parsed))
      {:status 404}
 
-     (not (auth-valid? (:site parsed) (:auth parsed) request))
+     (not (auth-valid? (-> parsed :site :site-id)
+                       (-> parsed :site :api-secret)
+                       (:auth parsed)
+                       request))
      {:status 403}
 
      :else
@@ -169,7 +125,9 @@
                      (assoc :site-id (-> parsed :site :site-id))
                      coercer)]
          (if-let [cache (state/events-cache)]
+           ;; TODO: check return val...
            (insert cache out))
+         ;; TODO: check return val...
          (kafka/record! out)
          {:status 200})))))
 

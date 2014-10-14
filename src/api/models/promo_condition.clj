@@ -61,8 +61,11 @@
 (defmethod validate :dates
   [{:keys [start-date end-date] :as condition} context]
   (cond
-   (before? (now) start-date) {:valid false :message "That promo hasn't started yet"}
-   (after? (now) end-date) {:valid false :message "That promo has ended"}
+   :else {:valid true}))
+
+(defmethod validate :total-discounts
+  [{:keys [total-discounts] :as condition} context]
+  (cond
    :else {:valid true}))
 
 (defmethod validate :usage-count

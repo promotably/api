@@ -142,6 +142,8 @@
 
 ;; Conditions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; TODO:  Do we need to support a condition that states "The maximum number of individual items this coupon can apply to when using product discounts. Absence of this condition = apply to all qualifying items in cart."?
+
 (def PromoConditionType
   (s/enum :dates
           :times
@@ -304,6 +306,10 @@
 (def BaseOfferCondition
   {(s/required-key :type) (apply s/enum (vec valid-types))
    s/Keyword s/Any})
+
+
+;; TODO: We need $/unit time and redemptions/unit time conditions.
+
 (def OfferCondition
   (s/conditional #(= (:type %) :dates)
                  (merge BaseOfferCondition {:start-date s/Inst
