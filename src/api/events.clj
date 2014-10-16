@@ -128,6 +128,6 @@
            ;; TODO: check return val...
            (insert cache out))
          ;; TODO: check return val...
-         (kafka/record! out)
+         (kafka/record! (:event-name out) out)
          {:status 200})))))
 

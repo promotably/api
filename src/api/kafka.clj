@@ -22,8 +22,9 @@
     (log/error "No Kafka brokers provided.")))
 
 (defn record!
-  [attributes]
+  [event-name attributes]
   (let [message (fress/write {:message-id (java.util.UUID/randomUUID)
+                              :event-name event-name
                               :attributes attributes})]
     (if @producer
       (do
