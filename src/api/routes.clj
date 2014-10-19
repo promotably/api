@@ -14,7 +14,7 @@
                                             lookup-promos]]
             [api.controllers.offers :refer [create-new-offer! show-offer
                                             update-offer! delete-offer!
-                                            lookup-offers]]
+                                            lookup-offers get-available-offers]]
             [api.controllers.accounts :refer [lookup-account create-new-account!
                                               update-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]))
@@ -55,6 +55,7 @@
            (GET "/users/:user-id" [] get-user)
            (POST "/users" [] create-new-user!)
            (PUT "/users/:user-id" [] update-user!)
+           (GET "/realtime-conversion-offers" [] get-available-offers)
            offer-routes
            promo-routes))
 

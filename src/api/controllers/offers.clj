@@ -6,7 +6,8 @@
             [api.views.offers :refer [shape-offer
                                       shape-lookup
                                       shape-new-offer]]
-            [clojure.data.json :refer [read-str]]
+            [clojure.core.cache :as cache]
+            [clojure.data.json :refer [read-str write-str]]
             [clojure.tools.logging :as log]
             [schema.coerce :as c]
             [schema.core :as s]))
@@ -14,6 +15,8 @@
 (def query-schema {:site-id s/Uuid
                    (s/optional-key :promotably-auth) s/Str
                    :offer-code s/Str})
+
+(def OffersCache (atom (cache/ttl-cache-factory {} :ttl 300000))) ;; TTL 5 minutes
 
 (defn lookup-offers
   [{:keys [params] :as request}]
@@ -84,4 +87,16 @@
       {:status 404 :body "Can't find that offer"}
       (do
         {:body (shape-offer the-offer)}))))
+
+(defn get-offers-for-site
+  [site-id]
+  (if (cache/has? @OffersCache site-id)
+    (swap! OffersCache #(cache/hit % site-id))
+    (swap! OffersCache #(cache/miss % site-id (offer/find-by-site-uuid site-id))))
+  (cache/lookup @OffersCache site-id))
+
+(defn get-available-offers
+  [{:keys [params] :as request}]
+
+  {:body (write-str [])})
 
