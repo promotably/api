@@ -1,45 +1,54 @@
 (ns api.cache
-  (:require [clj-time.core :as t]
-            [joda-time :as jt]
+  (:require [joda-time :as jt]
             [clojure.core.reducers :as r]
             [clojure.tools.logging :as log]
-            [api.lib.protocols :refer (EventCache)])
+            [api.lib.protocols :refer (SessionCache)]
+            [ring.middleware.session.store :as ss])
   (:import (java.util.concurrent Executors TimeUnit
-                                 ScheduledExecutorService)))
+                                 ScheduledExecutorService)
+           [java.util UUID]))
 
-(defn- clean-cache [cache window]
+(defn- clean-cache [cache]
   (swap! cache (fn [c]
-                 (remove (fn [item]
-                           (let [last-event-time (:event-time item)
-                                 expiry-predicate-time (jt/minus (jt/date-time) (jt/minutes window))]
-                             (jt/after? last-event-time expiry-predicate-time))))
-                 c)))
+                 (remove (fn [[session-key data]]
+                           (jt/after? (:expires data) (jt/date-time))) c))))
 
 (defn- init-scheduler [cache ^ScheduledExecutorService scheduler]
   (.scheduleWithFixedDelay
    scheduler
-   #(clean-cache cache 30)
+   #(clean-cache cache)
    5 5 TimeUnit/MINUTES))
 
-(defrecord ExportingEventCache [cache scheduler]
-  EventCache
+(defrecord ApiSessionCache [cache scheduler]
+  SessionCache
   (init [this]
     (log/info :INITIALIZING "Cache is starting...")
     (init-scheduler cache scheduler)
-    (doto (promise) (deliver nil)))
+    this)
   (shutdown [this]
     (log/info :SHUTTINGDOWN "Cache is shutting down...")
     (.shutdownNow ^ScheduledExecutorService scheduler)
     (reset! cache nil)
-    (doto (promise) (deliver nil)))
-  (query [this filter-fn]
-    (r/filter filter-fn cache))
-  (insert [this event]
+    this)
+  ss/SessionStore
+  (read-session [this session-id]
+    (when session-id
+      (session-id @cache)))
+  (write-session [this session-id data]
+    (let [session-id* (or session-id
+                          (UUID/randomUUID))
+          expires (jt/plus (jt/date-time) (jt/hours 2))
+          data* (assoc (merge (session-id* @cache) data)
+                  :expires expires)]
+      (swap! cache (fn [c]
+                     (assoc c session-id* data*)))
+      session-id*))
+  (delete-session [this session-id]
     (swap! cache (fn [c]
-                   (conj c (conj event {:event-time (jt/date-time)}))))))
+                   (dissoc c [session-id])))
+    nil))
 
-
-(defn exporting-event-cache []
-  (let [event-cache (atom [])
+(defn api-session-cache []
+  (let [session-cache (atom {})
         scheduler (Executors/newSingleThreadScheduledExecutor)]
-    (->ExportingEventCache event-cache scheduler)))
+    (->ApiSessionCache session-cache scheduler)))

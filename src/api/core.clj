@@ -16,17 +16,20 @@
             [api.state]
             [api.env :as env]
             [api.cache :as cache]
-            [api.lib.protocols :refer (EventCache init shutdown)]
+            [api.lib.protocols :refer (SessionCache init shutdown)]
             [api.kafka :as kafka]))
 
 (def ns-servlet-handler (atom nil))
+
+(def session-store nil)
 
 (defn app
   [options]
   (-> (handler/site routes/all-routes)
       (wrap-params)
       (wrap-keyword-params)
-      (session/wrap-session)
+      (session/wrap-session {:store session-store
+                             :cookie-name "promotably-session"})
       (wrap-exceptions)
       (wrap-stacktrace)
       (wrap-request-logging)
@@ -63,10 +66,10 @@
 
   (log/info :STARTING "NS Servlet")
   (db/init!)
-  (let [events-cache (cache/exporting-event-cache)]
-    @(init events-cache)
-    (alter-var-root #'api.state/*global-state*
-                    (constantly {:events-cache events-cache})))
+  (let [session-cache (cache/api-session-cache)]
+    (init session-cache)
+    (alter-var-root #'session-store
+                    (constantly session-cache)))
   (reset! ns-servlet-handler (app {}))
   (kafka/init!))
 
@@ -76,8 +79,6 @@
 (defn shutdown-app
   []
   (log/info :SHUTTINGDOWN "NS Servlet")
-  (let [{:keys [events-cache]} api.state/*global-state*]
-    (when events-cache @(shutdown events-cache))
-    (alter-var-root #'api.state/*global-state*
-                    (constantly nil))))
-
+  (when session-store (shutdown session-store))
+  (alter-var-root #'session-store
+                  (constantly nil)))

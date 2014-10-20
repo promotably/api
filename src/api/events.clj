@@ -4,7 +4,6 @@
             [clojure.tools.logging :as log]
             [clj-time.format]
             [clj-time.coerce]
-            [api.state :as state]
             [api.kafka :as kafka]
             [api.models.helper :refer :all]
             [api.models.site :as site]
@@ -14,7 +13,6 @@
                                              remove-nils
                                              custom-matcher
                                              underscore-to-dash-keys]]
-            [api.lib.protocols :refer (EventCache insert query)]
             [api.lib.auth :refer [parse-auth-string auth-valid? transform-auth]]
             [schema.coerce :as sc]
             [schema.core :as s]))
@@ -124,10 +122,6 @@
                      (assoc :visitor-id (:visitor-id request))
                      (assoc :site-id (-> parsed :site :site-id))
                      coercer)]
-         (if-let [cache (state/events-cache)]
-           ;; TODO: check return val...
-           (insert cache out))
          ;; TODO: check return val...
          (kafka/record! (:event-name out) out)
          {:status 200})))))
-
