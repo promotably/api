@@ -1,11 +1,8 @@
 (ns api.lib.protocols)
 
-(defprotocol EventCache
-  "Contract for the implementation of a cache of events."
+(defprotocol SessionCache
+  "Contract for the implementation of a session cache."
   (init [this]
     "Initialize the cache")
   (shutdown [this]
-    "Shutdown the cache")
-  (query [this filter-fn]
-    "Returns items from the cache that pass the provided filter function.")
-  (insert [this event]))
+    "Shutdown the cache"))
