@@ -203,7 +203,7 @@
 (defmethod validate :item-value
   [{:keys [matching-products cart-contents] :as context}
    {:keys [item-value] :as condition}]
-  (let [amounts (map :line-total (or matching-products cart-contents))
+  (let [amounts (map :line-subtotal (or matching-products cart-contents))
         total (or (apply + amounts) 0)]
     (cond
      (<= total item-value)

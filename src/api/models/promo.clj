@@ -244,11 +244,17 @@
                              (first (filter #(= selected-product-id (:product-id %))
                                             (or matching-products cart-contents))))
         {:keys [line-subtotal quantity product-categories]} selected-cart-item
-        unit-price (/ line-subtotal quantity)]
+        unit-price (if (and line-subtotal quantity)
+                     (/ line-subtotal quantity)
+                     0)]
+
     (cond
 
      errors
      [context errors]
+
+     (not selected-cart-item)
+     0
 
      :else
      (let [discount-amount-per-item (cond (= :percent reward-type)
