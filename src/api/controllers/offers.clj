@@ -125,5 +125,6 @@
                (get-offers-for-site site-id))]
     (log/info site-id)
     (log/info resp)
-    {:body (write-str resp)}))
+    {:body (write-str resp)
+     :headers {"Content-Type" "application/json"}}))
 
