@@ -23,41 +23,6 @@
                    (s/optional-key :promotably-auth) s/Str
                    :code s/Str})
 
-(def inbound-schema
-  {(s/required-key :site) s/Any
-   (s/required-key :code) s/Str
-   (s/optional-key :auth) Auth
-   (s/optional-key :shopper-id) (s/maybe s/Str)
-   (s/required-key :shopper-email) s/Str
-   (s/optional-key :applied-coupons) [s/Str]
-   (s/optional-key :shipping-address-1) s/Str
-   (s/optional-key :shipping-address-2) s/Str
-   (s/optional-key :shipping-city) s/Str
-   (s/optional-key :shipping-state) s/Str
-   (s/optional-key :shipping-country) s/Str
-   (s/optional-key :shipping-postcode) s/Str
-   (s/optional-key :shipping-email) s/Str
-   (s/optional-key :billing-address-1) s/Str
-   (s/optional-key :billing-address-2) s/Str
-   (s/optional-key :billing-city) s/Str
-   (s/optional-key :billing-state) s/Str
-   (s/optional-key :billing-country) s/Str
-   (s/optional-key :billing-postcode) s/Str
-   (s/optional-key :billing-email) s/Str
-   (s/optional-key :cart-contents) [{(s/required-key :product-id) s/Str
-                                     (s/optional-key :product-title) s/Str
-                                     (s/optional-key :product-type) s/Str
-                                     (s/optional-key :product-categories) [s/Str]
-                                     (s/optional-key :variation-id) s/Str
-                                     (s/optional-key :variation) s/Str
-                                     (s/optional-key :quantity) s/Int
-                                     (s/optional-key :line-total) s/Num
-                                     (s/optional-key :line-subtotal) s/Num
-                                     (s/optional-key :line-tax) s/Num
-                                     (s/optional-key :line-subtotal-tax) s/Num}]
-   (s/optional-key :product-ids-on-sale) [s/Str]
-   (s/optional-key :selected-product-id) s/Str})
-
 (defn lookup-promos
   [{:keys [params] :as request}]
   (let [{:keys [site-id] :as coerced-params}
@@ -73,7 +38,7 @@
   [{:keys [params body] :as request}]
   (let [{:keys [promo-id]} params
         promo-uuid (java.util.UUID/fromString promo-id)
-        found (promo/find-by-uuid promo-uuid)]
+        found (promo/find-raw :uuid promo-uuid)]
     (if found
       (do
         (promo/delete-by-uuid (:site-id found) promo-uuid)
@@ -144,7 +109,7 @@
   (let [slurped (slurp body)
         input-json (read-str slurped :key-fn keyword)
         matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
-        coercer (c/coercer inbound-schema matcher)
+        coercer (c/coercer PromoValidionRequest matcher)
         coerced-params (-> input-json
                            (assoc :promotably-auth
                              (:promotably-auth params))
@@ -165,9 +130,11 @@
      {:status 403}
 
      :else
-     (let [v (promo/valid? the-promo coerced-params)
-           resp (merge v {:uuid (:uuid the-promo)
-                          :code code})]
+     (let [[v errors] (promo/valid? the-promo coerced-params)
+           resp (merge {:uuid (:uuid the-promo) :code code}
+                       (if errors
+                         {:valid false :messages errors}
+                         {:valid true :messages []}))]
        {:status 201
         :headers {"Content-Type" "application/json; charset=UTF-8"}
         :body (shape-validate resp)}))))
@@ -177,18 +144,21 @@
   (let [slurped (slurp body)
         input-json (read-str slurped :key-fn keyword)
         matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
-        coercer (c/coercer inbound-schema matcher)
+        coercer (c/coercer PromoValidionRequest matcher)
         coerced-params (-> input-json
-                           (assoc :promotably-auth
-                             (:promotably-auth params))
+                           (assoc :promotably-auth (:promotably-auth params))
                            prep-incoming
                            coercer)
         site-id (-> coerced-params :site :site-id)
         code (-> coerced-params :code)
-        the-promo (promo/find-by-site-uuid-and-code site-id code)]
+        the-promo (promo/find-by-site-uuid-and-code site-id code)
+        [context errors] (promo/valid? the-promo coerced-params)]
     (cond
      (not the-promo)
      {:status 404 :body "Can't find that promo"}
+
+     errors
+     {:status 400}
 
      (not (auth-valid? site-id
                        (-> coerced-params :site :api-secret)
@@ -197,8 +167,7 @@
      {:status 403}
 
      :else
-      (let [v false]
+      (let [amt (promo/discount-amount the-promo context errors)]
         {:status 201
          :headers {"Content-Type" "application/json; charset=UTF-8"}
-         :body (shape-calculate (merge v
-                                       {:discount 0}))}))))
+         :body (shape-calculate {:valid true :discount amt})}))))

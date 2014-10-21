@@ -124,4 +124,6 @@
                      coercer)]
          ;; TODO: check return val...
          (kafka/record! (:event-name out) out)
-         {:status 200})))))
+         {:headers {"Content-Type" "text/javascript"}
+          :body ""
+          :status 200})))))

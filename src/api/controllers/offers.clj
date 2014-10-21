@@ -6,6 +6,8 @@
             [api.views.offers :refer [shape-offer
                                       shape-lookup
                                       shape-new-offer]]
+            [clj-time.core :as t]
+            [clj-time.format :as tf]
             [clojure.core.cache :as cache]
             [clojure.data.json :refer [read-str write-str]]
             [clojure.tools.logging :as log]
@@ -17,6 +19,23 @@
                    :offer-code s/Str})
 
 (def OffersCache (atom (cache/ttl-cache-factory {} :ttl 300000))) ;; TTL 5 minutes
+
+(def mock-offer {:offers [{:coupon {:code "TWENTYOFF"
+                                    :description "20% off all items"
+                                    :reward-amount 20
+                                    :reward-type :percent
+                                    :reward-applied-to :cart
+                                    :reward-tax :after-tax
+                                    :conditions [{:type :total-discounts
+                                                  :total-discounts 500.00}
+                                                 {:type :item-count
+                                                  :item-count 3}
+                                                 {:type :min-order-value
+                                                  :amount 50.00}
+                                                 {:type :individual-use}]}
+                           :rco {:display-text "Thank you for shopping with us. We'd like to offer you a one-time only 20% discount on your order. But hurry this offer expires soon!"
+                                 :presentation-type :fly-in
+                                 :presentation-page :any}}]})
 
 (defn lookup-offers
   [{:keys [params] :as request}]
@@ -88,7 +107,7 @@
       (do
         {:body (shape-offer the-offer)}))))
 
-(defn get-offers-for-site
+(defn- get-offers-for-site
   [site-id]
   (if (cache/has? @OffersCache site-id)
     (swap! OffersCache #(cache/hit % site-id))
@@ -97,6 +116,15 @@
 
 (defn get-available-offers
   [{:keys [params] :as request}]
-
-  {:body (write-str [])})
+  (let [site-id (java.util.UUID/fromString (or (:site-id params) (:site_id params)))
+        visitor-id (java.util.UUID/fromString (or (:visitor-id params) (:visitor_id params)))
+        mock? (Boolean/parseBoolean (:mock params))
+        resp (if mock?
+               (assoc-in mock-offer [:offers 0 :rco :expires] (tf/unparse (tf/formatters :date-time-no-ms)
+                                                                           (t/plus (t/now) (t/minutes 15))))
+               (get-offers-for-site site-id))]
+    (log/info site-id)
+    (log/info resp)
+    {:body (write-str resp)
+     :headers {"Content-Type" "application/json"}}))
 
