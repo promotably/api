@@ -103,16 +103,17 @@
                        :created_at (sqlfn now)
                        :updated_at (sqlfn now)
                        :uuid (java.util.UUID/randomUUID)}
-           the-promo (db-to-promo (insert promos (values new-values)))]
+           raw (insert promos (values new-values))
+           id (:id raw)]
        (when (seq conditions)
          (c/create-conditions! (map #(-> %
                                          (assoc :uuid (java.util.UUID/randomUUID))
-                                         (assoc :promo-id (:id the-promo)))
+                                         (assoc :promo-id id))
                                     conditions)))
        (when (seq linked-products)
          (lp/create! (map #(-> %
                                (assoc :uuid (java.util.UUID/randomUUID))
-                               (assoc :promo-id (:id the-promo)))
+                               (assoc :promo-id id))
                           linked-products)))
        {:success true}))))
 
@@ -167,6 +168,13 @@
                         (where {:sites.uuid site-uuid}))]
     (map db-to-promo results)))
 
+(defn find-raw
+  "Finds a promo by uuid and doesn't munge the result from the db at all."
+  [column value]
+  (let [results (select promos
+                        (where {(keyword column) value}))]
+    (-> results first underscore-to-dash-keys)))
+
 (sm/defn find-by-uuid
   "Finds a promo by uuid."
   [promo-uuid :- s/Uuid]
@@ -197,13 +205,65 @@
                                    :promos.code promo-code})))]
     (if row (db-to-promo row))))
 
+(def condition-order
+  [:dates
+   :times
+   :product-ids
+   :category-ids
+   :not-product-ids
+   :not-category-ids
+   :combo-product-ids
+   :item-count
+   :item-value
+   :individual-use
+   :min-order-value
+   :usage-count
+   :total-discounts])
+
 (defn valid?
   [{:keys [active conditions] :as promo}
    {:keys [cart-contents] :as context}]
   (if-not active
-    {:valid false :messages ["That promo is currently inactive"]}
-    (let [condition-validations (map #(c/validate % context) conditions)]
-      (if (not-every? true? (map #(:valid %) condition-validations))
-        {:valid false :messages (vec (map #(:message %)
-                                          (filter #(false? (:valid %)) condition-validations)))}
-        {:valid true}))))
+    [context ["That promo is currently inactive"]]
+    (let [ordered-conditions (mapcat #(filter (fn [c] (= % (:type c))) conditions)
+                                     condition-order)
+          validation (reduce
+                      #(c/validate %1 %2)
+                      context
+                      ordered-conditions)
+          errors (:errors validation)
+          errors (if errors (reverse errors))]
+      [validation errors])))
+
+(defn discount-amount
+  [{:keys [reward-applied-to reward-type reward-amount active conditions] :as promo}
+   {:keys [cart-contents matching-products selected-product-id] :as context}
+   errors]
+
+  (let [selected-cart-item (if selected-product-id
+                             (first (filter #(= selected-product-id (:product-id %))
+                                            (or matching-products cart-contents))))
+        {:keys [line-subtotal quantity product-categories]} selected-cart-item
+        unit-price (/ line-subtotal quantity)]
+    (cond
+
+     errors
+     [context errors]
+
+     :else
+     (let [discount-amount-per-item (cond (= :percent reward-type)
+                                          (* (/ reward-amount 100.0) unit-price)
+                                          (= :dollar reward-type)
+                                          reward-amount)]
+       (cond
+
+        (= :one-item reward-applied-to)
+        (format "%.4f" (/ (float discount-amount-per-item) quantity))
+
+        (= :all-items reward-applied-to)
+        discount-amount-per-item
+
+        (= :cart reward-applied-to)
+        discount-amount-per-item)))))
+
+

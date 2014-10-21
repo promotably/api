@@ -25,8 +25,7 @@
 
 (defn shape-validate
   [r]
-  (write-str r
-             :value-fn view-value-helper))
+  (write-str r :value-fn view-value-helper))
 
 (defn shape-calculate
   [r]

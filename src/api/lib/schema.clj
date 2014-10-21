@@ -171,9 +171,9 @@
    (s/optional-key :usage-count) (s/maybe s/Int)
    (s/optional-key :total-discounts) (s/maybe s/Num)
    (s/optional-key :product-ids) [s/Str]
-   (s/optional-key :product-categories) [s/Str]
+   (s/optional-key :categories-ids) [s/Str]
    (s/optional-key :not-product-ids) [s/Str]
-   (s/optional-key :not-product-categories) [s/Str]
+   (s/optional-key :not-categories-ids) [s/Str]
    (s/optional-key :combo-product-ids) [s/Str]
    (s/optional-key :item-count) (s/maybe s/Int)
    (s/optional-key :item-value) (s/maybe s/Num)
@@ -191,9 +191,9 @@
    (s/optional-key :usage-count) (s/maybe s/Int)
    (s/optional-key :total-discounts) (s/maybe s/Num)
    (s/optional-key :product-ids) [s/Str]
-   (s/optional-key :product-categories) [s/Str]
+   (s/optional-key :category-ids) [s/Str]
    (s/optional-key :not-product-ids) [s/Str]
-   (s/optional-key :not-product-categories) [s/Str]
+   (s/optional-key :not-categories-ids) [s/Str]
    (s/optional-key :combo-product-ids) [s/Str]
    (s/optional-key :item-count) (s/maybe s/Int)
    (s/optional-key :item-value) (s/maybe s/Num)
@@ -440,4 +440,41 @@
                       (s/required-key :conditions) [InboundOfferCondition]}))
 
 (def OfferLookup {(s/optional-key :site-id) s/Uuid})
+
+;; Requests ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def PromoValidionRequest
+  {(s/required-key :site) s/Any
+   (s/required-key :code) s/Str
+   (s/optional-key :auth) Auth
+   (s/optional-key :shopper-id) (s/maybe s/Str)
+   (s/required-key :shopper-email) s/Str
+   (s/optional-key :applied-coupons) [s/Str]
+   (s/optional-key :shipping-address-1) s/Str
+   (s/optional-key :shipping-address-2) s/Str
+   (s/optional-key :shipping-city) s/Str
+   (s/optional-key :shipping-state) s/Str
+   (s/optional-key :shipping-country) s/Str
+   (s/optional-key :shipping-postcode) s/Str
+   (s/optional-key :shipping-email) s/Str
+   (s/optional-key :billing-address-1) s/Str
+   (s/optional-key :billing-address-2) s/Str
+   (s/optional-key :billing-city) s/Str
+   (s/optional-key :billing-state) s/Str
+   (s/optional-key :billing-country) s/Str
+   (s/optional-key :billing-postcode) s/Str
+   (s/optional-key :billing-email) s/Str
+   (s/optional-key :cart-contents) [{(s/required-key :product-id) s/Str
+                                     (s/optional-key :product-title) s/Str
+                                     (s/optional-key :product-type) s/Str
+                                     (s/optional-key :product-categories) [s/Str]
+                                     (s/optional-key :variation-id) s/Str
+                                     (s/optional-key :variation) s/Str
+                                     (s/optional-key :quantity) s/Int
+                                     (s/optional-key :line-total) s/Num
+                                     (s/optional-key :line-subtotal) s/Num
+                                     (s/optional-key :line-tax) s/Num
+                                     (s/optional-key :line-subtotal-tax) s/Num}]
+   (s/optional-key :product-ids-on-sale) [s/Str]
+   (s/optional-key :selected-product-id) s/Str})
 

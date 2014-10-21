@@ -39,11 +39,18 @@
     java.sql.Date (to-sql-time thing)
     org.joda.time.DateTime (to-sql-time thing)))
 
+(defn coerce-to-str
+  [thing]
+  (condp = (class thing)
+    ;; pred is the thing you're trying to coerece FROM
+    java.lang.Long (format "%d" thing)))
+
 ;; Keys are the thing you're trying to coerce TO
 (let [coercions {org.joda.time.DateTime (safe #(coerce-joda-date-time %))
                  java.util.UUID (safe #(java.util.UUID/fromString %))
                  java.util.Date (safe #(coerce-date %))
                  java.sql.Date (safe #(coerce-sql-date %))
+                 java.lang.String (safe #(coerce-to-str %))
                  java.sql.Timestamp (safe #(coerce-sql-timestamp %))}]
   (defn custom-matcher
     "A matcher that coerces ...."

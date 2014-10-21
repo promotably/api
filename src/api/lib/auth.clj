@@ -50,12 +50,6 @@
                              qs-str "\n")
           computed-sig (hmac-sha1 (.getBytes ^String (str api-secret))
                                   (.getBytes ^String sign-me))]
-      (when (not (= computed-sig signature))
-        (prn "NOT VALID")
-        (prn slurped)
-        (prn sign-me)
-        (prn computed-sig)
-        (prn signature))
       (= computed-sig signature))))
 
 (def transform-auth
