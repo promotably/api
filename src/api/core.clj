@@ -7,6 +7,7 @@
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.middleware.session :as session]
+            [ring.middleware.jsonp :as jsonp]
             [clj-logging-config.log4j :as log-config]
             [api.db :as db]
             [api.middleware :refer [wrap-exceptions
@@ -28,6 +29,7 @@
   (-> (handler/site routes/all-routes)
       (wrap-params)
       (wrap-keyword-params)
+      (jsonp/wrap-json-with-padding)
       (session/wrap-session {:store session-store
                              :cookie-name "promotably-session"})
       (wrap-exceptions)
