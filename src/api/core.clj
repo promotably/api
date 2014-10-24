@@ -26,10 +26,11 @@
 
 (defn app
   [options]
-  (-> (handler/site routes/all-routes)
+  (-> routes/all-routes
+      (jsonp/wrap-json-with-padding)
+      (handler/site)
       (wrap-params)
       (wrap-keyword-params)
-      (jsonp/wrap-json-with-padding)
       (session/wrap-session {:store session-store
                              :cookie-name "promotably-session"})
       (wrap-exceptions)
