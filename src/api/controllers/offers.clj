@@ -116,8 +116,9 @@
 
 (defn get-available-offers
   [{:keys [params] :as request}]
+  (println (:visitor-id request))
   (let [site-id (java.util.UUID/fromString (or (:site-id params) (:site_id params)))
-        visitor-id (java.util.UUID/fromString (or (:visitor-id params) (:visitor_id params)))
+        visitor-id (java.util.UUID/fromString (or (:visitor-id params) (:visitor_id params) (:visitor-id request)))
         mock? (Boolean/parseBoolean (:mock params))
         resp (if mock?
                (assoc-in mock-offer
