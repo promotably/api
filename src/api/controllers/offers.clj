@@ -120,8 +120,10 @@
         visitor-id (java.util.UUID/fromString (or (:visitor-id params) (:visitor_id params)))
         mock? (Boolean/parseBoolean (:mock params))
         resp (if mock?
-               (assoc-in mock-offer [:offers 0 :rco :expires] (tf/unparse (tf/formatters :date-time-no-ms)
-                                                                           (t/plus (t/now) (t/minutes 15))))
+               (assoc-in mock-offer
+                         [:offers 0 :rco :expires]
+                         (tf/unparse (tf/formatters :date-time-no-ms)
+                                     (t/plus (t/now) (t/minutes 15))))
                (get-offers-for-site site-id))]
     (log/info site-id)
     (log/info resp)

@@ -1,14 +1,16 @@
 (ns api.models.offer-condition
   (:require [api.entities :refer :all]
-            [clojure.string :refer [trim]]
             [api.lib.coercion-helper :refer [custom-matcher dash-to-underscore-keys]]
+            [api.lib.redis :refer [get-integer]]
             [api.lib.schema :refer :all]
             [api.models.redemption :as redemption]
             [api.util :refer [hyphenify-key]]
+            [clj-time.core :refer [before? after? now]]
+            [clj-time.coerce :refer [from-sql-date]]
+            [clojure.set :refer [rename-keys intersection]]
+            [clojure.string :refer [trim]]
             [korma.core :refer :all]
             [korma.db :refer [transaction]]
-            [clojure.set :refer [rename-keys intersection]]
-            [clj-time.core :refer [before? after? now]]
             [schema.core :as s]
             [schema.coerce :as sc]))
 
@@ -60,3 +62,21 @@
   (transaction
    (delete-conditions! promo-id)
    (create-conditions! c)))
+
+(defmulti validate
+  (fn [context
+      {:keys [type] :as condition}]
+    (println type)
+    (keyword type)))
+
+(defmethod validate :dates
+  [context {:keys [start-date end-date]}]
+  (and (after? (now) (from-sql-date start-date))
+       (before? (now) (from-sql-date end-date))))
+
+(defmethod validate :product-views
+  [{:keys [site-id visitor-id] :as context}
+   {:keys [product_views] :as  condition}]
+  (let [k (str site-id "/" visitor-id "product-any")
+        product-any-views (get-integer k)]
+    (>= product-any-views product_views)))

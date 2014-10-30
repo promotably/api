@@ -18,6 +18,7 @@
                  [clj-logging-config "1.9.12"]
                  [clj-time "0.8.0"]
                  [compojure "1.1.9"]
+                 [com.taoensso/carmine "2.7.0"]
                  [korma "0.4.0"]
                  [log4j/log4j "1.2.17"]
                  [org.clojars.cvillecsteele/ring-permacookie-middleware "1.3.0"]

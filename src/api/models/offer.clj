@@ -207,3 +207,12 @@
                                    :offers.code (clojure.string/upper-case
                                                  offer-code)})))]
     (if row (db-to-offer row))))
+
+(defn valid?
+  [context {:keys [offer_conditions] :as offer}]
+  (let [validated-conditions (map (fn [oc]
+                                    (println (keyword (:type oc)))
+                                    (c/validate context oc)) offer_conditions)]
+    (if (seq validated-conditions)
+      (every? true? validated-conditions)
+      false)))
