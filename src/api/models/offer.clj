@@ -188,9 +188,7 @@
 (sm/defn delete-by-uuid
   "Deletes a offer by uuid."
   [offer-uuid :- s/Uuid]
-  (prn offer-uuid)
   (let [found (find-by-uuid offer-uuid)]
-    (prn found)
     (transaction
      (c/delete-conditions! (:id found))
      (delete offers (where {:offers.uuid offer-uuid})))))

@@ -29,6 +29,8 @@
                  [org.clojure/tools.logging "0.3.0"]
                  [org.clojure/tools.nrepl "0.2.6"]
                  [org.postgresql/postgresql "9.3-1100-jdbc4"]
+                 [com.cognitect/transit-clj "0.8.259"]
+                 [slingshot "0.12.1"]
                  [prismatic/schema "0.2.6"]
                  [ring.middleware.jsonp "0.1.6"]
                  [ring/ring-core "1.3.1"]]

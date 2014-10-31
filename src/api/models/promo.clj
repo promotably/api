@@ -16,6 +16,8 @@
             [api.util :refer [hyphenify-key]]
             [korma.core :refer :all]
             [korma.db :refer [transaction] :as kdb]
+            [api.kafka :as kafka]
+            [slingshot.slingshot :only [throw+] :as ss]
             [schema.core :as s]
             [schema.macros :as sm]
             [schema.coerce :as sc]))
@@ -79,6 +81,23 @@
   [site-id promo-id]
   (find-by-site-and-uuid site-id promo-id))
 
+(sm/defn find-by-uuid
+  "Finds a promo by uuid."
+  [promo-uuid :- s/Uuid]
+  (let [results (select promos
+                        (with promo-conditions)
+                        (with linked-products)
+                        (where {:promos.uuid promo-uuid}))]
+    (first (map db-to-promo results))))
+
+(defn to-kafka!
+  [mode promo-id site-id]
+  (if-let [p (first (find-by-id promo-id))]
+    (kafka/record! (str "promo-" (name mode))
+                   {:promo (find-by-uuid (:uuid p))
+                    :site (site/find-by-site-id site-id)})
+    (ss/throw+ {:type ::missing-promo :promo-id promo-id :site-id site-id})))
+
 (sm/defn new-promo!
   "Creates a new promo in the database"
   [{:keys [description name code exceptions
@@ -115,6 +134,7 @@
                                (assoc :uuid (java.util.UUID/randomUUID))
                                (assoc :promo-id id))
                           linked-products)))
+       (to-kafka! :create id site-id)
        {:success true}))))
 
 ;; (sm/defn update-promo!
@@ -155,6 +175,7 @@
                               (assoc :uuid (java.util.UUID/randomUUID))
                               (assoc :promo-id (:id found)))
                          linked-products))
+        (to-kafka! :update (:id found) site-id)
         {:success true}))))
 
 (sm/defn find-by-site-uuid
@@ -175,20 +196,12 @@
                         (where {(keyword column) value}))]
     (-> results first underscore-to-dash-keys)))
 
-(sm/defn find-by-uuid
-  "Finds a promo by uuid."
-  [promo-uuid :- s/Uuid]
-  (let [results (select promos
-                        (with promo-conditions)
-                        (with linked-products)
-                        (where {:promos.uuid promo-uuid}))]
-    (first (map db-to-promo results))))
-
 (sm/defn delete-by-uuid
   "Deletes a promo by uuid."
   [site-id promo-uuid :- s/Uuid]
   (let [found (first (by-promo-id site-id promo-uuid))]
     (transaction
+     (to-kafka! :delete (:id found) site-id)
      (c/delete-conditions! (:id found))
      (lp/delete! (:id found))
      (delete promos (where {:promos.uuid promo-uuid})))))

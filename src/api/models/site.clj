@@ -29,6 +29,13 @@
        (select sites
                (where {:account_id account-id}))))
 
+(sm/defn ^:always-validate find-by-account-uuid :- [SiteSchema]
+  [account-uuid :- s/Uuid]
+  (map db-to-site
+       (select sites
+               (join accounts (= :accounts.id :account_id))
+               (where {:accounts.account_id account-uuid}))))
+
 (defn find-by-site-uuid
   [site-uuid]
   (let [u (condp = (class site-uuid)
@@ -36,6 +43,10 @@
             java.util.UUID site-uuid)]
     (db-to-site (first (select sites
                                (where {:uuid u}))))))
+
+(defn find-by-site-id
+  [site-id]
+  (db-to-site (first (select sites (where {:id site-id})))))
 
 (defn get-id-by-site-uuid
   [site-uuid]

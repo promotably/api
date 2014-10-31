@@ -41,6 +41,7 @@
                        (values {:account_id (:id a)
                                 :site_code site-code
                                 :site_url site-url
+                                :name company-name
                                 :api_secret api-secret
                                 :created_at (sqlfn now)
                                 :updated_at (sqlfn now)}))]
@@ -68,27 +69,33 @@
 
 (defn update!
   [{:keys [account-id company-name first-name last-name
-           user-social-id site-code api-secret site-url] :as params}]
+           user-social-id site-name site-code api-secret site-url] :as params}]
   (let [the-account (find-by-account-id account-id)
-        site-update (assoc* {} :site_code site-code
-                               :api_secret api-secret
-                               :site_url site-url)
+        site-update (assoc* {}
+                            :site_code site-code
+                            :name company-name
+                            :api_secret api-secret
+                            :site_url site-url)
         user-update (assoc* {} :first_name first-name
                                :last_name last-name
                                :user_social_id user-social-id)]
+    (update accounts
+            (set-fields {:company_name company-name})
+            (where {:account_id account-id}))
+    (if-not (empty? site-update)
+      (update sites
+              (set-fields site-update)
+              (where {:account_id (:id the-account)})))
+    (if-not (empty? user-update)
+      (update users
+              (set-fields user-update)
+              (where {:account_id (:id the-account)})))
     (if the-account
-      {:status :updated
-       :account (update accounts
-                        (set-fields {:company_name company-name})
-                        (where {:account_id account-id}))
-       :site (if (empty? site-update)
-               (first (site/find-by-account-id (:id the-account)))
-               (update sites
-                       (set-fields site-update)
-                       (where {:account_id (:id the-account)})))
-       :user (if (empty? user-update)
-               (first (user/find-by-account-id (:id the-account)))
-               (update users
-                       (set-fields user-update)
-                       (where {:account_id (:id the-account)})))}
-      {:status :does-not-exist :account nil})))
+      (let [a (find-by-account-id account-id)
+            s (first (site/find-by-account-uuid account-id))
+            u (user/find-by-account-uuid account-id)]
+        {:status :updated
+         :account a
+         :site s
+         :user u})
+      {:status :does-not-exist :account nil :site nil :user nil})))

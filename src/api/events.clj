@@ -123,7 +123,7 @@
                      (assoc :site-id (-> parsed :site :site-id))
                      coercer)]
          ;; TODO: check return val...
-         (kafka/record! (:event-name out) out)
+         (kafka/record-event! (:event-name out) out)
          {:headers {"Content-Type" "text/javascript"}
           :body ""
           :status 200})))))
