@@ -66,7 +66,6 @@
 (defmulti validate
   (fn [context
       {:keys [type] :as condition}]
-    (println type)
     (keyword type)))
 
 (defmethod validate :dates
@@ -76,7 +75,7 @@
 
 (defmethod validate :product-views
   [{:keys [site-id visitor-id] :as context}
-   {:keys [product_views] :as  condition}]
-  (let [k (str site-id "/" visitor-id "product-any")
+   {:keys [product_views] :as condition}]
+  (let [k (str site-id "/" visitor-id "/product-any")
         product-any-views (get-integer k)]
     (>= product-any-views product_views)))
