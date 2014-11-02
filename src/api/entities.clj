@@ -43,6 +43,7 @@
 (defentity offers
   (table "offers")
   (belongs-to sites {:fk :site_id})
+  (belongs-to promos {:fk :promo_id})
   (has-many offer-conditions {:fk :offer_id}))
 
 (defentity offer-conditions

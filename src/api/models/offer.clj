@@ -14,11 +14,14 @@
             [api.models.site :as site]
             [api.models.promo :as promo]
             [api.util :refer [hyphenify-key]]
+            [clojure.core.cache :as cache]
             [korma.core :refer :all]
             [korma.db :refer [transaction] :as kdb]
             [schema.core :as s]
             [schema.macros :as sm]
             [schema.coerce :as sc]))
+
+(def OffersCache (atom (cache/ttl-cache-factory {} :ttl 300000))) ;; TTL 5 minutes
 
 (defn db-to-offer
   "Convert a database result to a offer that obeys the OfferSchema"
@@ -181,7 +184,7 @@
   "Finds a offer by uuid."
   [offer-uuid :- s/Uuid]
   (let [results (select offers
-                        (with offer-conditions)
+                        (with offer-conditions promos)
                         (where {:offers.uuid offer-uuid}))]
     (first (map db-to-offer results))))
 
@@ -205,6 +208,14 @@
                                    :offers.code (clojure.string/upper-case
                                                  offer-code)})))]
     (if row (db-to-offer row))))
+
+(defn get-offers-for-site
+  ;; Returns cached offers for a site
+  [site-id]
+  (if (cache/has? @OffersCache site-id)
+    (swap! OffersCache #(cache/hit % site-id))
+    (swap! OffersCache #(cache/miss % site-id (find-by-site-uuid site-id))))
+  (cache/lookup @OffersCache site-id))
 
 (defn valid?
   [context {:keys [offer_conditions] :as offer}]

@@ -8,7 +8,6 @@
                                       shape-new-offer]]
             [clj-time.core :as t]
             [clj-time.format :as tf]
-            [clojure.core.cache :as cache]
             [clojure.data.json :refer [read-str write-str]]
             [clojure.tools.logging :as log]
             [schema.coerce :as c]
@@ -17,8 +16,6 @@
 (def query-schema {:site-id s/Uuid
                    (s/optional-key :promotably-auth) s/Str
                    :offer-code s/Str})
-
-(def OffersCache (atom (cache/ttl-cache-factory {} :ttl 300000))) ;; TTL 5 minutes
 
 (def mock-offer {:offers [{:coupon {:code "TWENTYOFF"
                                     :description "20% off all items"
@@ -107,25 +104,20 @@
       (do
         {:body (shape-offer the-offer)}))))
 
-(defn- get-offers-for-site
-  [site-id]
-  (if (cache/has? @OffersCache site-id)
-    (swap! OffersCache #(cache/hit % site-id))
-    (swap! OffersCache #(cache/miss % site-id (offer/find-by-site-uuid site-id))))
-  (cache/lookup @OffersCache site-id))
-
 (defn get-available-offers
   [{:keys [params] :as request}]
   (println (:visitor-id request))
   (let [site-id (java.util.UUID/fromString (or (:site-id params) (:site_id params)))
-        visitor-id (java.util.UUID/fromString (or (:visitor-id params) (:visitor_id params) (:visitor-id request)))
+        visitor-id (java.util.UUID/fromString (or (:visitor-id params)
+                                                  (:visitor_id params)
+                                                  (:visitor-id request)))
         mock? (Boolean/parseBoolean (:mock params))
         resp (if mock?
                (assoc-in mock-offer
                          [:offers 0 :rco :expires]
                          (tf/unparse (tf/formatters :date-time-no-ms)
                                      (t/plus (t/now) (t/minutes 15))))
-               (get-offers-for-site site-id))]
+               (offer/get-offers-for-site site-id))]
     (log/info site-id)
     (log/info resp)
     {:body (write-str resp)
