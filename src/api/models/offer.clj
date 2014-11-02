@@ -41,8 +41,10 @@
                     (assoc :reward {:type (if (:dynamic cleaned)
                                             :dynamic-promo
                                             :promo)
-                                    :expiry-in-minutes (:expiry-in-minutes cleaned)
                                     :promo-id (:uuid promo)})
+                    ((fn [o] (if (= (:type o) :dynamic-promo)
+                               (assoc-in o [:reward :expiry-in-minutes] (:expiry-in-minutes o))
+                               o)))
                     (dissoc :promo-id :dynamic :expiry-in-minutes)
                     (dissoc :presentation-type
                             :presentation-page
@@ -175,10 +177,11 @@
   "Finds all offers for a given site id. Returns a collection (empty
   array if no results found)"
   [site-uuid :- s/Uuid]
-  (select offers
-          (with offer-conditions)
-          (join sites (= :sites.id :site_id))
-          (where {:sites.uuid site-uuid})))
+  (map db-to-offer
+       (select offers
+               (with offer-conditions)
+               (join sites (= :sites.id :site_id))
+               (where {:sites.uuid site-uuid}))))
 
 (sm/defn find-by-uuid
   "Finds a offer by uuid."
@@ -218,10 +221,8 @@
   (cache/lookup @OffersCache site-id))
 
 (defn valid?
-  [context {:keys [offer_conditions] :as offer}]
-  (let [validated-conditions (map (fn [oc]
-                                    (println (keyword (:type oc)))
-                                    (c/validate context oc)) offer_conditions)]
+  [context {:keys [conditions] :as offer}]
+  (let [validated-conditions (map #(c/validate context %) conditions)]
     (if (seq validated-conditions)
       (every? true? validated-conditions)
       false)))

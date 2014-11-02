@@ -69,13 +69,13 @@
     (keyword type)))
 
 (defmethod validate :dates
-  [context {:keys [start-date end-date]}]
+  [context {:keys [start-date end-date] :as condition}]
   (and (after? (now) (from-sql-date start-date))
        (before? (now) (from-sql-date end-date))))
 
 (defmethod validate :product-views
   [{:keys [site-id visitor-id] :as context}
-   {:keys [product_views] :as condition}]
+   {:keys [product-views] :as condition}]
   (let [k (str site-id "/" visitor-id "/product-any")
         product-any-views (get-integer k)]
-    (>= product-any-views product_views)))
+    (>= product-any-views product-views)))
