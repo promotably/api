@@ -113,10 +113,12 @@
                                                   (:visitor-id request)))
         mock? (Boolean/parseBoolean (:mock params))
         resp (if mock?
-               (assoc-in mock-offer
-                         [:offers 0 :rco :expires]
-                         (tf/unparse (tf/formatters :date-time-no-ms)
-                                     (t/plus (t/now) (t/minutes 15))))
+               (-> mock-offer
+                   (assoc-in [:offers 0 :rco :expires]
+                             (tf/unparse (tf/formatters :date-time-no-ms)
+                                         (t/plus (t/now) (t/minutes 15))))
+                   (assoc-in [:offers 0 :rco :presentation-type] (let [r (rand-int 100)] (if (< 50 r) :fly-in
+                                                                                             :lightbox))))
                (offer/get-offers-for-site site-id))]
     (log/info site-id)
     (log/info resp)
