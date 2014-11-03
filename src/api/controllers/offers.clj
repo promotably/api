@@ -122,6 +122,12 @@
                                                        ""
                                                        (range 6)))))
 
+(defn- real-life-offers-response
+  [site-id visitor-id]
+  (let [available-offers (offer/get-offers-for-site site-id)]
+    (println available-offers)
+    {:offers []}))
+
 (defn get-available-offers
   [{:keys [params session] :as request}]
   (let [site-id (java.util.UUID/fromString (or (:site-id params) (:site_id params)))
@@ -134,7 +140,7 @@
         product-view-count (get-in session [:product-view-count] 0)
         resp (if (or mock? (>= product-view-count 3))
                (mock-offers-response)
-               {:offers []})]
+               (real-life-offers-response site-id visitor-id))]
     {:body (write-str resp)
      :headers {"Content-Type" "application/json"}}))
 
