@@ -97,7 +97,8 @@
   [{:keys [params] :as request}]
   ;; for debug
   ;; (prn "PARAMS" params)
-  (let [parsed (parse-event params)]
+  (let [parsed (parse-event params)
+        product-view-count (get-in request [:session :product-view-count] 0)]
     ;; for debug
     ;; (prn "PARSED" parsed)
     (cond
@@ -124,6 +125,9 @@
                      coercer)]
          ;; TODO: check return val...
          (kafka/record-event! (:event-name out) out)
-         {:headers {"Content-Type" "text/javascript"}
-          :body ""
-          :status 200})))))
+         (let [response {:headers {"Content-Type" "text/javascript"}
+                         :body ""
+                         :status 200}]
+           (if (= (:event-name out) :trackproductview)
+             (merge response {:session {:product-view-count (inc product-view-count)}})
+             response)))))))
