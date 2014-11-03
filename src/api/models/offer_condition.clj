@@ -79,3 +79,20 @@
   (let [k (str site-id "/" visitor-id "/product-any")
         product-any-views (get-integer k)]
     (>= product-any-views product-views)))
+
+;;TODO: will we know the product-id from either the context or
+;; defined in the condition - or not at all? Right now this
+;; assumes we have it in the context
+(defmethod validate :repeat-product-views
+  [{:keys [site-id visitor-id product-id] :as context}
+   {:keys [repeat-product-views] :as condition}]
+  (let [k (str site-id "/" visitor-id "/product-view/" product-id)
+        views (get-integer k)]
+    (>= views repeat-product-views)))
+
+(defmethod validate :num-lifetime-orders
+  [{:keys [site-id visitor-id]}
+   {:keys [num-lifetime-orders] :as condition}]
+  (let [k (str site-id "/" visitor-id "/lifetime-orders")
+        lifetime-orders (get-integer k)]
+    (>= lifetime-orders num-lifetime-orders)))
