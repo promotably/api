@@ -107,29 +107,34 @@
 
 (def the-chars "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
+(defn- mock-offers-response
+  []
+  (-> mock-offer
+      (assoc-in [:offers 0 :rco :expires]
+                (tf/unparse (tf/formatters :date-time-no-ms)
+                            (t/plus (t/now) (t/minutes 15))))
+      (assoc-in [:offers 0 :rco :presentation-type] (let [r (rand-int 100)] (if (< 50 r) :fly-in
+                                                                                :lightbox)))
+      (assoc-in [:offers 0 :rco :dynamic-coupon-code] (reduce
+                                                       #(let [c (str (nth the-chars (rand (count the-chars))))
+                                                              _ %2]
+                                                          (str %1 c))
+                                                       ""
+                                                       (range 6)))))
+
 (defn get-available-offers
   [{:keys [params session] :as request}]
-  (println (:visitor-id request))
   (let [site-id (java.util.UUID/fromString (or (:site-id params) (:site_id params)))
         visitor-id (java.util.UUID/fromString (or (:visitor-id params)
                                                   (:visitor_id params)
                                                   (:visitor-id request)))
-        mock? (Boolean/parseBoolean (:mock params))
-        resp (if (or mock? (>= 3 (:product-view-count session)))
-               (-> mock-offer
-                   (assoc-in [:offers 0 :rco :expires]
-                             (tf/unparse (tf/formatters :date-time-no-ms)
-                                         (t/plus (t/now) (t/minutes 15))))
-                   (assoc-in [:offers 0 :rco :presentation-type] (let [r (rand-int 100)] (if (< 50 r) :fly-in
-                                                                                             :lightbox)))
-                   (assoc-in [:offers 0 :rco :dynamic-coupon-code] (reduce
-                                                                    #(let [c (str (nth the-chars (rand (count the-chars))))
-                                                                           _ %2]
-                                                                       (str %1 c))
-                                                                    ""
-                                                                    (range 6)))))]
-    (log/info site-id)
-    (log/info resp)
+        mock? (if-not (nil? (:mock params))
+                (Boolean/parseBoolean (:mock params))
+                false)
+        product-view-count (get-in session [:product-view-count] 0)
+        resp (if (or mock? (>= product-view-count 3))
+               (mock-offers-response)
+               {:offers []})]
     {:body (write-str resp)
      :headers {"Content-Type" "application/json"}}))
 
