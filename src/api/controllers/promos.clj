@@ -82,7 +82,9 @@
   (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
         coercer (c/coercer query-schema matcher)
         {:keys [site-id code] :as coerced-params} (coercer params)
-        the-promo (promo/find-by-site-uuid-and-code site-id code)]
+        the-promo (promo/find-by-site-uuid-and-code
+                   site-id
+                   (clojure.string/upper-case code))]
     (if-not the-promo
       {:status 404 :body "Can't find that promo"}
       (do
@@ -116,7 +118,7 @@
                            prep-incoming
                            coercer)
         site-id (-> coerced-params :site :site-id)
-        code (-> coerced-params :code)
+        code (-> coerced-params :code clojure.string/upper-case)
         the-promo (promo/find-by-site-uuid-and-code site-id code)]
 
     (cond
@@ -150,7 +152,7 @@
                            prep-incoming
                            coercer)
         site-id (-> coerced-params :site :site-id)
-        code (-> coerced-params :code)
+        code (-> coerced-params :code clojure.string/upper-case)
         the-promo (promo/find-by-site-uuid-and-code site-id code)
         [context errors] (promo/valid? the-promo coerced-params)]
     (cond
