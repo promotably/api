@@ -108,14 +108,14 @@
 (def the-chars "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 (defn get-available-offers
-  [{:keys [params] :as request}]
+  [{:keys [params session] :as request}]
   (println (:visitor-id request))
   (let [site-id (java.util.UUID/fromString (or (:site-id params) (:site_id params)))
         visitor-id (java.util.UUID/fromString (or (:visitor-id params)
                                                   (:visitor_id params)
                                                   (:visitor-id request)))
         mock? (Boolean/parseBoolean (:mock params))
-        resp (if mock?
+        resp (if (or mock? (>= 3 (:product-view-count session)))
                (-> mock-offer
                    (assoc-in [:offers 0 :rco :expires]
                              (tf/unparse (tf/formatters :date-time-no-ms)
@@ -127,8 +127,7 @@
                                                                            _ %2]
                                                                        (str %1 c))
                                                                     ""
-                                                                    (range 6))))
-               (offer/get-offers-for-site site-id))]
+                                                                    (range 6)))))]
     (log/info site-id)
     (log/info resp)
     {:body (write-str resp)
