@@ -32,7 +32,8 @@
                                                  {:type :individual-use}]}
                            :rco {:display-text "Thank you for shopping with us. We'd like to offer you a one-time only 20% discount on your order. But hurry this offer expires soon!"
                                  :presentation-type :fly-in
-                                 :presentation-page :any}}]})
+                                 :presentation-page :any
+                                 :dynamic-coupon-code "ASDSDF"}}]})
 
 (defn lookup-offers
   [{:keys [params] :as request}]
@@ -104,6 +105,8 @@
       (do
         {:body (shape-offer the-offer)}))))
 
+(def the-chars "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
 (defn get-available-offers
   [{:keys [params] :as request}]
   (println (:visitor-id request))
@@ -118,7 +121,13 @@
                              (tf/unparse (tf/formatters :date-time-no-ms)
                                          (t/plus (t/now) (t/minutes 15))))
                    (assoc-in [:offers 0 :rco :presentation-type] (let [r (rand-int 100)] (if (< 50 r) :fly-in
-                                                                                             :lightbox))))
+                                                                                             :lightbox)))
+                   (assoc-in [:offers 0 :rco :dynamic-coupon-code] (reduce
+                                                                    #(let [c (str (nth the-chars (rand (count the-chars))))
+                                                                           _ %2]
+                                                                       (str %1 c))
+                                                                    ""
+                                                                    (range 6))))
                (offer/get-offers-for-site site-id))]
     (log/info site-id)
     (log/info resp)
