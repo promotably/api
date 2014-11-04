@@ -1,15 +1,31 @@
 (ns api.views.offers
   (:require [api.views.helper :refer [view-value-helper]]
-            [clojure.data.json :refer [write-str]]))
+            [clojure.data.json :refer [write-str]]
+            [clj-time.core :as t]
+            [clj-time.format :as tf]))
+
+(def the-chars "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 (defn shape-one
   [offer]
-  (-> offer
-      (assoc :conditions
-        (map (fn [c] (dissoc c :id :offer-id))
-             (:conditions offer))
-        :offer-id (:uuid offer))
-      (dissoc :id :uuid :site-id)))
+  (let [coupon (select-keys offer [:code :description :reward-amount :reward-type :reward-applied-to :reward-tax])
+        rco (select-keys offer [:presentation :reward])
+        coupon* (assoc coupon :conditions (map (fn [c] (dissoc c :id :offer-id))
+                                               (:conditions offer)))
+        rco* {:display-text (get-in rco [:presentation :display-text])
+              :presentation-type (get-in rco [:presentation :type])
+              :presentation-page (get-in rco [:presentation :page])
+              :expires (tf/unparse (tf/formatters :date-time-no-ms)
+                                   (t/plus (t/now) (t/minutes (get-in rco [:reward :expiry-in-minutes]))))
+              :dynamic-coupon-code (reduce
+                                    #(let [c (str (nth the-chars (rand (count the-chars))))
+                                           _ %2]
+                                       (str %1 c))
+                                    ""
+                                    (range 6))}]
+    (-> {:coupon coupon*
+         :rco rco*}
+        (dissoc :id :uuid :site-id))))
 
 (defn shape-offer
   [offer]

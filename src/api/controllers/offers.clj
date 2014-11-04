@@ -124,9 +124,10 @@
 
 (defn- real-life-offers-response
   [site-id visitor-id]
-  (let [available-offers (offer/get-offers-for-site site-id)]
-    (println available-offers)
-    {:offers []}))
+  (let [available-offers (offer/get-offers-for-site site-id)
+        valid-offers (shape-lookup (filter offers/valid? available-offers))]
+    (println valid-offers)
+    {:offers valid-offers}))
 
 (defn get-available-offers
   [{:keys [params session] :as request}]
@@ -143,4 +144,3 @@
                (real-life-offers-response site-id visitor-id))]
     {:body (write-str resp)
      :headers {"Content-Type" "application/json"}}))
-
