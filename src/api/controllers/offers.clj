@@ -140,7 +140,11 @@
                 false)
         product-view-count (get-in session [:product-view-count] 0)
         resp (if (or mock? (>= product-view-count 3))
-               (merge {:session {:product-view-count 0}} (mock-offers-response))
+               (mock-offers-response)
                (real-life-offers-response site-id visitor-id))]
-    {:body (write-str resp)
-     :headers {"Content-Type" "application/json"}}))
+    (if (>= product-view-count 3)
+      {:body (write-str resp)
+       :headers {"Content-Type" "application/json"}
+       :session {:product-view-count 0}}
+      {:body (write-str resp)
+       :headers {"Content-Type" "application/json"}})))
