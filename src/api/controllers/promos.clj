@@ -73,7 +73,7 @@
 
 (defn show-promo
   [{:keys [promo-id params body] :as request}]
-  (let [promos (promo/by-promo-id promo-id)]
+  (let [promos (promo/find-by-site-and-uuid (:site-id params) promo-id)]
     (shape-new-promo (first promos))))
 
 ;; TODO: Check auth

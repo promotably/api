@@ -77,10 +77,6 @@
   (seq (select promos
                (where {:site_id site-id :uuid promo-id}))))
 
-(defn by-promo-id
-  [site-id promo-id]
-  (find-by-site-and-uuid site-id promo-id))
-
 (sm/defn find-by-uuid
   "Finds a promo by uuid."
   [promo-uuid :- s/Uuid]
@@ -144,7 +140,7 @@
                     reward-type reward-applied-to reward-tax reward-amount
                     site-id conditions linked-products] :as params}]
   (let [promo-id (java.util.UUID/fromString promo-id)
-        found (first (by-promo-id site-id promo-id))
+        found (first (find-by-site-and-uuid site-id promo-id))
         id (:id found)]
     (if-not found
       {:success false
@@ -199,7 +195,7 @@
 (sm/defn delete-by-uuid
   "Deletes a promo by uuid."
   [site-id promo-uuid :- s/Uuid]
-  (let [found (first (by-promo-id site-id promo-uuid))]
+  (let [found (first (find-by-site-and-uuid site-id promo-uuid))]
     (transaction
      (to-kafka! :delete (:id found) site-id)
      (c/delete-conditions! (:id found))
