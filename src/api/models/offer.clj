@@ -188,13 +188,14 @@
   "Finds a offer by uuid."
   [offer-uuid :- s/Uuid]
   (let [results (select offers
-                        (with offer-conditions promos)
+                        (with offer-conditions)
                         (where {:offers.uuid offer-uuid}))]
     (first (map db-to-offer results))))
 
 (sm/defn delete-by-uuid
   "Deletes a offer by uuid."
   [offer-uuid :- s/Uuid]
+  (prn "delete" offer-uuid)
   (let [found (find-by-uuid offer-uuid)]
     (transaction
      (c/delete-conditions! (:id found))
