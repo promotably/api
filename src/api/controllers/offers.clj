@@ -125,8 +125,8 @@
 (defn- real-life-offers-response
   [site-id visitor-id]
   (let [available-offers (offer/get-offers-for-site site-id)
-        valid-offers (shape-lookup (filter offer/valid? available-offers))]
-    (println valid-offers)
+        ;;valid-offers (shape-lookup (filter offer/valid? available-offers))
+        ]
     {:offers []}))
 
 (defn get-available-offers
