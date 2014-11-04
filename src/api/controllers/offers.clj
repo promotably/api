@@ -125,9 +125,9 @@
 (defn- real-life-offers-response
   [site-id visitor-id]
   (let [available-offers (offer/get-offers-for-site site-id)
-        valid-offers (shape-lookup (filter offers/valid? available-offers))]
+        valid-offers (shape-lookup (filter offer/valid? available-offers))]
     (println valid-offers)
-    {:offers valid-offers}))
+    {:offers []}))
 
 (defn get-available-offers
   [{:keys [params session] :as request}]
@@ -140,7 +140,7 @@
                 false)
         product-view-count (get-in session [:product-view-count] 0)
         resp (if (or mock? (>= product-view-count 3))
-               (mock-offers-response)
+               (merge {:session {:product-view-count 0}} (mock-offers-response))
                (real-life-offers-response site-id visitor-id))]
     {:body (write-str resp)
      :headers {"Content-Type" "application/json"}}))
