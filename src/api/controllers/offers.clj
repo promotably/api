@@ -148,3 +148,4 @@
        :session {:product-view-count 0}}
       {:body (write-str resp)
        :headers {"Content-Type" "application/json"}})))
+
