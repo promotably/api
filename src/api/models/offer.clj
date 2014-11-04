@@ -42,8 +42,9 @@
                                             :dynamic-promo
                                             :promo)
                                     :promo-id (:uuid promo)})
-                    ((fn [o] (if (= (:type o) :dynamic-promo)
-                               (assoc-in o [:reward :expiry-in-minutes] (:expiry-in-minutes o))
+                    ((fn [o] (if (= (-> o :reward :type) :dynamic-promo)
+                               (assoc-in o [:reward :expiry-in-minutes]
+                                         (:expiry-in-minutes o))
                                o)))
                     (dissoc :promo-id :dynamic :expiry-in-minutes)
                     (dissoc :presentation-type

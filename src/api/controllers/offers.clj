@@ -43,7 +43,7 @@
                                       c/string-coercion-matcher]))
          params)
         found (offer/find-by-site-uuid site-id)]
-    (shape-lookup (map offer/db-to-offer found))))
+    (shape-lookup found)))
 
 (defn show-offer
   [{:keys [params body] :as request}]
