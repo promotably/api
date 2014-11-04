@@ -62,6 +62,11 @@
         coercer (sc/coercer OutboundPromo matcher)]
     (coercer cleaned)))
 
+(defn exists?
+  [site-id code]
+  (seq (select promos
+               (where {:site_id site-id :code code}))))
+
 (defn find-by-id
   [promo-id]
   (seq (select promos
