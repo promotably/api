@@ -14,6 +14,7 @@
   :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.1"]
             [cider/cider-nrepl "0.7.0-20140711.132954-36"]]
   :dependencies [[clojure.joda-time "0.2.0"]
+                 [clj-http "0.9.2"]
                  [clj-kafka "0.2.6-0.8" :exclusions [org.apache.zookeeper/zookeeper]]
                  [clj-logging-config "1.9.12"]
                  [clj-time "0.8.0"]
