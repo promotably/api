@@ -5,6 +5,4 @@
 (defn create-email-subscriber!
   [{:keys [params] :as request}]
   (render-create
-   (es/create-email-subscriber!
-    {:browser-id (java.util.UUID/fromString (:browser-id params))
-     :email (:email params)})))
+   (es/create-email-subscriber! (:email params))))
