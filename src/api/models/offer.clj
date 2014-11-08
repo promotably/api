@@ -190,7 +190,7 @@
                (where {:sites.uuid site-uuid}))))
 
 (sm/defn find-by-uuid
-  "Finds a offer by uuid."
+  "Finds an offer by uuid."
   [offer-uuid :- s/Uuid]
   (let [results (select offers
                         (with offer-conditions)
@@ -221,11 +221,11 @@
 
 (defn get-offers-for-site
   ;; Returns cached offers for a site
-  [site-id]
-  (if (cache/has? @OffersCache site-id)
-    (swap! OffersCache #(cache/hit % site-id))
-    (swap! OffersCache #(cache/miss % site-id (find-by-site-uuid site-id))))
-  (cache/lookup @OffersCache site-id))
+  [site-uuid]
+  (if (cache/has? @OffersCache site-uuid)
+    (swap! OffersCache #(cache/hit % site-uuid))
+    (swap! OffersCache #(cache/miss % site-uuid (find-by-site-uuid site-uuid))))
+  (cache/lookup @OffersCache site-uuid))
 
 (defn valid?
   [context {:keys [conditions] :as offer}]
