@@ -39,3 +39,24 @@
               :message (format "Promo %s does not exist" pid)})
     (provided (api.models.promo/find-by-site-and-uuid ...site-id... pid) => [],
               (exists? ...site-id... ...code...) => false)))
+
+(fact "update-offer! handles when an offer doesn't exist"
+  (let [offer-uuid (java.util.UUID/randomUUID)]
+    (update-offer! (str offer-uuid) {:site-id ...site-id...
+                                     :reward {:promo-id ...promo-id...}})
+    => (just {:success false
+              :error :not-found
+              :message (format "Offer id %s does not exist." offer-uuid)})
+    (provided (by-offer-uuid ...site-id... offer-uuid) => [],
+              (api.models.promo/find-by-site-and-uuid ...site-id...
+                                                      ...promo-id...) => [{:id 1}])))
+
+(fact "update-offer! handles when a promo doesn't exist"
+  (let [offer-uuid (java.util.UUID/randomUUID)]
+    (update-offer! (str offer-uuid) {:site-id ...site-id...
+                                     :reward {:promo-id 1}})
+    => (just {:success false
+              :error :not-found
+              :message (format "Promo id %s does not exist." 1)})
+    (provided (by-offer-uuid ...site-id... offer-uuid) => [{:id 2}],
+              (api.models.promo/find-by-site-and-uuid ...site-id... 1) => [])))
