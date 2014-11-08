@@ -59,13 +59,18 @@
                  (assoc :conditions conditions))]
     (coercer done)))
 
+(defn lookup-by
+  [fields]
+  {:pre [(map? fields)]}
+  (select offers (where fields)))
+
 (defn exists?
   [site-id code]
-  (seq (select offers (where {:site_id site-id :code code}))))
+  (not (empty? (lookup-by {:site_id site-id :code code}))))
 
 (defn by-offer-uuid
   [site-id offer-id]
-  (seq (select offers (where {:site_id site-id :uuid offer-id}))))
+  (seq (lookup-by {:site_id site-id :uuid offer-id})))
 
 (defn by-site-uuid-and-offer-uuid
   [site-uuid offer-uuid]
@@ -84,45 +89,45 @@
   (let [{p-type :type p-display-text :display-text p-page :page} presentation
         {:keys [promo-id expiry-in-minutes type]} reward
         p (first (promo/find-by-site-and-uuid site-id promo-id))]
-    (transaction
-     (cond
+    (cond
 
-      (seq (exists? site-id code))
-      {:success false
-       :error :already-exists
-       :message (format "A offer with code %s already exists" code)}
+     (exists? site-id code)
+     {:success false
+      :error :already-exists
+      :message (format "A offer with code %s already exists" code)}
 
-      (not p)
-      {:success false
-       :error :invalid-promo
-       :message (format "Promo %s does not exist" promo-id)}
+     (not p)
+     {:success false
+      :error :invalid-promo
+      :message (format "Promo %s does not exist" promo-id)}
 
-      :else
-       (let [new-values {;; TODO: should probably have this flag.
-                         ;; :active true
-                         :site_id site-id
-                         :code code
-                         :name name
-                         :display_text display-text
-                         :promo_id (:id p)
-                         :dynamic (if (= :dynamic-promo type)
-                                    true
-                                    false)
-                         :expiry_in_minutes expiry-in-minutes
-                         :presentation_type (clojure.core/name p-type)
-                         :presentation_page (clojure.core/name p-page)
-                         :presentation_display_text p-display-text
-                         :created_at (sqlfn now)
-                         :updated_at (sqlfn now)
-                         :uuid (java.util.UUID/randomUUID)}
-             result (insert offers (values new-values))
-             the-offer (db-to-offer result)]
-         (when (seq conditions)
-           (c/create-conditions! (map #(-> %
-                                           (assoc :uuid (java.util.UUID/randomUUID))
-                                           (assoc :offer-id (:id the-offer)))
-                                      conditions)))
-         {:success true})))))
+     :else
+     (transaction
+      (let [new-values {;; TODO: should probably have this flag.
+                        ;; :active true
+                        :site_id site-id
+                        :code code
+                        :name name
+                        :display_text display-text
+                        :promo_id (:id p)
+                        :dynamic (if (= :dynamic-promo type)
+                                   true
+                                   false)
+                        :expiry_in_minutes expiry-in-minutes
+                        :presentation_type (clojure.core/name p-type)
+                        :presentation_page (clojure.core/name p-page)
+                        :presentation_display_text p-display-text
+                        :created_at (sqlfn now)
+                        :updated_at (sqlfn now)
+                        :uuid (java.util.UUID/randomUUID)}
+            result (insert offers (values new-values))
+            the-offer (db-to-offer result)]
+        (when (seq conditions)
+          (c/create-conditions! (map #(-> %
+                                          (assoc :uuid (java.util.UUID/randomUUID))
+                                          (assoc :offer-id (:id the-offer)))
+                                     conditions)))
+        {:success true})))))
 
 (defn update-offer!
   "Updates a offer in the database"
