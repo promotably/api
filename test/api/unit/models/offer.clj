@@ -60,3 +60,10 @@
               :message (format "Promo id %s does not exist." 1)})
     (provided (by-offer-uuid ...site-id... offer-uuid) => [{:id 2}],
               (api.models.promo/find-by-site-and-uuid ...site-id... 1) => [])))
+
+(fact "get offers for site uses the cache"
+  (let [site-uuid (java.util.UUID/randomUUID)]
+    ;; Lookup 10 times, the actual DB lookup only happens once
+    (dotimes [n 10] (get-offers-for-site site-uuid))
+    => nil
+    (provided (find-by-site-uuid site-uuid) => [{:id 1} {:id 2}] :times 1)))
