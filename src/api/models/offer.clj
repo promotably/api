@@ -60,17 +60,20 @@
     (coercer done)))
 
 (defn lookup-by
-  [fields]
-  {:pre [(map? fields)]}
-  (select offers (where fields)))
+  [{:keys [conditions withs joins]}]
+  {:pre [(map? conditions)]}
+  (-> (cond-> (select* offers)
+              conditions (where conditions)
+              withs (with withs))
+      (select)))
 
 (defn exists?
   [site-id code]
-  (not (empty? (lookup-by {:site_id site-id :code code}))))
+  (not (empty? (lookup-by {:conditions {:site_id site-id :code code}}))))
 
 (defn by-offer-uuid
   [site-id offer-id]
-  (seq (lookup-by {:site_id site-id :uuid offer-id})))
+  (seq (lookup-by {:conditions {:site_id site-id :uuid offer-id}})))
 
 (defn by-site-uuid-and-offer-uuid
   [site-uuid offer-uuid]

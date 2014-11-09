@@ -6,8 +6,8 @@
 (tabular
  (fact "exists? returns expected output"
    (exists? ...site-id... ...code...) => ?result
-   (provided (lookup-by {:site_id ...site-id...
-                         :code ...code...}) => ?lookup-result))
+   (provided (lookup-by {:conditions {:site_id ...site-id...
+                                      :code ...code...}}) => ?lookup-result))
  ?result ?lookup-result
  false   []
  true    [{:id 1}]
@@ -16,8 +16,8 @@
 (tabular
  (fact "by-offer-uuid returns expected output"
    (by-offer-uuid ...site-id... ...offer-id...) => ?result
-   (provided (lookup-by {:site_id ...site-id...
-                         :uuid ...offer-id...}) => ?lookup-result))
+   (provided (lookup-by {:conditions {:site_id ...site-id...
+                                      :uuid ...offer-id...}}) => ?lookup-result))
  ?result             ?lookup-result
  nil                 []
  [{:id 1}]           [{:id 1}])
