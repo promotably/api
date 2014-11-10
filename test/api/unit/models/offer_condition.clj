@@ -31,3 +31,20 @@
  100                false    10
  100                true     100
  100                true     101)
+
+
+(tabular
+ (fact "validation for num-lifetime-orders condition works properly"
+   (let [oc {:type :num-lifetime-orders
+             :num-lifetime-orders ?oc-num-lifetime-orders}
+         site-id (java.util.UUID/randomUUID)
+         visitor-id (java.util.UUID/randomUUID)
+         context {:site-id site-id
+                  :visitor-id visitor-id}]
+     (validate context oc) => ?result
+     (provided (api.lib.redis/get-integer anything)
+               => ?actual-lifetime-orders)))
+ ?oc-num-lifetime-orders  ?result  ?actual-lifetime-orders
+ 100                      false    10
+ 100                      true     100
+ 100                      true     101)
