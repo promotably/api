@@ -195,10 +195,9 @@
 (sm/defn find-by-uuid
   "Finds an offer by uuid."
   [offer-uuid :- s/Uuid]
-  (let [results (select offers
-                        (with offer-conditions)
-                        (where {:offers.uuid offer-uuid}))]
-    (first (map db-to-offer results))))
+  (let [results (lookup-by {:conditions {:offers.uuid offer-uuid}
+                            :withs offer-conditions})]
+    (db-to-offer (first results))))
 
 (sm/defn delete-by-uuid
   "Deletes a offer by uuid."
