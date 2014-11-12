@@ -26,13 +26,17 @@
 (defn db-to-offer
   "Convert a database result to a offer that obeys the OfferSchema"
   [r]
+  (println "R" r)
   (let [matcher (sc/first-matcher [custom-matcher sc/string-coercion-matcher])
         coercer (sc/coercer OutboundOffer matcher)
         hyphenified-params (underscore-to-dash-keys r)
+        _ (println "HP" hyphenified-params)
         cleaned (apply dissoc
                        hyphenified-params
                        (for [[k v] hyphenified-params :when (nil? v)] k))
+        _ (println "CLEANED" cleaned)
         promo (first (promo/find-by-id (:promo-id cleaned)))
+        _ (println "PROMO" promo)
         renamed (-> cleaned
                     (assoc :presentation
                       {:page (keyword (:presentation-page cleaned))
@@ -50,6 +54,7 @@
                     (dissoc :presentation-type
                             :presentation-page
                             :presentation-display-text))
+        _ (println renamed)
         conditions (map
                     (comp unwrap-jdbc
                           c/db-to-condition)
@@ -195,10 +200,10 @@
 (sm/defn find-by-uuid
   "Finds an offer by uuid."
   [offer-uuid :- s/Uuid]
-  (let [results (select offers
-                        (with offer-conditions)
-                        (where {:offers.uuid offer-uuid}))]
-    (first (map db-to-offer results))))
+  (let [results (lookup-by {:conditions {:offers.uuid offer-uuid}
+                            :withs offer-conditions})]
+    (println "RESULTS" results)
+    (db-to-offer (first results))))
 
 (sm/defn delete-by-uuid
   "Deletes a offer by uuid."
