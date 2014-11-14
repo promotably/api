@@ -17,8 +17,7 @@
             [api.state]
             [api.env :as env]
             [api.cache :as cache]
-            [api.lib.protocols :refer (SessionCache init shutdown)]
-            [api.kafka :as kafka]))
+            [api.lib.protocols :refer (SessionCache init shutdown)]))
 
 (def ns-servlet-handler (atom nil))
 
@@ -73,8 +72,7 @@
     (init session-cache)
     (alter-var-root #'session-store
                     (constantly session-cache)))
-  (reset! ns-servlet-handler (app {}))
-  (kafka/init!))
+  (reset! ns-servlet-handler (app {})))
 
 (defn current-app [context]
   (@ns-servlet-handler context))

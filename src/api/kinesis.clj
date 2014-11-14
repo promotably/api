@@ -1,4 +1,6 @@
-(ns api.kinesis
+(ns ^{:author "smnirven"
+      :doc "Here lies code for interacting with AWS Kinesis"}
+  api.kinesis
   (:import [java.io ByteArrayInputStream ByteArrayOutputStream]
            [java.nio ByteBuffer])
   (:require [amazonica.aws.kinesis :refer (put-record worker!)]
@@ -11,7 +13,7 @@
 (def promo-stream-name (or (System/getenv "PROMO_STREAM_NAME")
                            "dev-PromoStream"))
 
-(defn record!
+(defn- record!
   "Records to an AWS Kinesis Stream."
   [stream-name message-map]
   (try
@@ -32,3 +34,12 @@
              {:message-id (java.util.UUID/randomUUID)
               :event-name event-name
               :attributes attributes})))
+
+(defn record-promo-action!
+  [action promo site]
+  (future
+    (record! promo-stream-name
+             {:message-id (java.util.UUID/randomUUID)
+              :action action
+              :promo promo
+              :site site})))

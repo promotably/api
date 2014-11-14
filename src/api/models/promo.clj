@@ -16,7 +16,7 @@
             [api.util :refer [hyphenify-key]]
             [korma.core :refer :all]
             [korma.db :refer [transaction] :as kdb]
-            [api.kafka :as kafka]
+            [api.kinesis :as kinesis]
             [slingshot.slingshot :only [throw+] :as ss]
             [schema.core :as s]
             [schema.macros :as sm]
@@ -86,12 +86,12 @@
                         (where {:promos.uuid promo-uuid}))]
     (first (map db-to-promo results))))
 
-(defn to-kafka!
-  [mode promo-id site-id]
-  (if-let [p (first (find-by-id promo-id))]
-    (kafka/record! (str "promo-" (name mode))
-                   {:promo (find-by-uuid (:uuid p))
-                    :site (site/find-by-site-id site-id)})
+(defn to-kinesis!
+  [action promo-id site-id]
+  (if-let [the-promo (first (find-by-id promo-id))]
+    (kinesis/record-promo-action! action
+                                  the-promo
+                                  (site/find-by-site-id site-id))
     (ss/throw+ {:type ::missing-promo :promo-id promo-id :site-id site-id})))
 
 (sm/defn new-promo!
@@ -130,7 +130,7 @@
                                (assoc :uuid (java.util.UUID/randomUUID))
                                (assoc :promo-id id))
                           linked-products)))
-       (to-kafka! :create id site-id)
+       (to-kinesis! :create id site-id)
        {:success true}))))
 
 ;; (sm/defn update-promo!
@@ -171,7 +171,7 @@
                               (assoc :uuid (java.util.UUID/randomUUID))
                               (assoc :promo-id (:id found)))
                          linked-products))
-        (to-kafka! :update (:id found) site-id)
+        (to-kinesis! :update (:id found) site-id)
         {:success true}))))
 
 (sm/defn find-by-site-uuid
@@ -197,7 +197,7 @@
   [site-id promo-uuid :- s/Uuid]
   (let [found (first (find-by-site-and-uuid site-id promo-uuid))]
     (transaction
-     (to-kafka! :delete (:id found) site-id)
+     (to-kinesis! :delete (:id found) site-id)
      (c/delete-conditions! (:id found))
      (lp/delete! (:id found))
      (delete promos (where {:promos.uuid promo-uuid})))))
