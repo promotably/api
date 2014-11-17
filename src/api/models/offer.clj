@@ -3,7 +3,6 @@
             [clj-time.core :refer [before? after? now]]
             [clj-time.coerce :refer [from-sql-date]]
             [clojure.set :refer [rename-keys intersection]]
-            [api.db :refer :all]
             [api.entities :refer :all]
             [api.lib.coercion-helper :refer [custom-matcher underscore-to-dash-keys]]
             [api.lib.schema :refer :all]

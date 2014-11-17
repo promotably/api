@@ -1,7 +1,6 @@
 (ns api.models.user
   (:require [clojure.set :refer [rename-keys]]
             [clojure.tools.logging :as log]
-            [api.db :refer :all]
             [api.entities :refer [users accounts]]
             [api.lib.coercion-helper :refer [dash-to-underscore-keys]]
             [api.lib.user :refer [salted-pass parse-sql-exception]]
