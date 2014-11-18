@@ -4,7 +4,7 @@
             [clojure.tools.logging :as log]
             [clj-time.format]
             [clj-time.coerce]
-            [api.kafka :as kafka]
+            [api.kinesis :as kinesis]
             [api.models.helper :refer :all]
             [api.models.site :as site]
             [api.lib.schema :refer :all]
@@ -124,7 +124,7 @@
                      (assoc :site-id (-> parsed :site :site-id))
                      coercer)]
          ;; TODO: check return val...
-         (kafka/record-event! (:event-name out) out)
+         (kinesis/record-event! (:event-name out) out)
          (let [response {:headers {"Content-Type" "text/javascript"}
                          :body ""
                          :status 200}]

@@ -12,8 +12,10 @@
                    :jvm-opts ["-DKAFKA_BROKERS=localhost:9092"]}}
   :global-vars {*warn-on-reflection* true}
   :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.1"]
-            [cider/cider-nrepl "0.7.0-20140711.132954-36"]]
-  :dependencies [[clojure.joda-time "0.2.0"]
+            ;;[cider/cider-nrepl "0.7.0-20140711.132954-36"]
+            [cider/cider-nrepl "0.8.0-SNAPSHOT"]]
+  :dependencies [[amazonica "0.2.29"]
+                 [clojure.joda-time "0.2.0"]
                  [clj-http "0.9.2"]
                  [clj-kafka "0.2.6-0.8" :exclusions [org.apache.zookeeper/zookeeper]]
                  [clj-logging-config "1.9.12"]
@@ -38,7 +40,9 @@
                  [ring/ring-core "1.3.1"]
                  [ring/ring-json "0.3.1"]]
   :resource-paths ["resources"]
-  :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC"]
+  :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC"
+             "-DEVENT_STREAM_NAME=dev-PromotablyAPIEvents"
+             "-DPROMO_STREAM_NAME=dev-PromoStream"]
   :ring {:handler api.system/servlet-handler
          :init api.system/init-servlet
          :destroy api.system/stop

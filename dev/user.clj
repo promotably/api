@@ -1,10 +1,10 @@
 (ns dev.user
-  (:require [api.kafka :as kafka]))
+  (:require [api.kinesis :refer (record-event!)]))
 
 
 (defn record-product-view
   [site-id visitor-id product-id]
-  (kafka/record-event!
+  (record-event!
    :trackproductview
    {:visitor-id visitor-id
     :product-id product-id
