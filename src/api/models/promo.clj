@@ -4,7 +4,6 @@
             [clj-time.coerce :refer [from-sql-date]]
             [clojure.set :refer [rename-keys intersection]]
             [clojure.walk :refer [postwalk]]
-            [api.db :refer :all]
             [api.models.helper :refer :all]
             [api.entities :refer :all]
             [api.lib.coercion-helper :refer [custom-matcher underscore-to-dash-keys]]
@@ -280,5 +279,3 @@
 
         (= :cart reward-applied-to)
         discount-amount-per-item)))))
-
-

@@ -21,6 +21,7 @@
                  [clj-logging-config "1.9.12"]
                  [clj-time "0.8.0"]
                  [compojure "1.1.9"]
+                 [com.stuartsierra/component "0.2.2"]
                  [com.taoensso/carmine "2.7.0"]
                  [korma "0.4.0"]
                  [log4j/log4j "1.2.17"]
@@ -36,14 +37,15 @@
                  [slingshot "0.12.1"]
                  [prismatic/schema "0.2.6"]
                  [ring.middleware.jsonp "0.1.6"]
-                 [ring/ring-core "1.3.1"]]
+                 [ring/ring-core "1.3.1"]
+                 [ring/ring-json "0.3.1"]]
   :resource-paths ["resources"]
   :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC"
              "-DEVENT_STREAM_NAME=dev-PromotablyAPIEvents"
              "-DPROMO_STREAM_NAME=dev-PromoStream"]
-  :ring {:handler api.core/current-app
-         :init api.core/init-app
-         :destroy api.core/shutdown-app
+  :ring {:handler api.system/servlet-handler
+         :init api.system/init-servlet
+         :destroy api.system/stop
          :auto-reload? false
          :reload-paths "src"}
   :aws {:beanstalk {:environments [{:name "promotably-api-staging"
