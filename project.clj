@@ -35,7 +35,8 @@
                  [slingshot "0.12.1"]
                  [prismatic/schema "0.2.6"]
                  [ring.middleware.jsonp "0.1.6"]
-                 [ring/ring-core "1.3.1"]]
+                 [ring/ring-core "1.3.1"]
+                 [ring/ring-json "0.3.1"]]
   :resource-paths ["resources"]
   :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC"]
   :ring {:handler api.system/servlet-handler

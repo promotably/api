@@ -9,6 +9,7 @@
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.middleware.session :as session]
+            [ring.middleware.json :as json]
             [ring.middleware.jsonp :as jsonp]
             [ring.util.response :refer [response content-type]]
             [ring.middleware.permacookie :refer [wrap-permacookie]]
@@ -139,6 +140,7 @@
 (defn app
   [options]
   (-> all-routes
+      json/wrap-json-body
       jsonp/wrap-json-with-padding
       handler/site
       wrap-params
