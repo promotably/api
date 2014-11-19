@@ -17,7 +17,7 @@
                                             (dissoc :id :uuid :site-id)) r)))})
 
 (defn shape-new-promo
-  [{:keys [success error message] :as response}]
+  [{:keys [success error message] :as response} accept]
   (cond
    (true? success) {:status 201}
    (and (false? success) (= error :already-exists)) {:status 409 :body message}

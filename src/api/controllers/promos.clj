@@ -47,16 +47,19 @@
 
 (defn create-new-promo!
   [{:keys [params body] :as request}]
-  (let [input-edn (clojure.edn/read-string (slurp body))
-        site-id (:site-id input-edn)
-        ;; TODO: Handle the site not being found
-        id (site/get-id-by-site-uuid site-id)
+  (let [content-type (get-in request [:headers :content-type] "application/edn")
+        deserialized-body (condp = content-type
+                            "application/json" (read-str (slurp body))
+                            "application/edn" (clojure.edn/read-string (slurp body)))
+        site-id (:site-id deserialized-body)
+        id (site/find-by-site-uuid site-id)
         coerced-params ((c/coercer NewPromo
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
-                        input-edn)]
+                        deserialized-body)]
     (shape-new-promo
-     (promo/new-promo! (assoc coerced-params :site-id id)))))
+     (promo/new-promo! (assoc coerced-params :site-id id))
+     (get-in request [:headers :accept] "application/edn"))))
 
 (defn update-promo!
   [{:keys [params body] :as request}]
