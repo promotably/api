@@ -47,9 +47,11 @@
 
 (defn create-new-promo!
   [{:keys [params body] :as request}]
-  (let [content-type (get-in request [:headers :content-type] "application/edn")
+  (let [content-type (get-in request [:headers "content-type"] "application/edn")
         deserialized-body (condp = content-type
-                            "application/json" (read-str (slurp body))
+                            "application/json" body ;; I guess
+                            ;; somewhere in the luminiforous ether its
+                            ;; getting deserialized
                             "application/edn" (clojure.edn/read-string (slurp body)))
         site-id (:site-id deserialized-body)
         id (site/find-by-site-uuid site-id)
