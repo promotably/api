@@ -29,6 +29,7 @@ vagrant up
 ```
 
 ### Database
+
 * NOTE: You don't have to do this if you followed the vagrant setup
 * This server uses PostgreSQL 9.3. If you're looking for a really easy way to run a postgresql database on your mac, checkout [postgres.app](http://postgresapp.com/)
 * Also, the postgresql extension uuid-ossp is required. Once you have your database up, do the following setup:
