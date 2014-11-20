@@ -14,19 +14,7 @@ Make sure your ~/.lein/profiles.clj has at least:
 
      $ cat ~/.lein/profiles.clj
      {:user {:plugins [[lein-midje "3.0.0"]
-                      [cider/cider-nrepl "0.7.0-SNAPSHOT"]]}}
-
-### Up and Running with Vagrant
-
-API requires several different services to function properly. There's a vagrant config in API that will setup a virtual machine on your development machine, which will have all the requisite services installed and running.
-
-Install Vagrant [from here](http://docs.vagrantup.com/v2/installation/index.html)
-
-From the root project directory (api), run the following command:
-
-```
-vagrant up
-```
+                      [cider/cider-nrepl "0.8.0"]]}}
 
 ### Database
 
