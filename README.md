@@ -48,6 +48,7 @@ GRANT ALL PRIVILEGES ON TABLE migrations TO p_user;
 API uses [drift for migrations](https://github.com/macourtney/drift).
 
 #### To run migrations:
+
 ```
 lein migrate
 ```
