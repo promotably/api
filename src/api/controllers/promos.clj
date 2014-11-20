@@ -53,8 +53,8 @@
                             ;; somewhere in the luminiforous ether its
                             ;; getting deserialized
                             "application/edn" (clojure.edn/read-string (slurp body)))
-        site-id (:site-id deserialized-body)
-        id (site/find-by-site-uuid site-id)
+        id (site/find-by-site-uuid (or (:site-id deserialized-body)
+                                       (get deserialized-body "site-id")))
         coerced-params ((c/coercer NewPromo
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
