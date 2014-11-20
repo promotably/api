@@ -49,12 +49,9 @@
   [{:keys [params body] :as request}]
   (let [content-type (get-in request [:headers "content-type"] "application/edn")
         deserialized-body (condp = content-type
-                            "application/json" body ;; I guess
-                            ;; somewhere in the luminiforous ether its
-                            ;; getting deserialized
+                            "application/json" body
                             "application/edn" (clojure.edn/read-string (slurp body)))
-        id (site/find-by-site-uuid (or (:site-id deserialized-body)
-                                       (get deserialized-body "site-id")))
+        id (site/get-id-by-site-uuid (:site-id deserialized-body))
         coerced-params ((c/coercer NewPromo
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))

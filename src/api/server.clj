@@ -140,7 +140,7 @@
 (defn app
   [options]
   (-> all-routes
-      json/wrap-json-body
+      (json/wrap-json-body {:keywords? true})
       jsonp/wrap-json-with-padding
       handler/site
       wrap-params

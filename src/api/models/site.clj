@@ -50,6 +50,9 @@
 
 (defn get-id-by-site-uuid
   [site-uuid]
-  (:id (first (select sites
-                      (fields [:id])
-                      (where {:uuid site-uuid})))))
+  (let [u (condp = (class site-uuid)
+            java.lang.String (java.util.UUID/fromString site-uuid)
+            java.util.UUID site-uuid)]
+    (:id (first (select sites
+                        (fields [:id])
+                        (where {:uuid u}))))))
