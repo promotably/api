@@ -94,7 +94,8 @@
         coercer)))
 
 (defn record-event
-  [{:keys [params] :as request}]
+  [kinesis-comp
+   {:keys [params] :as request}]
   ;; for debug
   ;; (prn "PARAMS" params)
   (let [parsed (parse-event params)
@@ -124,7 +125,9 @@
                      (assoc :site-id (-> parsed :site :site-id))
                      coercer)]
          ;; TODO: check return val...
-         (kinesis/record-event! (:event-name out) out)
+         (kinesis/record-event! kinesis-comp
+                                (:event-name out)
+                                out)
          (let [response {:headers {"Content-Type" "text/javascript"}
                          :body ""
                          :status 200}]

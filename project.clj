@@ -15,8 +15,7 @@
   :global-vars {*warn-on-reflection* true}
   :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.1"]
             [cider/cider-nrepl "0.8.0"]]
-  :dependencies [[org.clojure/clojure "1.6.0"]
-                 [amazonica "0.2.29" :exclusions [joda-time]]
+  :dependencies [[amazonica "0.2.30"]
                  [clojure.joda-time "0.2.0"]
                  [clj-http "0.9.2"
                   :exclusions [commons-logging
@@ -33,6 +32,7 @@
                  [korma "0.4.0"]
                  [log4j/log4j "1.2.17"]
                  [org.clojars.cvillecsteele/ring-permacookie-middleware "1.3.0"]
+                 [org.clojure/clojure "1.6.0"]
                  [org.clojure/core.cache "0.6.4"]
                  [org.clojure/data.json "0.2.5"]
                  [org.clojure/tools.logging "0.3.0"]

@@ -5,6 +5,7 @@
 (defn record-product-view
   [site-id visitor-id product-id]
   (record-event!
+   {:event-stream-name "dev-PromotablyAPIEvents"}
    :trackproductview
    {:visitor-id visitor-id
     :product-id product-id

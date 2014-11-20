@@ -86,16 +86,18 @@
     (first (map db-to-promo results))))
 
 (defn to-kinesis!
-  [action promo-id site-id]
+  [kinesis-comp action promo-id site-id]
   (if-let [the-promo (first (find-by-id promo-id))]
-    (kinesis/record-promo-action! action
+    (kinesis/record-promo-action! kinesis-comp
+                                  action
                                   the-promo
                                   (site/find-by-site-id site-id))
     (ss/throw+ {:type ::missing-promo :promo-id promo-id :site-id site-id})))
 
 (sm/defn new-promo!
   "Creates a new promo in the database"
-  [{:keys [description name code exceptions
+  [kinesis-comp
+   {:keys [description name code exceptions
            reward-type reward-applied-to reward-tax reward-amount
            site-id linked-products conditions promo-id] :as params}]
   (transaction
@@ -129,7 +131,7 @@
                                (assoc :uuid (java.util.UUID/randomUUID))
                                (assoc :promo-id id))
                           linked-products)))
-       (to-kinesis! :create id site-id)
+       (to-kinesis! kinesis-comp :create id site-id)
        {:success true}))))
 
 ;; (sm/defn update-promo!
@@ -170,7 +172,7 @@
                               (assoc :uuid (java.util.UUID/randomUUID))
                               (assoc :promo-id (:id found)))
                          linked-products))
-        (to-kinesis! :update (:id found) site-id)
+        ;;(to-kinesis! :update (:id found) site-id)
         {:success true}))))
 
 (sm/defn find-by-site-uuid
@@ -196,7 +198,7 @@
   [site-id promo-uuid :- s/Uuid]
   (let [found (first (find-by-site-and-uuid site-id promo-uuid))]
     (transaction
-     (to-kinesis! :delete (:id found) site-id)
+     ;;(to-kinesis! :delete (:id found) site-id)
      (c/delete-conditions! (:id found))
      (lp/delete! (:id found))
      (delete promos (where {:promos.uuid promo-uuid})))))

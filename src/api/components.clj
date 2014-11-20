@@ -12,7 +12,10 @@
             [clj-logging-config.log4j :as log-config])
   (:import (java.util.concurrent Executors TimeUnit
                                  ScheduledExecutorService)
-           [java.util UUID]))
+           [java.util UUID]
+           [com.amazonaws.services.kinesis AmazonKinesisClient]
+           [com.amazonaws.auth.profile ProfileCredentialsProvider]
+           [com.amazonaws.auth DefaultAWSCredentialsProviderChain]))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -101,13 +104,38 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; AWS Kinesis Component
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defrecord Kinesis [aws-credential-profile event-stream-name promo-stream-name client]
+  component/Lifecycle
+  (start [this]
+    (log/info :INITIALIZING "Kinesis is starting...")
+    (let [cp (if-not (nil? aws-credential-profile)
+               (ProfileCredentialsProvider. aws-credential-profile)
+               (DefaultAWSCredentialsProviderChain.))
+          c (AmazonKinesisClient. cp)]
+
+      (assoc this :client c)))
+  (stop [this]
+    (log/info :SHUTTINGDOWN "Kinesis is shutting down...")
+    this))
+
+
+(defn init-kinesis
+  [config]
+  (map->Kinesis config))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; High Level Application System
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def app-system-components
   "The components whose lifecycles are managed by the application system."
-  [:database :session-cache])
+  [:database :session-cache :kinesis])
 
 (defn configure-logging
   "Configure logging for the application."
@@ -126,7 +154,7 @@
 
 
 ;; Our master system component.
-(defrecord ApplicationSystem [config env database session-cache]
+(defrecord ApplicationSystem [config env database session-cache kinesis]
   component/Lifecycle
   (start [this]
     (log/info "Starting Application System Components...")
@@ -140,8 +168,9 @@
 
 (defn application-system
   "Constructor for our main system component."
-  [config database session-cache]
+  [config database session-cache kinesis]
   (map->ApplicationSystem {:config config
                            :env (:env config)
                            :database database
-                           :session-cache session-cache}))
+                           :session-cache session-cache
+                           :kinesis kinesis}))

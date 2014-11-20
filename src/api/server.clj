@@ -42,7 +42,7 @@
 
 (defroutes promo-routes
   (context "/promos" []
-           (POST "/" [] create-new-promo!)
+           (POST "/" [] (fn [r] (create-new-promo! (:kinesis system) r)))
            (GET "/" [] lookup-promos)
            (DELETE ["/:promo-id", :promo-id promo-code-regex] [promo-id] delete-promo!)
            (GET ["/:promo-id", :promo-id promo-code-regex] [promo-id] show-promo)
@@ -64,7 +64,7 @@
 
 (defroutes api-routes
   (context "/v1" []
-           (GET "/track" req events/record-event)
+           (GET "/track" req (fn [r] (let [k (:kinesis system)] (events/record-event k r))))
            (POST "/email-subscribers" [] create-email-subscriber!)
            (GET "/accounts" [] lookup-account)
            (POST "/accounts" [] create-new-account!)

@@ -1,5 +1,6 @@
 (ns api.system
-  (:require [api.components :refer [application-system api-session-cache init-database]]
+  (:require [api.components :refer [application-system api-session-cache init-database
+                                    init-kinesis]]
             [api.config :as config]
             [api.server]
             [com.stuartsierra.component :as component]))
@@ -7,10 +8,11 @@
 (def servlet-handler (api.server/app {}))
 
 (defn sys-components
-  [{:keys [database] :as conf}]
+  [{:keys [database kinesis] :as conf}]
   (application-system conf
                       (init-database database)
-                      (api-session-cache)))
+                      (api-session-cache)
+                      (init-kinesis kinesis)))
 
 (defn init
   [conf]

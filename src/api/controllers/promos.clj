@@ -46,14 +46,16 @@
       {:status 404})))
 
 (defn create-new-promo!
-  [{:keys [params body-params] :as request}]
+  [kinesis-comp
+   {:keys [params body-params] :as request}]
   (let [id (site/get-id-by-site-uuid (:site-id body-params))
         coerced-params ((c/coercer NewPromo
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
                         body-params)]
     (shape-new-promo
-     (promo/new-promo! (assoc coerced-params :site-id id))
+     (promo/new-promo! kinesis-comp
+                       (assoc coerced-params :site-id id))
      (get-in request [:headers :accept] "application/edn"))))
 
 (defn update-promo!
