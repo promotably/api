@@ -477,5 +477,7 @@ products, line items, etc...
 
 ## License
 
+## I'm a teapot
+
 Copyright © 2014 Promotably
 
