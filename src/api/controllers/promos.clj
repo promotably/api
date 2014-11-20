@@ -46,28 +46,23 @@
       {:status 404})))
 
 (defn create-new-promo!
-  [{:keys [params body] :as request}]
-  (let [content-type (get-in request [:headers "content-type"] "application/edn")
-        deserialized-body (condp = content-type
-                            "application/json" body
-                            "application/edn" (clojure.edn/read-string (slurp body)))
-        id (site/get-id-by-site-uuid (:site-id deserialized-body))
+  [{:keys [params body-params] :as request}]
+  (let [id (site/get-id-by-site-uuid (:site-id body-params))
         coerced-params ((c/coercer NewPromo
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
-                        deserialized-body)]
+                        body-params)]
     (shape-new-promo
      (promo/new-promo! (assoc coerced-params :site-id id))
      (get-in request [:headers :accept] "application/edn"))))
 
 (defn update-promo!
-  [{:keys [params body] :as request}]
+  [{:keys [params body-params] :as request}]
   (let [{:keys [promo-id]} params
-        input-edn (clojure.edn/read-string (slurp body))
         coerced-params ((c/coercer NewPromo
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
-                        (dissoc input-edn :promo-id))
+                        (dissoc body-params :promo-id))
         ;; TODO: Handle the site not being found
         id (site/get-id-by-site-uuid (:site-id coerced-params))]
     (shape-new-promo
@@ -109,12 +104,10 @@
         transform-auth)))
 
 (defn validate-promo
-  [{:keys [params body] :as request}]
-  (let [slurped (slurp body)
-        input-json (read-str slurped :key-fn keyword)
-        matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
+  [{:keys [params body-params] :as request}]
+  (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
         coercer (c/coercer PromoValidionRequest matcher)
-        coerced-params (-> input-json
+        coerced-params (-> body-params
                            (assoc :promotably-auth
                              (:promotably-auth params))
                            prep-incoming
@@ -130,7 +123,7 @@
      (not (auth-valid? site-id
                        (-> coerced-params :site :api-secret)
                        (:auth coerced-params)
-                       (assoc request :body slurped)))
+                       (assoc request :body body-params)))
      {:status 403}
 
      :else
@@ -144,12 +137,10 @@
         :body (shape-validate resp)}))))
 
 (defn calculate-promo
-  [{:keys [params body] :as request}]
-  (let [slurped (slurp body)
-        input-json (read-str slurped :key-fn keyword)
-        matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
+  [{:keys [params body-params] :as request}]
+  (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
         coercer (c/coercer PromoValidionRequest matcher)
-        coerced-params (-> input-json
+        coerced-params (-> body-params
                            (assoc :promotably-auth (:promotably-auth params))
                            prep-incoming
                            coercer)
@@ -167,7 +158,7 @@
      (not (auth-valid? site-id
                        (-> coerced-params :site :api-secret)
                        (:auth coerced-params)
-                       (assoc request :body slurped)))
+                       (assoc request :body body-params)))
      {:status 403}
 
      :else

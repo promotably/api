@@ -36,23 +36,21 @@
 
   (defn create-new-account!
     "Creates a new account in the database. Also creates a user and a site"
-    [{:keys [params body] :as request}]
-    (let [input-edn (clojure.edn/read-string (slurp body))
-          coerced-params ((c/coercer
+    [{:keys [params body-params] :as request}]
+    (let [coerced-params ((c/coercer
                            inbound-schema
                            (c/first-matcher [custom-matcher
                                              c/string-coercion-matcher]))
-                          input-edn)
+                          body-params)
           results (account/new-account! coerced-params)]
       (shape-create (underscore-to-dash-keys results))))
 
   (defn update-account!
-    [{body :body {:keys [account-id]} :params}]
-    (let [input-edn (clojure.edn/read-string (slurp body))
-          coerced-params ((c/coercer
+    [{body-params :body-params {:keys [account-id]} :params}]
+    (let [coerced-params ((c/coercer
                            inbound-schema
                            (c/first-matcher [custom-matcher
                                              c/string-coercion-matcher]))
-                          (merge input-edn {:account-id account-id}))
+                          (merge body-params {:account-id account-id}))
           result (account/update! coerced-params)]
       (shape-update (underscore-to-dash-keys result)))))

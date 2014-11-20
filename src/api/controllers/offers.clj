@@ -65,27 +65,25 @@
       {:status 404})))
 
 (defn create-new-offer!
-  [{:keys [params body] :as request}]
-  (let [input-edn (clojure.edn/read-string (slurp body))
-        site-id (:site-id input-edn)
+  [{:keys [params body-params] :as request}]
+  (let [site-id (:site-id body-params)
         ;; TODO: Handle the site not being found
         id (site/get-id-by-site-uuid site-id)
         coerced-params ((c/coercer NewOffer
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
-                        input-edn)]
+                        body-params)]
     (shape-new-offer
      (offer/new-offer! (assoc coerced-params :site-id id)))))
 
 (defn update-offer!
-  [{:keys [params body] :as request}]
+  [{:keys [params body-params] :as request}]
   (let [{:keys [offer-id]} params
-        input-edn (clojure.edn/read-string (slurp body))
-        site-uuid (:site-id input-edn)
+        site-uuid (:site-id body-params)
         coerced-params ((c/coercer NewOffer
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
-                        (dissoc input-edn :offer-id))
+                        (dissoc body-params :offer-id))
         ;; TODO: Handle the site not being found
         id (site/get-id-by-site-uuid site-uuid)]
     (shape-new-offer
@@ -148,4 +146,3 @@
        :session {:product-view-count 0}}
       {:body (write-str resp)
        :headers {"Content-Type" "application/json"}})))
-

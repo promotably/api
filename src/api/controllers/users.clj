@@ -17,13 +17,12 @@
                       (s/optional-key :first-name) s/Str
                       (s/optional-key :last-name) s/Str}]
   (defn create-new-user!
-    [{:keys [body] :as request}]
-    (let [input-edn (clojure.edn/read-string (slurp body))
-          coerced-params ((c/coercer
+    [{:keys [body-params] :as request}]
+    (let [coerced-params ((c/coercer
                            inbound-schema
                            (c/first-matcher [custom-matcher
                                              c/string-coercion-matcher]))
-                          input-edn)
+                          body-params)
           result (user/new-user! coerced-params)]
       (println result)
       (shape-create-user result))))
@@ -39,13 +38,12 @@
                       (s/optional-key :user-social-id) s/Str
                       (s/optional-key :browser-id) s/Uuid}]
   (defn update-user!
-    [{body :body {:keys [user-id]} :params :as request}]
-    (let [input-edn (clojure.edn/read-string (slurp body))
-          coerced-params ((c/coercer
+    [{body-params :body-params {:keys [user-id]} :params :as request}]
+    (let [coerced-params ((c/coercer
                            inbound-schema
                            (c/first-matcher [custom-matcher
                                              c/string-coercion-matcher]))
-                          (assoc input-edn :user-id user-id))]
+                          (assoc body-params :user-id user-id))]
       (shape-update-user (user/update-user! coerced-params)))))
 
 (defn get-user
