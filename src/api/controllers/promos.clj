@@ -60,12 +60,11 @@
 (defn update-promo!
   [{:keys [params body-params] :as request}]
   (let [{:keys [promo-id]} params
+        id (site/get-id-by-site-uuid (:site-id body-params))
         coerced-params ((c/coercer NewPromo
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
-                        (dissoc body-params :promo-id))
-        ;; TODO: Handle the site not being found
-        id (site/get-id-by-site-uuid (:site-id coerced-params))]
+                        (dissoc body-params :promo-id))]
     (shape-new-promo
      (promo/update-promo! promo-id (assoc coerced-params :site-id id)))))
 
