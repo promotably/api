@@ -12,10 +12,10 @@
   {:status 200
    :body (vec (map (fn [p]
                      (let [result (-> p
-                                      #(assoc % :conditions
-                                        (map (fn [c] (dissoc c :id :promo-id))
-                                             (:conditions %))
-                                        :promo-id (:uuid %))
+                                      (#(assoc % :conditions
+                                                (map (fn [c] (dissoc c :id :promo-id))
+                                                     (:conditions %))
+                                                :promo-id (:uuid %)))
                                       (dissoc :id :uuid :site-id))]
                        (reduce-kv (fn [m k v]
                                     (assoc m k (view-value-helper v)))
