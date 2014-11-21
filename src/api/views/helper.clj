@@ -4,7 +4,7 @@
 
 (defn view-value-helper
   "Intended for use with clojure.data.json write-str as the :value-fn"
-  [key value]
+  [value]
   (cond (= (class value) java.sql.Timestamp) (unparse (formatters :date-time-no-ms) (from-sql-time value))
         (= (class value) java.util.Date) (unparse (formatters :date-time-no-ms) (from-date value))
         (= (class value) java.util.UUID) (.toString ^java.util.UUID value)

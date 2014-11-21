@@ -14,12 +14,12 @@
 (defn shape-offer
   [offer]
   {:status 200
-   :body (pr-str (shape-one offer))})
+   :body (shape-one offer)})
 
 (defn shape-lookup
   [results]
   {:status 200
-   :body (pr-str (vec (map shape-one results)))})
+   :body (vec (map shape-one results))})
 
 (defn shape-new-offer
   [{:keys [success error message] :as response}]

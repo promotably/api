@@ -55,8 +55,7 @@
                         body-params)]
     (shape-new-promo
      (promo/new-promo! kinesis-comp
-                       (assoc coerced-params :site-id id))
-     (get-in request [:headers :accept] "application/edn"))))
+                       (assoc coerced-params :site-id id)))))
 
 (defn update-promo!
   [{:keys [params body-params] :as request}]
@@ -135,7 +134,6 @@
                          {:valid false :messages errors}
                          {:valid true :messages []}))]
        {:status 201
-        :headers {"Content-Type" "application/json; charset=UTF-8"}
         :body (shape-validate resp)}))))
 
 (defn calculate-promo
@@ -166,5 +164,4 @@
      :else
       (let [amt (promo/discount-amount the-promo context errors)]
         {:status 201
-         :headers {"Content-Type" "application/json; charset=UTF-8"}
          :body (shape-calculate {:valid true :discount amt})}))))

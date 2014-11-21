@@ -141,8 +141,6 @@
                (mock-offers-response)
                (real-life-offers-response site-id visitor-id))]
     (if (>= product-view-count 3)
-      {:body (write-str resp)
-       :headers {"Content-Type" "application/json"}
+      {:body resp
        :session {:product-view-count 0}}
-      {:body (write-str resp)
-       :headers {"Content-Type" "application/json"}})))
+      {:body resp})))

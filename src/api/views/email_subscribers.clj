@@ -7,5 +7,4 @@
          (:success create-result) 201
          :else 500)]
     {:status status-code
-     :body (pr-str create-result)
-     :headers {"Content-Type" "application/edn; charset=UTF-8"}}))
+     :body create-result}))
