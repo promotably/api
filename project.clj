@@ -43,6 +43,8 @@
                                com.fasterxml.jackson.core/jackson-core]]
                  [slingshot "0.12.1"]
                  [prismatic/schema "0.2.6"]
+                 [com.stuartsierra/dependency "0.1.1"]
+                 [drift "1.5.2"]
                  [ring.middleware.jsonp "0.1.6"]
                  [ring-middleware-format "0.4.0"]
                  [ring/ring-core "1.3.1"]

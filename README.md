@@ -18,7 +18,8 @@ Make sure your ~/.lein/profiles.clj has at least:
 
 ### Database
 
-* NOTE: You don't have to do this if you followed the vagrant setup
+NOTE: If you are using the devbox/schmetterling repo for a development VM, you don't need to do this.
+
 * This server uses PostgreSQL 9.3. If you're looking for a really easy way to run a postgresql database on your mac, checkout [postgres.app](http://postgresapp.com/)
 * Also, the postgresql extension uuid-ossp is required. Once you have your database up, do the following setup:
 ```

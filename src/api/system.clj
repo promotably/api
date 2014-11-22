@@ -1,6 +1,6 @@
 (ns api.system
-  (:require [api.components :refer [application-system api-session-cache init-database
-                                    init-kinesis]]
+  (:require [api.components :refer [application-system api-session-cache
+                                    init-database init-kinesis]]
             [api.config :as config]
             [api.server]
             [com.stuartsierra.component :as component]))
@@ -34,3 +34,11 @@
   (let [conf (config/lookup)]
     (init conf)
     (start)))
+
+(comment
+  (System/setProperty "ENV" "dev")
+  (System/getProperty "ENV")
+  (prn api.server/system)
+  (init-servlet)
+  (stop))
+

@@ -49,4 +49,6 @@
   "Updates the current version of the database"
   [version]
   (if-not @$db-config (init!))
-  (jdbc/insert! @$db-config :migrations {:version version}))
+  (jdbc/with-db-transaction [t-con @$db-config]
+    (jdbc/delete! t-con :migrations ["version IS NOT NULL"])
+    (jdbc/insert! t-con :migrations {:version version})))

@@ -5,7 +5,6 @@
 (defn up
   "Migrates the database up to version 20140310191948."
   []
-  (prn @db/$db-config)
   (jdbc/with-db-connection [db-con @db/$db-config]
     (jdbc/db-do-commands
      db-con
