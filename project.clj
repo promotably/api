@@ -4,8 +4,8 @@
   ;; :license {:name "Eclipse Public License"
   ;;           :url "http://www.eclipse.org/legal/epl-v10.html"}
   :profiles {:dev {:dependencies [[midje "1.6.3"
-                                   :exclusions [org.clojure/tools.macro]]
-                                  [javax.servlet/servlet-api "2.5"]]
+                                   :exclusions [joda-time
+                                                org.clojure/tools.macro]]]
                    :plugins [[drift "1.5.2"]
                              [lein-beanstalk "0.2.7"
                               :exclusions [org.clojure/clojure commons-codec]]
@@ -15,13 +15,16 @@
   :global-vars {*warn-on-reflection* true}
   :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.1"]
             [cider/cider-nrepl "0.8.0"]]
-  :dependencies [[amazonica "0.2.30"]
-                 [clojure.joda-time "0.2.0"]
+  :dependencies [[compojure "1.1.9" :exclusions [joda-time]]
+                 [ring/ring-core "1.3.1" :exclusions [joda-time]]
+                 [amazonica "0.2.30" :exclusions [joda-time]]
                  [clj-http "0.9.2"
                   :exclusions [commons-logging
+                               org.clojure/tools.reader
                                com.fasterxml.jackson.core/jackson-core]]
                  [clj-logging-config "1.9.12"]
-                 [clj-time "0.8.0"]
+                 [clj-time "0.8.0" :exclusions [joda-time]]
+                 [clojure.joda-time "0.2.0" :exclusions [joda-time]]
                  [compojure "1.1.9"]
                  [com.stuartsierra/component "0.2.2"]
                  [com.taoensso/carmine "2.7.0"
@@ -46,10 +49,15 @@
                  [com.stuartsierra/dependency "0.1.1"]
                  [drift "1.5.2"]
                  [ring.middleware.jsonp "0.1.6"]
-                 [ring-middleware-format "0.4.0"]
-                 [ring/ring-core "1.3.1"]
+                 [ring-middleware-format "0.4.0"
+                  :exclusions [com.fasterxml.jackson.core/jackson-annotations
+                               joda-time
+                               org.clojure/tools.reader
+                               com.fasterxml.jackson.core/jackson-databind
+                               org.clojure/java.classpath
+                               com.fasterxml.jackson.core/jackson-core]]
                  [ring/ring-json "0.3.1"
-                  :exclusions [com.fasterxml.jackson.core/jackson-core]]]
+                  :exclusions [joda-time com.fasterxml.jackson.core/jackson-core]]]
   :resource-paths ["resources"]
   :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC"
              ;; "–XX:+UseG1GC"
