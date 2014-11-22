@@ -51,7 +51,8 @@
                  [ring/ring-json "0.3.1"
                   :exclusions [com.fasterxml.jackson.core/jackson-core]]]
   :resource-paths ["resources"]
-  :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC"
+  :jvm-opts ["-Xmx1g" "-server"
+             "–XX:+UseG1GC"
              "-DEVENT_STREAM_NAME=dev-PromotablyAPIEvents"
              "-DPROMO_STREAM_NAME=dev-PromoStream"]
   :ring {:handler api.system/servlet-handler
