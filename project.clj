@@ -56,6 +56,7 @@
                                com.fasterxml.jackson.core/jackson-databind
                                org.clojure/java.classpath
                                com.fasterxml.jackson.core/jackson-core]]
+                 [joda-time/joda-time "2.5"]
                  [ring/ring-json "0.3.1"
                   :exclusions [joda-time com.fasterxml.jackson.core/jackson-core]]]
   :resource-paths ["resources"]
