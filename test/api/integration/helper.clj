@@ -33,11 +33,11 @@
     (system/start)
     (migrate-down)
     (migrate-up)
-    (reset! test-server
-           (doto (Thread.
-                  (fn [] (run-jetty api.system/servlet-handler {:port 3000})))
-             (.start))))
+    (when (nil? @test-server)
+      (reset! test-server
+              (run-jetty api.system/servlet-handler {:port 3000 :join? false}))))
 
   (defn stop-test-server
     []
-    (.stop @test-server)))
+    (.stop @test-server)
+    (reset! test-server nil)))

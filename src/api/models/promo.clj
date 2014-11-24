@@ -215,6 +215,12 @@
                                    :promos.code promo-code})))]
     (if row (db-to-promo row))))
 
+(sm/defn count-by-site
+  [site-uuid :- s/Uuid]
+  (select promos
+          (aggregate (count :*) :cnt)
+          (join sites (= :sites.id :site_id))))
+
 (def condition-order
   [:dates
    :times

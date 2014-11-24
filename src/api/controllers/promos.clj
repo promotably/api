@@ -48,15 +48,16 @@
 (defn create-new-promo!
   [kinesis-comp
    {:keys [params body-params] :as request}]
-  (let [id (site/get-id-by-site-uuid (:site-id body-params))
-        coerced-params ((c/coercer NewPromo
+  (let [coerced-params ((c/coercer NewPromo
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
                         body-params)
         p (condp = (class coerced-params)
             schema.utils.ErrorContainer coerced-params
             (promo/new-promo! kinesis-comp
-                              (assoc coerced-params :site-id id)))]
+                              (assoc coerced-params
+                                :site-id (site/get-id-by-site-uuid
+                                          (:site-id coerced-params)))))]
     (shape-new-promo p)))
 
 (defn update-promo!
