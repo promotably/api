@@ -27,7 +27,8 @@
   (cond
    (true? success) {:status 201}
    (and (false? success) (= error :already-exists)) {:status 409 :body message}
-   :else {:status 500}))
+   (= (class response) schema.utils.ErrorContainer) {:status 400 :body error}
+   :else {:status 500 :body error}))
 
 (defn shape-validate
   [r]

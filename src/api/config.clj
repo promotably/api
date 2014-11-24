@@ -59,7 +59,9 @@
                                    "%d{HH:mm:ss} %-5p %22.22t %-22.22c{2} %m%n"))})
                 :env :dev}
    :test       {:database {}
-                :kinesis {}
+                :kinesis  {:aws-credential-profile "promotably"
+                          :promo-stream-name "dev-PromoStream"
+                          :event-stream-name "dev-PromotablyAPIEvents"}
                 :logging (if-not (empty? (System/getProperty "catalina.base"))
                            {:name "catalina"
                             :level :info

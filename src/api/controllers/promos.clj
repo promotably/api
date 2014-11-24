@@ -52,10 +52,12 @@
         coerced-params ((c/coercer NewPromo
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
-                        body-params)]
-    (shape-new-promo
-     (promo/new-promo! kinesis-comp
-                       (assoc coerced-params :site-id id)))))
+                        body-params)
+        p (condp = (class coerced-params)
+            schema.utils.ErrorContainer coerced-params
+            (promo/new-promo! kinesis-comp
+                              (assoc coerced-params :site-id id)))]
+    (shape-new-promo p)))
 
 (defn update-promo!
   [{:keys [params body-params] :as request}]

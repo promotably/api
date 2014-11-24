@@ -12,7 +12,7 @@
                         ?form
                         (migrate-down))))
 
-(fact "..."
+(future-fact "..."
   (let [foo 1]
     nil => truthy))
 

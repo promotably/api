@@ -56,3 +56,8 @@
     (:id (first (select sites
                         (fields [:id])
                         (where {:uuid u}))))))
+
+(defn find-by-name
+  [name]
+  (db-to-site (first (select sites
+                             (where {:name name})))))
