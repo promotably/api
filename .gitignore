@@ -11,3 +11,4 @@ pom.xml.asc
 *~
 /src/api/version.clj
 .vagrant
+/.idea
