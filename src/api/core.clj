@@ -1,6 +1,7 @@
 (ns api.core
   (:gen-class)
   (:require [com.stuartsierra.component :as c]
+            [clojure.tools.logging :as log]
             [clojure.tools.cli :refer [parse-opts]]
             [api.components :as components]
             [api.route :as route]

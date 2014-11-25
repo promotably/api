@@ -182,11 +182,11 @@
 (defn system
   [{:keys [port repl-port] :as options}]
   (component/system-map
-   :config   (component/using (config/map->Config {}) [])
-   :logging  (component/using (map->LoggingComponent {}) [:config])
-   :database (component/using (map->DatabaseComponent {}) [:config :logging])
-   :kinesis  (component/using (map->Kinesis {}) [:config :logging])
-   :cider    (component/using (map->ReplComponent {:port repl-port}) [:config :logging])
-   :session-cache    (component/using (map->SessionCacheComponent {}) [:config :logging])
-   :router   (component/using (route/map->Router {}) [:config :logging :session-cache])
-   :server   (component/using (map->Server {:port port}) [:config :logging :router])))
+   :config        (component/using (config/map->Config {}) [])
+   :logging       (component/using (map->LoggingComponent {}) [:config])
+   :database      (component/using (map->DatabaseComponent {}) [:config :logging])
+   :kinesis       (component/using (map->Kinesis {}) [:config :logging])
+   :cider         (component/using (map->ReplComponent {:port repl-port}) [:config :logging])
+   :session-cache (component/using (map->SessionCacheComponent {}) [:config :logging])
+   :router        (component/using (route/map->Router {}) [:config :logging :session-cache])
+   :server        (component/using (map->Server {:port port}) [:config :logging :router])))

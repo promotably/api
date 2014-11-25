@@ -34,7 +34,7 @@
 
 
 
-(def ^:dynamic current-system nil)
+(defonce ^:dynamic current-system nil)
 
 ;;;;;;;;;;;;;;;;;;;
 ;;
