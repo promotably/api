@@ -40,11 +40,11 @@
           [test-output test-stdout @result])))))
 
 (defn results-to-sns
-  [output stdout result]
+  [topic-name output stdout result]
   (let [arn (->> (list-topics)
                  :topics
                  (map :topic-arn)
-                 (filter #(re-find #"api-integration-test" %))
+                 (filter #(re-find (re-pattern topic-name) %))
                  first)]
     (publish :topic-arn arn
              :subject "Integration Test Results"
@@ -72,7 +72,8 @@
     (go options)
     (if (= :integration (-> sys/current-system :config :env))
       (let [[test-output test-stdout result] (run-integration-tests)]
-        (results-to-sns test-output test-stdout result)
+        (results-to-sns (-> sys/current-system :config :test-topic)
+                        test-output test-stdout result)
         (System/exit 0)))))
 
 (comment

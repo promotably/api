@@ -68,6 +68,20 @@ Integration testing:
 KINESIS_A=dev-PromoStream KINESIS_B=dev-PromotablyAPIEvents RDS_HOST=localhost RDS_PORT=5432 RDS_USER=p_user RDS_DB_NAME=promotably_dev RDS_PW=pr0m0 ENV=integration lein midje api.integration.*
 ```
 
+### Development
+
+Use the usual in emacs: `cider-jack-in`.  Open core.clj and load the file in cider.  Then eval the desired lines at the bottom of the file:
+
+```
+  (System/setProperty "ENV" "dev")
+  (System/setProperty "ENV" "localdev")
+  (System/getProperty "ENV")
+
+  (prn sys/current-system)
+  (go {:port 3000 :repl-port 55555})
+  (stop)
+```
+
 ## Request Signing
 
 Authenticated requests to the Promotably API include a cryptographic
