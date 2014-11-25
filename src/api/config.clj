@@ -77,7 +77,8 @@
                 :logging base-log-config
                 :env :staging}
    :integration {:database (get-database-config)
-                 :test-topic (System/getenv "TEST_RESULTS_SNS_TOPIC_NAME")
+                 :test-topic (or (System/getenv "TEST_RESULTS_SNS_TOPIC_NAME")
+                                 "api-integration-test")
                  :kinesis (get-kinesis-config)
                  :logging base-log-config
                  :env :integration}
