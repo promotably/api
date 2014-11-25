@@ -1,6 +1,6 @@
 (ns api.integration.helper
   (:require [api.fixtures.basic :as base]
-            [api.system :as sys]
+            [api.route :as route]
             [korma.db :as kdb]
             [api.q-fix :as qfix]
             [api.db :as db]
@@ -21,7 +21,7 @@
 
 (defn load-fixture-set
   [fset]
-  (let [config (-> sys/current-system :config :database)]
+  (let [config (-> route/current-system :config :database)]
     (jdbc/with-db-transaction [t-con (kdb/postgres config)]
       (qfix/load fset
                  (fn [table-name val-map]

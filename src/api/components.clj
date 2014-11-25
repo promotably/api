@@ -1,5 +1,6 @@
 (ns api.components
   (:require [com.stuartsierra.component :as component]
+            [org.httpkit.server :as http-kit]
             [korma.core :refer :all]
             [korma.db :refer [defdb postgres]]
             [clojure.java.jdbc :as jdbc]
@@ -10,7 +11,6 @@
             [clojure.tools.nrepl.server :as nrepl-server]
             [cider.nrepl :refer (cider-nrepl-handler)]
             [clj-logging-config.log4j :as log-config]
-            [api.server :as server]
             [api.config :as config]
             [api.route :as route])
   (:import (java.util.concurrent Executors TimeUnit
@@ -148,6 +148,31 @@
     (log/logf :info "Kinesis is shutting down.")
     (dissoc this :client)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Server component
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defrecord Server [port config logging router]
+  component/Lifecycle
+  (start
+   [component]
+   (if (:stop! component)
+     component
+     (let [server (-> component
+                      :router
+                      :ring-routes
+                      (http-kit/run-server {:port (or port 0)}))
+           port (-> server meta :local-port)]
+       (log/logf :info "Web server running on port %d" port)
+       (assoc component :stop! server :port port))))
+  (stop
+   [component]
+   (when-let [stop! (:stop! component)]
+     (stop! :timeout 250))
+   (dissoc component :stop! :router :port)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; High Level Application System
@@ -162,5 +187,6 @@
    :database (component/using (map->DatabaseComponent {}) [:config :logging])
    :kinesis  (component/using (map->Kinesis {}) [:config :logging])
    :cider    (component/using (map->ReplComponent {:port repl-port}) [:config :logging])
-   :router   (component/using (route/map->Router {}) [:config :logging])
-   :server   (component/using (server/map->Server {:port port}) [:config :logging :router])))
+   :session-cache    (component/using (map->SessionCacheComponent {}) [:config :logging])
+   :router   (component/using (route/map->Router {}) [:config :logging :session-cache])
+   :server   (component/using (map->Server {:port port}) [:config :logging :router])))

@@ -1,7 +1,7 @@
 (ns api.integration.promos
   (:require [api.fixtures.basic :as base]
             [api.integration.helper :refer :all]
-            [api.system :as sys]
+            [api.route :as route]
             [api.core :as core]
             [api.models.site]
             [clj-http.client :as client]
@@ -9,7 +9,7 @@
             [midje.sweet :refer :all]))
 
 (background (around :facts
-                    (do (if (nil? sys/current-system)
+                    (do (if (nil? route/current-system)
                           (core/go {:port 3000 :repl-port 55555}))
                         (migrate-down)
                         (migrate-up)

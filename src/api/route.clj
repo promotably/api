@@ -34,7 +34,7 @@
 
 
 
-(def ^:dynamic system nil)
+(def ^:dynamic current-system nil)
 
 ;;;;;;;;;;;;;;;;;;;
 ;;
@@ -47,7 +47,7 @@
 
 (defroutes promo-routes
   (context "/promos" []
-           (POST "/" [] (fn [r] (create-new-promo! (:kinesis system) r)))
+           (POST "/" [] (fn [r] (create-new-promo! (:kinesis current-system) r)))
            (GET "/" [] lookup-promos)
            (DELETE ["/:promo-id", :promo-id promo-code-regex] [promo-id] delete-promo!)
            (GET ["/:promo-id", :promo-id promo-code-regex] [promo-id] show-promo)
@@ -69,7 +69,7 @@
 
 (defroutes api-routes
   (context "/v1" []
-           (GET "/track" req (fn [r] (let [k (:kinesis system)] (events/record-event k r))))
+           (GET "/track" req (fn [r] (let [k (:kinesis current-system)] (events/record-event k r))))
            (POST "/email-subscribers" [] create-email-subscriber!)
            (GET "/accounts" [] lookup-account)
            (POST "/accounts" [] create-new-account!)
@@ -150,7 +150,8 @@
       handler/site
       wrap-params
       wrap-keyword-params
-      (session/wrap-session {:cookie-name "promotably-session"})
+      (session/wrap-session {:store (:session-cache options)
+                             :cookie-name "promotably-session"})
       wrap-exceptions
       wrap-stacktrace
       wrap-request-logging
@@ -165,8 +166,8 @@
 
 (defn- ring-routes
   "Returns all routes, with CSRF protection where applicable."
-  []
-  (let [app-routes (app {})
+  [session-cache]
+  (let [app-routes (app {:session-cache session-cache})
         csrf-routes (-> (compojure/routes
                          ;; All application routes here that you want
                          ;; to have csrf protection...
@@ -196,14 +197,13 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defrecord Router [config logging]
+(defrecord Router [config logging session-cache]
   component/Lifecycle
   (start
    [component]
    (if (:stop! component)
      component
-     (assoc component :ring-routes (ring-routes))))
+     (assoc component :ring-routes (ring-routes session-cache))))
   (stop
    [component]
     component))
-

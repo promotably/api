@@ -3,7 +3,7 @@
   (:require [com.stuartsierra.component :as c]
             [clojure.tools.cli :refer [parse-opts]]
             [api.components :as components]
-            [api.system :as sys]
+            [api.route :as route]
             [clojure.string :as str]
             [clojure.test :as ct]
             [midje.config]
@@ -12,13 +12,13 @@
             [midje.repl :refer [load-facts]]))
 
 (defn init [options]
-  (alter-var-root #'sys/current-system (constantly (components/system options))))
+  (alter-var-root #'route/current-system (constantly (components/system options))))
 
 (defn start []
-  (alter-var-root #'sys/current-system c/start))
+  (alter-var-root #'route/current-system c/start))
 
 (defn stop []
-  (alter-var-root #'sys/current-system #(when % (c/stop %))))
+  (alter-var-root #'route/current-system #(when % (c/stop %))))
 
 (defn go [options]
   (init options)
@@ -70,9 +70,9 @@
   [& args]
   (let [{:keys [options summary errors] :as parsed} (parse-opts args cli-options)]
     (go options)
-    (if (= :integration (-> sys/current-system :config :env))
+    (if (= :integration (-> route/current-system :config :env))
       (let [[test-output test-stdout result] (run-integration-tests)]
-        (results-to-sns (-> sys/current-system :config :test-topic)
+        (results-to-sns (-> route/current-system :config :test-topic)
                         test-output test-stdout result)
         (System/exit 0)))))
 
@@ -82,7 +82,7 @@
   (System/setProperty "ENV" "localdev")
   (System/getProperty "ENV")
 
-  (prn sys/current-system)
+  (prn route/current-system)
   (go {:port 3000 :repl-port 55555})
   (stop)
 
