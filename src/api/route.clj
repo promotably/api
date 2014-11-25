@@ -1,10 +1,11 @@
-(ns api.server
+(ns api.route
   (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
-            [org.httpkit.server :as http-kit]
+            [clojure.core.match :as match :refer (match)]
             [clojure.repl :refer [pst]]
             [clojure.pprint :refer [pprint]]
-            [compojure.core :refer [defroutes context GET POST PUT DELETE]]
+            [compojure.core :refer [routes GET PUT HEAD POST DELETE ANY context defroutes]
+             :as compojure]
             [compojure.route :refer [not-found]]
             [compojure.handler :as handler]
             [ring.middleware.format :refer [wrap-restful-format]]
@@ -15,6 +16,8 @@
             [ring.middleware.jsonp :as jsonp]
             [ring.util.response :refer [response content-type]]
             [ring.middleware.permacookie :refer [wrap-permacookie]]
+            [ring.middleware.anti-forgery :as ring-anti-forgery
+             :refer [wrap-anti-forgery]]
             [api.events :as events]
             [api.controllers.users :refer [create-new-user! get-user update-user!
                                            lookup-user]]
@@ -135,7 +138,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Main ring handler entry point
+;; Main handler entry point
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -153,27 +156,54 @@
       wrap-request-logging
       wrap-content-type))
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Server component
+;; http-kit routes
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defrecord Server [port config logging router]
+(defn- ring-routes
+  "Returns all routes, with CSRF protection where applicable."
+  []
+  (let [app-routes (app {})
+        csrf-routes (-> (compojure/routes
+                         ;; All application routes here that you want
+                         ;; to have csrf protection...
+
+                         ;; FOR EXAMPLE:
+                         ;; authorized-routes
+                         ;; (GET "/"    [] homepage/render)
+                         ;; (GET "/sessions" [] session/session)
+
+                         (ring-anti-forgery/wrap-anti-forgery
+                          {:read-token (fn [req] (-> req :params :csrf-token))})))]
+
+    (-> (compojure/routes
+         ;; These routes get NO csrf protection.
+         app-routes
+
+         ;; Serve static resources.
+         ;; These routes get NO csrf protection.
+         (compojure.route/resources "/")
+
+         ;; Fall back to routes with csrf protection
+         (ANY "*" [] csrf-routes)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Component
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defrecord Router [config logging]
   component/Lifecycle
   (start
    [component]
    (if (:stop! component)
      component
-     (let [server (-> component
-                      :router
-                      :ring-routes
-                      (http-kit/run-server {:port (or port 0)}))
-           port (-> server meta :local-port)]
-       (log/logf :info "Web server running on port %d" port)
-       (assoc component :stop! server :port port))))
+     (assoc component :ring-routes (ring-routes))))
   (stop
    [component]
-   (when-let [stop! (:stop! component)]
-     (stop! :timeout 250))
-   (dissoc component :stop! :router :port)))
+    component))
+

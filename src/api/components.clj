@@ -9,7 +9,10 @@
             [ring.middleware.session.store :as ss]
             [clojure.tools.nrepl.server :as nrepl-server]
             [cider.nrepl :refer (cider-nrepl-handler)]
-            [clj-logging-config.log4j :as log-config])
+            [clj-logging-config.log4j :as log-config]
+            [api.server :as server]
+            [api.config :as config]
+            [api.route :as route])
   (:import (java.util.concurrent Executors TimeUnit
                                  ScheduledExecutorService)
            [java.util UUID]
@@ -19,28 +22,62 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Database Component
+;; logging component
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;
 
-(defn init-pool
-  "Initialize Korma db connection pool."
-  [config]
-  (defdb $the-db (postgres config)))
-
-;; Database component, just initializes the connection pool for Korma.
-(defrecord Database [config]
+(defrecord LoggingComponent [config]
   component/Lifecycle
   (start [this]
-    (init-pool config)
+    (log-config/set-logger!
+     "api"
+     :name (-> config :logging :name)
+     :level (-> config :logging :level)
+     :out (-> config :logging :out))
+    (log/logf :info "Environment is %s" (-> config :env))
     this)
   (stop [this]
     this))
 
-(defn init-database
-  "Constructor for our database component."
-  [config]
-  (map->Database {:config config}))
+;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; repl component
+;;
+;;;;;;;;;;;;;;;;;;;;;;
+
+(defrecord ReplComponent [port config logging]
+  component/Lifecycle
+  (start [this]
+    (when ((-> config :env) #{:dev :localdev})
+      (log/info (format "Starting cider (nrepl) on %d" port))
+      (assoc this :server (clojure.tools.nrepl.server/start-server
+                           :port port
+                           :handler cider.nrepl/cider-nrepl-handler))))
+  (stop [this]
+    (if ((-> config :env) #{:dev :localdev})
+      (when (:server this)
+        (log/info (format "Stopping cider (nrepl)"))
+        (clojure.tools.nrepl.server/stop-server (:server this))))
+    (dissoc this :server)))
+
+;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Database Component
+;;
+;;;;;;;;;;;;;;;;;;;;;;
+
+;; Database component, just initializes the connection pool for Korma.
+(defrecord DatabaseComponent [config logging]
+  component/Lifecycle
+  (start [this]
+    ;; Initialize Korma db connection pool.
+    (log/logf :info
+              "Connecting to DB at %s:%s"
+              (-> config :database :host)
+              (pr-str (-> config :database :port)))
+    (assoc this :db (defdb $the-db (postgres (:database config)))))
+  (stop [this]
+    (dissoc this :db)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -55,52 +92,38 @@
                  (remove (fn [[session-key data]]
                            (jt/after? (:expires data) (jt/date-time))) c))))
 
-(defn- init-scheduler
-  "Initialize the scheduled executor that removes expired items from the
-  cache."
-  [cache ^ScheduledExecutorService scheduler]
-  (.scheduleWithFixedDelay
-   scheduler
-   #(clean-cache cache)
-   5 5 TimeUnit/MINUTES))
-
 ;; Session cache component. Starts a scheduled thread to remove old items
 ;; out of the cache.
-(defrecord ApiSessionCache [cache scheduler]
+(defrecord SessionCacheComponent [config logging]
   component/Lifecycle
   (start [this]
     (log/info :INITIALIZING "Cache is starting...")
-    (init-scheduler cache scheduler)
-    this)
+    (let [s (Executors/newSingleThreadScheduledExecutor)
+          c (atom {})]
+      (.scheduleWithFixedDelay s #(clean-cache c) 5 5 TimeUnit/MINUTES)
+      (-> this
+          (assoc :cache c)
+          (assoc :scheduler s))))
   (stop [this]
     (log/info :SHUTTINGDOWN "Cache is shutting down...")
-    (.shutdownNow ^ScheduledExecutorService scheduler)
-    (reset! cache nil)
-    this)
+    (.shutdownNow ^ScheduledExecutorService (:scheduler this))
+    (reset! (:cache this) nil)
+    (dissoc this :scheduler :cache))
   ss/SessionStore
   (read-session [this session-id]
     (when session-id
-      (session-id @cache)))
+      (session-id @(:cache this))))
   (write-session [this session-id data]
     (let [session-id* (or session-id
                           (UUID/randomUUID))
           expires (jt/plus (jt/date-time) (jt/hours 2))
-          data* (assoc (merge (session-id* @cache) data)
+          data* (assoc (merge (session-id* @(:cache this)) data)
                   :expires expires)]
-      (swap! cache (fn [c]
-                     (assoc c session-id* data*)))
+      (swap! (:cache this) (fn [c] (assoc c session-id* data*)))
       session-id*))
   (delete-session [this session-id]
-    (swap! cache (fn [c]
-                   (dissoc c [session-id])))
+    (swap! (:cache this) (fn [c] (dissoc c [session-id])))
     nil))
-
-(defn api-session-cache
-  "Constructor for our custom ring session store."
-  []
-  (let [session-cache (atom {})
-        scheduler (Executors/newSingleThreadScheduledExecutor)]
-    (->ApiSessionCache session-cache scheduler)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -108,24 +131,22 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defrecord Kinesis [aws-credential-profile event-stream-name promo-stream-name client]
+(defrecord Kinesis [config logging]
   component/Lifecycle
   (start [this]
-    (log/info :INITIALIZING "Kinesis is starting...")
-    (let [cp (if-not (nil? aws-credential-profile)
-               (ProfileCredentialsProvider. aws-credential-profile)
-               (DefaultAWSCredentialsProviderChain.))
-          c (AmazonKinesisClient. cp)]
-
+    (log/logf :info
+              "Kinesis is starting, using credentials for '%s'."
+              (-> config :kinesis :aws-credential-profile))
+    (let [creds (-> config :kinesis :aws-credential-profile)
+          ^com.amazonaws.auth.AWSCredentialsProvider cp
+          (if-not (nil? creds)
+            (ProfileCredentialsProvider. creds)
+            (DefaultAWSCredentialsProviderChain.))
+          c (com.amazonaws.services.kinesis.AmazonKinesisClient. cp)]
       (assoc this :client c)))
   (stop [this]
-    (log/info :SHUTTINGDOWN "Kinesis is shutting down...")
-    this))
-
-
-(defn init-kinesis
-  [config]
-  (map->Kinesis config))
+    (log/logf :info "Kinesis is shutting down.")
+    (dissoc this :client)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -133,44 +154,13 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def app-system-components
-  "The components whose lifecycles are managed by the application system."
-  [:database :session-cache :kinesis])
-
-(defn configure-logging
-  "Configure logging for the application."
-  [log-conf]
-  (log-config/set-logger!
-   "api"
-   :name (:name log-conf)
-   :level (:level log-conf)
-   :out (:out log-conf)))
-
-(defn start-nrepl
-  "Start an nrepl server. Usually only in dev mode."
-  []
-  (let [s (nrepl-server/start-server :handler cider-nrepl-handler)]
-    (log/info (str "Started cider (nrepl) on " (:port s)))))
-
-
-;; Our master system component.
-(defrecord ApplicationSystem [config env database session-cache kinesis]
-  component/Lifecycle
-  (start [this]
-    (log/info "Starting Application System Components...")
-    (configure-logging (:logging config))
-    (when (= :dev env)
-      (start-nrepl))
-    (component/start-system this app-system-components))
-  (stop [this]
-    (log/info "Stopping Application System Components...")
-    (component/stop-system this app-system-components)))
-
-(defn application-system
-  "Constructor for our main system component."
-  [config database session-cache kinesis]
-  (map->ApplicationSystem {:config config
-                           :env (:env config)
-                           :database database
-                           :session-cache session-cache
-                           :kinesis kinesis}))
+(defn system
+  [{:keys [port repl-port] :as options}]
+  (component/system-map
+   :config   (component/using (config/map->Config {}) [])
+   :logging  (component/using (map->LoggingComponent {}) [:config])
+   :database (component/using (map->DatabaseComponent {}) [:config :logging])
+   :kinesis  (component/using (map->Kinesis {}) [:config :logging])
+   :cider    (component/using (map->ReplComponent {:port repl-port}) [:config :logging])
+   :router   (component/using (route/map->Router {}) [:config :logging])
+   :server   (component/using (server/map->Server {:port port}) [:config :logging :router])))

@@ -9,7 +9,8 @@
 
 (defn- record!
   "Records to an AWS Kinesis Stream."
-  [kinesis-client stream-name message-map]
+  [^com.amazonaws.services.kinesis.AmazonKinesisClient kinesis-client
+   stream-name message-map]
   (try
     (let [^ByteArrayOutputStream out-stream (ByteArrayOutputStream. 4096)
           writer (transit/writer out-stream :json)]

@@ -51,8 +51,23 @@ This places a migration file in the src/migrations directory
 
 ### Running the Server
 ```
-lein ring server
+lein run
 ```
+
+### Testing
+
+Unit testing:  
+
+```
+ENV=test lein midje api.unit.*
+```
+
+Integration testing:  
+
+```
+KINESIS_A=dev-PromoStream KINESIS_B=dev-PromotablyAPIEvents RDS_HOST=localhost RDS_PORT=5432 RDS_USER=p_user RDS_DB_NAME=promotably_dev RDS_PW=pr0m0 ENV=integration lein midje api.integration.*
+```
+
 ## Request Signing
 
 Authenticated requests to the Promotably API include a cryptographic

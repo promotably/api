@@ -1,6 +1,7 @@
 (ns api.integration.helper
   (:require [api.fixtures.basic :as base]
-            [api.system :as system]
+            [api.system :as sys]
+            [korma.db :as kdb]
             [api.q-fix :as qfix]
             [api.db :as db]
             [clj-time.coerce :refer (to-sql-time)]
@@ -20,24 +21,9 @@
 
 (defn load-fixture-set
   [fset]
-  (jdbc/with-db-transaction [t-con @db/$db-config]
-    (qfix/load fset
-               (fn [table-name val-map]
-                 (let [result (jdbc/insert! t-con table-name val-map)]
-                   (-> result first :id))))))
-
-(let [test-server (atom nil)]
-  (defn start-test-server
-    []
-    (system/init (api.config/lookup))
-    (system/start)
-    (migrate-down)
-    (migrate-up)
-    (when (nil? @test-server)
-      (reset! test-server
-              (run-jetty api.system/servlet-handler {:port 3000 :join? false}))))
-
-  (defn stop-test-server
-    []
-    (.stop @test-server)
-    (reset! test-server nil)))
+  (let [config (-> sys/current-system :config :database)]
+    (jdbc/with-db-transaction [t-con (kdb/postgres config)]
+      (qfix/load fset
+                 (fn [table-name val-map]
+                   (let [result (jdbc/insert! t-con table-name val-map)]
+                     (-> result first :id)))))))
