@@ -22,6 +22,7 @@
 
   (def site (api.models.site/find-by-name "site-1"))
   (def site-id (:site-id site))
+
   (defn- create-promo
     [new-promo]
     (client/post "http://localhost:3000/v1/promos"
@@ -29,6 +30,14 @@
                   :content-type :json
                   :accept :json
                   :throw-exceptions false}))
+
+  (defn- lookup-promos
+    [sid]
+    (client/get "http://localhost:3000/v1/promos"
+                {:query-params {:site-id sid}
+                 :content-type :json
+                 :accept :json
+                 :throw-exceptions false}))
 
   (fact-group :integration
 
@@ -76,17 +85,43 @@
                :conditions)
 
               (facts "Promo Lookup Happy Path"
-                (let [r (client/get "http://localhost:3000/v1/promos"
-                                    {:query-params {:site-id site-id}
-                                     :content-type :json
-                                     :accept :json
-                                     :throw-exceptions false})
+                (let [r (lookup-promos site-id)
                       b (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
                   b => (just [(contains {:name "Twenty Off"
                                          :code "TWENTYOFF"
                                          :description "You get 20% off. Bitches."
                                          :reward-amount 20.0
+                                         :reward-type "percent"
+                                         :reward-tax "after-tax"
+                                         :reward-applied-to "cart"
+                                         :exceptions nil
+                                         :conditions []
+                                         :promo-id string?})])))
+
+              (facts "Promo Update Happy Path"
+                (let [b (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)
+                      promo-id (:promo-id (first b))
+                      r (client/put (str "http://localhost:3000/v1/promos/" promo-id)
+                                    {:body (json/write-str {:site-id (str site-id)
+                                                            :name "Eye-catching name here"
+                                                            :description "alsdkfjlaksdjf"
+                                                            :code "EYECATCH"
+                                                            :reward-amount 10.0
+                                                            :reward-type :percent
+                                                            :reward-tax :after-tax
+                                                            :reward-applied-to :cart
+                                                            :exceptions nil
+                                                            :conditions []})
+                                     :content-type :json
+                                     :accept :json
+                                     :throw-exceptions false})
+                      u (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)]
+                  (:status r) => 204
+                  u => (just [(contains {:name "Eye-catching name here"
+                                         :description "alsdkfjlaksdjf"
+                                         :code "EYECATCH"
+                                         :reward-amount 10.0
                                          :reward-type "percent"
                                          :reward-tax "after-tax"
                                          :reward-applied-to "cart"

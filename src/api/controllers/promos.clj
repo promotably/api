@@ -11,6 +11,7 @@
             [api.views.promos :refer [shape-promo
                                       shape-lookup
                                       shape-new-promo
+                                      shape-update-promo
                                       shape-validate
                                       shape-calculate]]
             [api.lib.auth :refer [parse-auth-string auth-valid? transform-auth]]
@@ -63,13 +64,16 @@
 (defn update-promo!
   [{:keys [params body-params] :as request}]
   (let [{:keys [promo-id]} params
-        id (site/get-id-by-site-uuid (:site-id body-params))
         coerced-params ((c/coercer NewPromo
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
-                        (dissoc body-params :promo-id))]
-    (shape-new-promo
-     (promo/update-promo! promo-id (assoc coerced-params :site-id id)))))
+                        (dissoc body-params :promo-id))
+        p (condp = (class coerced-params)
+            schema.utils.ErrorContainer coerced-params
+            (promo/update-promo! promo-id (assoc coerced-params
+                                            :site-id (site/get-id-by-site-uuid
+                                                      (:site-id coerced-params)))))]
+    (shape-update-promo p)))
 
 (defn show-promo
   [{:keys [promo-id params body] :as request}]

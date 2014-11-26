@@ -30,6 +30,13 @@
    (= (class response) schema.utils.ErrorContainer) {:status 400 :body error}
    :else {:status 500 :body error}))
 
+(defn shape-update-promo
+  [{:keys [success error message] :as response}]
+  (cond
+   (true? success) {:status 204}
+   (= (class response) schema.utils.ErrorContainer) {:status 400 :body error}
+   :else {:status 500 :body error}))
+
 (defn shape-validate
   [r]
   (reduce-kv (fn [m k v]
