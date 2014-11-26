@@ -50,7 +50,8 @@
     (publish :topic-arn arn
              :subject "Integration Test Results"
              :message (format
-                       "== TEST RESULT\n%s\n\n== TEST OUTPUT\n%s\n== TEST STDOUT\n%s\n"
+                       "== TEST RESULT %s\n%s\n\n== TEST OUTPUT\n%s\n== TEST STDOUT\n%s\n"
+                       (System/getenv "STACKNAME")
                        result
                        output
                        stdout))))
