@@ -10,6 +10,7 @@
             [midje.config]
             [amazonica.aws.sns :refer :all]
             midje.emission.colorize
+            api.version
             [midje.repl :refer [load-facts]]))
 
 (defn init [options]
@@ -50,8 +51,9 @@
     (publish :topic-arn arn
              :subject "Integration Test Results"
              :message (format
-                       "== TEST RESULT %s\n%s\n\n== TEST OUTPUT\n%s\n== TEST STDOUT\n%s\n"
+                       "== TEST RESULT %s %s\n%s\n\n== TEST OUTPUT\n%s\n== TEST STDOUT\n%s\n"
                        (System/getenv "STACKNAME")
+                       api.version/version
                        result
                        output
                        stdout))))
