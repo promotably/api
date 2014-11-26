@@ -37,7 +37,7 @@
       (midje.emission.colorize/init!)
       (binding [ct/*test-out* (java.io.StringWriter.)]
         (let [test-stdout (with-out-str
-                            (reset! result (load-facts :integration :print-facts)))
+                            (reset! result (load-facts 'api.integration.* :print-facts)))
               test-output (-> ^java.io.StringWriter ct/*test-out* .toString)]
           [test-output test-stdout @result])))))
 
