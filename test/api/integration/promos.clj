@@ -91,4 +91,5 @@
                                          :reward-tax "after-tax"
                                          :reward-applied-to "cart"
                                          :exceptions nil
-                                         :conditions []})])))))
+                                         :conditions []
+                                         :promo-id string?})])))))
