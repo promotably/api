@@ -81,5 +81,14 @@
                                      :content-type :json
                                      :accept :json
                                      :throw-exceptions false})
-                      b (json/read-str (:body r))]
-                  (:status r) => 200))))
+                      b (json/read-str (:body r) :key-fn keyword)]
+                  (:status r) => 200
+                  b => (just [(contains {:name "Twenty Off"
+                                         :code "TWENTYOFF"
+                                         :description "You get 20% off. Bitches."
+                                         :reward-amount 20.0
+                                         :reward-type "percent"
+                                         :reward-tax "after-tax"
+                                         :reward-applied-to "cart"
+                                         :exceptions nil
+                                         :conditions []})])))))
