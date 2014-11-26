@@ -20,7 +20,7 @@
   (alter-var-root #'route/current-system c/start))
 
 (defn stop []
-  (alter-var-root #'route/current-system #(when % (c/stop %))))
+  (alter-var-root #'route/current-system #(when % (c/stop %) nil)))
 
 (defn go [options]
   (init options)
