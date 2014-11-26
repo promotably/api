@@ -68,6 +68,8 @@ Integration testing:
 KINESIS_A=dev-PromoStream KINESIS_B=dev-PromotablyAPIEvents RDS_HOST=localhost RDS_PORT=5432 RDS_USER=p_user RDS_DB_NAME=promotably_dev RDS_PW=pr0m0 ENV=integration lein midje api.integration.*
 ```
 
+Integration testing depends on AWS credentials as per [doc](https://github.com/mcohen01/amazonica).
+
 ### Development
 
 Use the usual in emacs: `cider-jack-in`.  Open core.clj and load the file in cider.  Then eval the desired lines at the bottom of the file:
