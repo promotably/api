@@ -88,7 +88,18 @@
                 (let [r (lookup-promos site-id)
                       b (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  b => (just [(contains {:name "Twenty Off"
+                  b => (just [(contains {:active true
+                                         :code "EASTER"
+                                         :conditions []
+                                         :description "This is a description"
+                                         :exceptions nil
+                                         :linked-products []
+                                         :name "Easter Coupon"
+                                         :reward-amount 20.0
+                                         :reward-applied-to "cart"
+                                         :reward-tax "after-tax"
+                                         :reward-type "percent"})
+                              (contains {:name "Twenty Off"
                                          :code "TWENTYOFF"
                                          :description "You get 20% off. Bitches."
                                          :reward-amount 20.0
@@ -127,4 +138,15 @@
                                          :reward-applied-to "cart"
                                          :exceptions nil
                                          :conditions []
-                                         :promo-id string?})])))))
+                                         :promo-id string?})
+                              (contains {:active true
+                                         :code "TWENTYOFF"
+                                         :conditions []
+                                         :description "You get 20% off. Bitches."
+                                         :exceptions nil
+                                         :linked-products []
+                                         :name "Twenty Off"
+                                         :reward-amount 20.0
+                                         :reward-applied-to "cart"
+                                         :reward-tax "after-tax"
+                                         :reward-type "percent"})])))))

@@ -23,4 +23,34 @@
                    :uuid (java.util.UUID/randomUUID)
                    :site_code "site1"
                    :api_secret (java.util.UUID/randomUUID)
-                   :site_url "http://sekrit.com"))))
+                   :site_url "http://sekrit.com"))
+   (table :promos
+          (fixture :promo-1
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :name "Easter Coupon"
+                   :code "EASTER"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :exceptions nil
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "This is a description"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+      (table :offers
+          (fixture :offer-1
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :promo_id :promo-1
+                   :name "Easter Offer"
+                   :code "E1"
+                   :display_text "display text"
+                   :active true
+                   :expiry_in_minutes 20
+                   :presentation_type "lightbox"
+                   :presentation_page "any"
+                   :presentation_display_text "presentation text"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))))

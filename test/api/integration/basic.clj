@@ -1,18 +1,23 @@
 (ns api.integration.basic
-  (:require [api.fixtures.basic :as base]
-            [api.db :as db]
-            [api.integration.helper :refer :all]
-            [midje.sweet :refer :all]))
+  (:require
+   [api.integration.helper :refer :all]
+   [api.fixtures.basic :as base]
+   [api.route :as route]
+   [api.core :as core]
+   [clj-http.client :as client]
+   [midje.sweet :refer :all]))
 
-(background (around :facts
-                    (do (db/init!)
-                        (migrate-down)
-                        (migrate-up)
-                        (load-fixture-set base/fixture-set)
-                        ?form
-                        (migrate-down))))
+(against-background [(before :contents
+                             (do (when (nil? route/current-system)
+                                   (core/go {:port 3000 :repl-port 55555}))
+                                 (migrate-down)
+                                 (migrate-up)
+                                 (load-fixture-set base/fixture-set)))
+                     (after :contents
+                            (migrate-down))]
 
-(future-fact "..."
-  (let [foo 1]
-    nil => truthy))
+  (facts "Health check"
+    (let [resp (client/get "http://localhost:3000/health-check")]
+      (:body resp) => "<h1>I'm here</h1>"
+      (get (:cookies resp) "promotably") => truthy)))
 
