@@ -178,13 +178,16 @@
 (sm/defn find-by-site-uuid
   "Finds all promos for a given site id. Returns a collection (empty
   array if no results found)"
-  [site-uuid :- s/Uuid]
-  (let [results (select promos
-                        (with promo-conditions)
-                        (with linked-products)
-                        (join sites (= :sites.id :site_id))
-                        (where {:sites.uuid site-uuid}))]
-    (map db-to-promo results)))
+  ([site-uuid :- s/Uuid] (find-by-site-uuid site-uuid true))
+  ([site-uuid :- s/Uuid cooked-mode]
+     (let [results (select promos
+                           (with promo-conditions)
+                           (with linked-products)
+                           (join sites (= :sites.id :site_id))
+                           (where {:sites.uuid site-uuid}))]
+       (if cooked-mode
+         (map db-to-promo results)
+         results))))
 
 (defn find-raw
   "Finds a promo by uuid and doesn't munge the result from the db at all."

@@ -48,6 +48,7 @@
                    :code "E1"
                    :display_text "display text"
                    :active true
+                   :dynamic true
                    :expiry_in_minutes 20
                    :presentation_type "lightbox"
                    :presentation_page "any"

@@ -10,6 +10,7 @@
             [clj-time.format :as tf]
             [clojure.data.json :refer [read-str write-str]]
             [clojure.tools.logging :as log]
+            [slingshot.slingshot :refer [throw+ try+]]
             [schema.coerce :as c]
             [schema.core :as s]))
 
@@ -66,13 +67,19 @@
 
 (defn create-new-offer!
   [{:keys [params body-params] :as request}]
-  (let [site-id (:site-id body-params)
+  (let [site-uuid (java.util.UUID/fromString (:site-id body-params))
         ;; TODO: Handle the site not being found
-        id (site/get-id-by-site-uuid site-id)
+        id (site/get-id-by-site-uuid site-uuid)
+        ;; required since JSON input results in strings and we need keywords
+        body-params (-> body-params
+                        (update-in [:reward :type] #(keyword %1))
+                        (update-in [:presentation :type] #(keyword %1)))
         coerced-params ((c/coercer NewOffer
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
                         body-params)]
+    (when (= schema.utils.ErrorContainer (type coerced-params))
+      (throw+ {:type ::argument-error :body-params params :error coerced-params}))
     (shape-new-offer
      (offer/new-offer! (assoc coerced-params :site-id id)))))
 

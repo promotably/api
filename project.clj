@@ -8,7 +8,7 @@
                              [lein-midje "3.0.0"]]
                    :jvm-opts ["-DKAFKA_BROKERS=localhost:9092"]}}
   :main api.core
-  :global-vars {*warn-on-reflection* true}
+  :global-vars {*warn-on-reflection* false}
   :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.2"]
             [cider/cider-nrepl "0.8.0"]]
   :dependencies [[compojure "1.1.9" :exclusions [joda-time]]

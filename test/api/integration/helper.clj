@@ -13,11 +13,11 @@
 
 (defn migrate-down
   []
-  (drift.execute/migrate 0 []))
+  (with-out-str (drift.execute/migrate 0 [])))
 
 (defn migrate-up
   []
-  (drift.execute/migrate Long/MAX_VALUE []))
+  (with-out-str (drift.execute/migrate Long/MAX_VALUE [])))
 
 (defn load-fixture-set
   [fset]
