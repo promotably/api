@@ -7,6 +7,7 @@
    [api.models.site]
    [api.models.promo :as promo]
    [clj-http.client :as client]
+   [cheshire.core :refer :all]
    [clojure.data.json :as json]
    [midje.sweet :refer :all]))
 
@@ -29,6 +30,13 @@
                   :content-type :json
                   :accept :json
                   :throw-exceptions false}))
+  (defn- update-offer
+    [offer-id offer]
+    (client/put (str "http://localhost:3000/v1/offers/" offer-id)
+                {:body (json/write-str offer)
+                 :content-type :json
+                 :accept :json
+                 :throw-exceptions false}))
 
   (fact-group :integration
 
@@ -45,4 +53,83 @@
                                                 :display-text "presentation text"}
                                  :conditions []}
                       r (create-offer new-offer)]
-                  (:status r) => 201))))
+                  (:status r) => 201))
+
+              (facts "List Offers"
+                (let [url (str "http://localhost:3000/v1/offers/?site-id="
+                               (:site-id site))
+                      r (client/get url)
+                      listed (parse-string (:body r) keyword)]
+                  listed => (just [(contains
+                                    {:display-text "display text"
+                                     :name "New Visitor Offer"
+                                     :presentation {:display-text "presentation text"
+                                                     :page "any"
+                                                     :type "lightbox"}
+                                     :active true
+                                     :reward {:type "dynamic-promo"
+                                              :promo-id (-> promos first :uuid str)
+                                              :expiry-in-minutes 10}
+                                     :code "NEW-VISITOR"
+                                     :conditions []})
+                                   (contains
+                                    {:display-text "display text"
+                                     :name "Easter Offer"
+                                     :presentation {:display-text "presentation text"
+                                                    :page "any"
+                                                    :type "lightbox"}
+                                     :active true
+                                     :reward {:type "dynamic-promo"
+                                              :promo-id (-> promos first :uuid str)
+                                              :expiry-in-minutes 20}
+                                     :code "E1"
+                                     :conditions []})])
+                  (:status r) => 200))
+
+              (facts "Offer Update"
+                (let [url (str "http://localhost:3000/v1/offers/?site-id="
+                               (:site-id site))
+                      r (client/get url)
+                      listed (parse-string (:body r) keyword)
+                      updated-offer {:site-id (str site-id)
+                                     :offer-id (-> listed first :offer-id)
+                                     :name "Old Visitor Offer"
+                                     :code "OLD-VISITOR"
+                                     :display-text "display text again"
+                                     :reward {:promo-id (-> promos first :uuid str)
+                                              :type :dynamic-promo
+                                              :expiry-in-minutes 10}
+                                     :presentation {:type :fixed-div
+                                                    :page :search-results
+                                                    :display-text "foo"}
+                                     :conditions [{:type :product-views
+                                                   :product-views 3}]}
+                      r1 (update-offer (-> listed first :offer-id) updated-offer)
+                      r2 (client/get url)
+                      listed (parse-string (:body r2) keyword)]
+                  (:status r) => 200
+                  listed => (just [(contains
+                                    {:display-text "display text again"
+                                     :name "Old Visitor Offer"
+                                     :presentation {:display-text "foo"
+                                                    :page "search-results"
+                                                    :type "fixed-div"}
+                                     :active true
+                                     :reward {:type "dynamic-promo"
+                                              :promo-id (-> promos first :uuid str)
+                                              :expiry-in-minutes 10}
+                                     :code "OLD-VISITOR"
+                                     :conditions [{:product-views 3
+                                                   :type "product-views"}]})
+                                   (contains
+                                    {:display-text "display text"
+                                     :name "Easter Offer"
+                                     :presentation {:display-text "presentation text"
+                                                    :page "any"
+                                                    :type "lightbox"}
+                                     :active true
+                                     :reward {:type "dynamic-promo"
+                                              :promo-id (-> promos first :uuid str)
+                                              :expiry-in-minutes 20}
+                                     :code "E1"
+                                     :conditions []})])))))

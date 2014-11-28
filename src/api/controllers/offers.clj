@@ -71,9 +71,11 @@
         ;; TODO: Handle the site not being found
         id (site/get-id-by-site-uuid site-uuid)
         ;; required since JSON input results in strings and we need keywords
+        conditions (map #(assoc %1 :type (keyword (:type %1))) (:conditions body-params))
         body-params (-> body-params
                         (update-in [:reward :type] #(keyword %1))
-                        (update-in [:presentation :type] #(keyword %1)))
+                        (update-in [:presentation :type] #(keyword %1))
+                        (assoc :conditions conditions))
         coerced-params ((c/coercer NewOffer
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
@@ -86,13 +88,21 @@
 (defn update-offer!
   [{:keys [params body-params] :as request}]
   (let [{:keys [offer-id]} params
-        site-uuid (:site-id body-params)
+        site-uuid (java.util.UUID/fromString (:site-id body-params))
+        ;; required since JSON input results in strings and we need keywords
+        conditions (map #(assoc %1 :type (keyword (:type %1))) (:conditions body-params))
+        body-params (-> body-params
+                        (update-in [:reward :type] #(keyword %1))
+                        (update-in [:presentation :type] #(keyword %1))
+                        (assoc :conditions conditions))
         coerced-params ((c/coercer NewOffer
                                    (c/first-matcher [custom-matcher
                                                      c/string-coercion-matcher]))
                         (dissoc body-params :offer-id))
         ;; TODO: Handle the site not being found
         id (site/get-id-by-site-uuid site-uuid)]
+    (when (= schema.utils.ErrorContainer (type coerced-params))
+      (throw+ {:type ::argument-error :body-params params :error coerced-params}))
     (shape-new-offer
      (offer/update-offer! offer-id (assoc coerced-params :site-id id)))))
 
