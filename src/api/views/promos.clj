@@ -16,8 +16,10 @@
 
 (defn shape-lookup
   [r]
-  {:status 200
-   :body (vec (map shape-promo r))})
+  (cond
+   (not (contains? r :error)) {:status 200 :body (vec (map shape-promo (:results r)))}
+   (and (contains? r :error) (= (:error r) :site-not-found)) {:status 404
+                                                              :body "That Site Doesn't Exist"}))
 
 (defn shape-new-promo
   [{:keys [success error message] :as response}]

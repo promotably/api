@@ -39,6 +39,14 @@
                  :accept :json
                  :throw-exceptions false}))
 
+  (defn- update-promo
+    [promo-id value]
+    (client/put (str "http://localhost:3000/v1/promos/" promo-id)
+                {:body (json/write-str value)
+                 :content-type :json
+                 :accept :json
+                 :throw-exceptions false}))
+
   (defn- lookup-promo-by-code
     [code sid]
     (client/get (str "http://localhost:3000/v1/promos/query/" code)
@@ -119,23 +127,25 @@
                                          :exceptions nil
                                          :conditions []})])))
 
+              (facts "Promo Lookup Site Doesn't Exist"
+                (let [bad-site-id (str (java.util.UUID/randomUUID))
+                      r (lookup-promos bad-site-id)]
+                  (:status r) => 404))
+
               (facts "Promo Update Happy Path"
                 (let [b (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)
                       promo-id (:promo-id (first b))
-                      r (client/put (str "http://localhost:3000/v1/promos/" promo-id)
-                                    {:body (json/write-str {:site-id (str site-id)
-                                                            :name "Eye-catching name here"
-                                                            :description "alsdkfjlaksdjf"
-                                                            :code "EYECATCH"
-                                                            :reward-amount 10.0
-                                                            :reward-type :percent
-                                                            :reward-tax :after-tax
-                                                            :reward-applied-to :cart
-                                                            :exceptions nil
-                                                            :conditions []})
-                                     :content-type :json
-                                     :accept :json
-                                     :throw-exceptions false})
+                      r (update-promo promo-id {:site-id (str site-id)
+                                                :name "Eye-catching name here"
+                                                :description "alsdkfjlaksdjf"
+                                                :code "EYECATCH"
+                                                :reward-amount 10.0
+                                                :reward-type :percent
+                                                :reward-tax :after-tax
+                                                :reward-applied-to :cart
+                                                :exceptions nil
+                                                :conditions []})
+
                       u (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)]
                   (:status r) => 204
                   u => (just [(contains {:name "Eye-catching name here"
@@ -158,4 +168,33 @@
                                          :reward-amount 20.0
                                          :reward-applied-to "cart"
                                          :reward-tax "after-tax"
-                                         :reward-type "percent"})])))))
+                                         :reward-type "percent"})])))
+
+              (tabular
+               (facts "Promo Update Missing Fields"
+                 (let [b (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)
+                       promo-id (:promo-id (first b))
+                       p (dissoc {:site-id (str site-id)
+                                  :name "Twenty Off"
+                                  :code "TWENTYOFF"
+                                  :description "You get 20% off."
+                                  :reward-amount 20.0
+                                  :reward-type :percent
+                                  :reward-tax :after-tax
+                                  :reward-applied-to :cart
+                                  :exceptions nil
+                                  :conditions []}
+                                 ?remove)
+                       r (update-promo promo-id p)]
+                   (:status r) => 400))
+               ?remove
+               :site-id
+               :name
+               :code
+               :description
+               :reward-amount
+               :reward-type
+               :reward-tax
+               :reward-applied-to
+               :exceptions
+               :conditions)))

@@ -31,8 +31,11 @@
                     (c/first-matcher [custom-matcher
                                       c/string-coercion-matcher]))
          params)
-        found (promo/find-by-site-uuid site-id)]
-    (shape-lookup found)))
+        found-site (site/find-by-site-uuid site-id)
+        r (if found-site
+            {:results (promo/find-by-site-uuid site-id)}
+            {:error :site-not-found})]
+    (shape-lookup r)))
 
 ;; TODO: enforce ownership
 (defn delete-promo!
