@@ -3,24 +3,21 @@
 
 (defn shape-promo
   [p]
-  (reduce-kv (fn [m k v]
-               (assoc m k (view-value-helper v)))
-             {} p))
+  (let [result (-> (assoc p
+                     :conditions (map (fn [c]
+                                        (dissoc c :id :promo-id))
+                                      (:conditions p))
+                     :promo-id (:uuid p))
+                   (dissoc :id :uuid :site-id))]
+    (reduce-kv (fn [m k v]
+                 (assoc m k (view-value-helper v)))
+               {}
+               result)))
 
 (defn shape-lookup
   [r]
   {:status 200
-   :body (vec (map (fn [p]
-                     (let [result (-> (assoc p
-                                        :conditions (map (fn [c]
-                                                           (dissoc c :id :promo-id))
-                                                         (:conditions p))
-                                        :promo-id (:uuid p))
-                                      (dissoc :id :uuid :site-id))]
-                       (reduce-kv (fn [m k v]
-                                    (assoc m k (view-value-helper v)))
-                                  {} result)))
-                   r))})
+   :body (vec (map shape-promo r))})
 
 (defn shape-new-promo
   [{:keys [success error message] :as response}]

@@ -39,6 +39,14 @@
                  :accept :json
                  :throw-exceptions false}))
 
+  (defn- lookup-promo-by-code
+    [code sid]
+    (client/get (str "http://localhost:3000/v1/promos/query/" code)
+                {:query-params {:site-id sid}
+                 :content-type :json
+                 :accept :json
+                 :throw-exceptions false}))
+
   (fact-group :integration
 
               (facts "Promo Create"
@@ -89,6 +97,7 @@
                       b (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
                   b => (just [(contains {:active true
+                                         :promo-id string?
                                          :code "EASTER"
                                          :conditions []
                                          :description "This is a description"
@@ -100,6 +109,7 @@
                                          :reward-tax "after-tax"
                                          :reward-type "percent"})
                               (contains {:name "Twenty Off"
+                                         :promo-id string?
                                          :code "TWENTYOFF"
                                          :description "You get 20% off. Bitches."
                                          :reward-amount 20.0
@@ -107,8 +117,7 @@
                                          :reward-tax "after-tax"
                                          :reward-applied-to "cart"
                                          :exceptions nil
-                                         :conditions []
-                                         :promo-id string?})])))
+                                         :conditions []})])))
 
               (facts "Promo Update Happy Path"
                 (let [b (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)

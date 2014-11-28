@@ -47,7 +47,10 @@
 
 (defroutes promo-routes
   (context "/promos" []
-           (POST "/" [] (fn [r] (create-new-promo! (:kinesis current-system) r)))
+           (POST "/" [] (fn [r] (create-new-promo! (merge
+                                                    (:kinesis current-system)
+                                                    (-> current-system :config :kinesis))
+                                                   r)))
            (GET "/" [] lookup-promos)
            (DELETE ["/:promo-id", :promo-id promo-code-regex] [promo-id] delete-promo!)
            (GET ["/:promo-id", :promo-id promo-code-regex] [promo-id] show-promo)
