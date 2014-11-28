@@ -47,6 +47,13 @@
                  :accept :json
                  :throw-exceptions false}))
 
+  (defn- show-promo
+    [sid promo-id]
+    (client/get (str "http://localhost:3000/v1/promos/" promo-id)
+                {:query-params {:site-id sid}
+                 :accept :json
+                 :throw-exceptions false}))
+
   (defn- lookup-promo-by-code
     [code sid]
     (client/get (str "http://localhost:3000/v1/promos/query/" code)
@@ -197,4 +204,13 @@
                :reward-tax
                :reward-applied-to
                :exceptions
-               :conditions)))
+               :conditions)
+
+              (facts "Show Promo Happy Path"
+                (let [promo-id (:promo-id
+                                (first
+                                 (json/read-str
+                                  (:body (lookup-promos site-id))
+                                  :key-fn keyword)))
+                      r (show-promo site-id promo-id)]
+                  (:status r) => 200))))

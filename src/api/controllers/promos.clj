@@ -79,9 +79,12 @@
     (shape-update-promo p)))
 
 (defn show-promo
-  [{:keys [promo-id params body] :as request}]
-  (let [promos (promo/find-by-site-and-uuid (:site-id params) promo-id)]
-    (shape-new-promo (first promos))))
+  [{:keys [params body] :as request}]
+  (let [site (site/find-by-site-uuid (:site-id params))
+        promos (promo/find-by-site-and-uuid (:id site)
+                                            (java.util.UUID/fromString
+                                             (:promo-id params)))]
+    (shape-promo (first promos))))
 
 ;; TODO: Check auth
 (defn query-promo
