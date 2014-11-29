@@ -66,7 +66,6 @@
 
               (facts "Promo Create"
                 (let [new-promo {:site-id (str site-id)
-                                 :name "Twenty Off"
                                  :code "TWENTYOFF"
                                  :description "You get 20% off. Bitches."
                                  :reward-amount 20.0
@@ -84,7 +83,6 @@
                (facts "Promo Create Missing Required Fields"
                  (let [bc (promo/count-by-site site-id)
                        np {:site-id (str site-id)
-                           :name "Twenty Off"
                            :code "TWENTYOFF"
                            :description "You get 20% off. Bitches."
                            :reward-amount 20.0
@@ -101,7 +99,6 @@
                    ac => bc))
                ?remove
                :site-id
-               :name
                :code
                :description
                :reward-amount
@@ -119,16 +116,15 @@
                                          :promo-id string?
                                          :code "EASTER"
                                          :conditions []
-                                         :description "This is a description"
+                                         :description "Easter Coupon"
+                                         :seo-text "Best effing coupon evar"
                                          :exceptions nil
                                          :linked-products []
-                                         :name "Easter Coupon"
                                          :reward-amount 20.0
                                          :reward-applied-to "cart"
                                          :reward-tax "after-tax"
                                          :reward-type "percent"})
-                              (contains {:name "Twenty Off"
-                                         :promo-id string?
+                              (contains {:promo-id string?
                                          :code "TWENTYOFF"
                                          :description "You get 20% off. Bitches."
                                          :reward-amount 20.0
@@ -149,7 +145,6 @@
                 (let [b (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)
                       promo-id (:promo-id (first b))
                       r (update-promo promo-id {:site-id (str site-id)
-                                                :name "Eye-catching name here"
                                                 :description "alsdkfjlaksdjf"
                                                 :code "EYECATCH"
                                                 :reward-amount 10.0
@@ -161,8 +156,7 @@
 
                       u (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)]
                   (:status r) => 204
-                  u => (just [(contains {:name "Eye-catching name here"
-                                         :description "alsdkfjlaksdjf"
+                  u => (just [(contains {:description "alsdkfjlaksdjf"
                                          :code "EYECATCH"
                                          :reward-amount 10.0
                                          :reward-type "percent"
@@ -179,7 +173,6 @@
                                          :description "You get 20% off. Bitches."
                                          :exceptions nil
                                          :linked-products []
-                                         :name "Twenty Off"
                                          :reward-amount 20.0
                                          :reward-applied-to "cart"
                                          :reward-tax "after-tax"
@@ -190,7 +183,6 @@
                  (let [b (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)
                        promo-id (:promo-id (first b))
                        p (dissoc {:site-id (str site-id)
-                                  :name "Twenty Off"
                                   :code "TWENTYOFF"
                                   :description "You get 20% off."
                                   :reward-amount 20.0
@@ -204,7 +196,6 @@
                    (:status r) => 400))
                ?remove
                :site-id
-               :name
                :code
                :description
                :reward-amount

@@ -37,7 +37,6 @@
         db-result {:description "adsfdf"
                    :updated_at (to-sql-date (now))
                    :created_at (to-sql-date (now))
-                   :name "10% Off"
                    :reward_amount 10.0000M
                    :active true
                    :id 1
@@ -53,6 +52,5 @@
                                             :end_date (to-sql-date (now))}])}]
     (db-to-promo db-result) => (contains {:description "adsfdf"
                                           :uuid promo-uuid
-                                          :name "10% Off"
                                           :reward-amount 10.0000M
                                           :conditions (just [(contains {:type :dates})])})))

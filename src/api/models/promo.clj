@@ -97,7 +97,7 @@
 (sm/defn new-promo!
   "Creates a new promo in the database"
   [kinesis-comp
-   {:keys [description name code exceptions
+   {:keys [description seo-text code exceptions
            reward-type reward-applied-to reward-tax reward-amount
            site-id linked-products conditions promo-id] :as params}]
   (transaction
@@ -107,8 +107,8 @@
       :message (format "A promo with code %s already exists" code)}
      (let [new-values {:active true
                        :site_id site-id
-                       :name name
                        :description description
+                       :seo_text seo-text
                        :exceptions (if exceptions
                                      (clojure.core/name exceptions))
                        :reward_applied_to (clojure.core/name reward-applied-to)
@@ -137,7 +137,7 @@
 ;; (sm/defn update-promo!
 (defn update-promo!
   "Updates a promo in the database"
-  [promo-id {:keys [description name code exceptions
+  [promo-id {:keys [description seo-text code exceptions
                     reward-type reward-applied-to reward-tax reward-amount
                     site-id conditions linked-products] :as params}]
   (let [promo-id (java.util.UUID/fromString promo-id)
@@ -149,8 +149,8 @@
        :message (format "Promo id %s does not exist." promo-id)}
       (let [new-values {:active true
                         :site_id site-id
-                        :name name
                         :description description
+                        :seo_text seo-text
                         :exceptions (if exceptions
                                       (clojure.core/name exceptions))
                         :reward_applied_to (clojure.core/name reward-applied-to)

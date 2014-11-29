@@ -225,9 +225,9 @@
 
 ;; Promos ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def BasePromo {(s/required-key :name) s/Str
-                (s/required-key :code) s/Str
+(def BasePromo {(s/required-key :code) s/Str
                 (s/required-key :description) (s/maybe s/Str)
+                (s/optional-key :seo-text) (s/maybe s/Str)
                 (s/optional-key :active) s/Bool
                 (s/required-key :reward-amount) (s/maybe s/Num)
                 (s/required-key :reward-type) (s/maybe (s/enum :dollar :percent))

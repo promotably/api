@@ -28,7 +28,6 @@
           (fixture :promo-1
                    :uuid (java.util.UUID/randomUUID)
                    :site_id :site-1
-                   :name "Easter Coupon"
                    :code "EASTER"
                    :active true
                    :reward_amount 20
@@ -36,7 +35,8 @@
                    :exceptions nil
                    :reward_tax "after-tax"
                    :reward_applied_to "cart"
-                   :description "This is a description"
+                   :description "Easter Coupon"
+                   :seo_text "Best effing coupon evar"
                    :updated_at (c/to-sql-date (t/now))
                    :created_at (c/to-sql-date (t/now))))
       (table :offers
