@@ -46,7 +46,6 @@
                              arrify
                              undered
                              fixers)]
-                  (prn fixed)
                   (insert promo-conditions (values fixed))))
               conditions)))))
 
