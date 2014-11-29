@@ -81,10 +81,9 @@
 (defn show-promo
   [{:keys [params body] :as request}]
   (let [site (site/find-by-site-uuid (:site-id params))
-        promos (promo/find-by-site-and-uuid (:id site)
-                                            (java.util.UUID/fromString
-                                             (:promo-id params)))]
-    (shape-promo (first promos))))
+        the-promo (promo/find-by-uuid (java.util.UUID/fromString
+                                       (:promo-id params)))]
+    (shape-promo {:promo the-promo})))
 
 ;; TODO: Check auth
 (defn query-promo
@@ -95,10 +94,7 @@
         the-promo (promo/find-by-site-uuid-and-code
                    site-id
                    (clojure.string/upper-case code))]
-    (if-not the-promo
-      {:status 404 :body "Can't find that promo"}
-      (do
-        {:body (shape-promo the-promo)}))))
+    (shape-promo {:promo the-promo})))
 
 (def coerce-site-id
   (make-trans #{:site-id}

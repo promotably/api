@@ -212,4 +212,35 @@
                                   (:body (lookup-promos site-id))
                                   :key-fn keyword)))
                       r (show-promo site-id promo-id)]
-                  (:status r) => 200))))
+                  (:status r) => 200))
+
+              (facts "Promo with Conditions Create & Show Roundtrip"
+                (let [p {:site-id (str site-id)
+                         :code "FALLSALE"
+                         :description "Fall Sale"
+                         :reward-amount 15.0
+                         :reward-type :percent
+                         :reward-tax :before-tax
+                         :reward-applied-to :cart
+                         :exceptions nil
+                         :conditions [{:type :dates
+                                       :start-date "2015-08-01T04:59:59Z"
+                                       :end-date "2015-11-30T04:59:59Z"}]}
+                      cr (create-promo p)
+                      qr (json/read-str
+                          (:body (lookup-promo-by-code "FALLSALE" site-id))
+                          :key-fn keyword)
+                      sr (json/read-str
+                          (:body (show-promo site-id (:promo-id qr)))
+                          :key-fn keyword)]
+                  (:status cr) => 201
+                  qr => (contains {:code "FALLSALE"
+                                   :description "Fall Sale"
+                                   :reward-amount 15.0
+                                   :reward-type "percent"
+                                   :reward-tax "before-tax"
+                                   :reward-applied-to "cart"
+                                   :conditions (just [(contains {:type "dates"
+                                                                 :start-date "2015-08-01T04:59:59Z"
+                                                                 :end-date "2015-11-30T04:59:59Z"})])})
+                  sr => qr))))

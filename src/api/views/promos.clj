@@ -1,7 +1,7 @@
 (ns api.views.promos
   (:require [api.views.helper :refer [view-value-helper]]))
 
-(defn shape-promo
+(defn- prep-single-promo
   [p]
   (let [result (-> (assoc p
                      :conditions (map (fn [c]
@@ -14,10 +14,22 @@
                {}
                result)))
 
+(defn shape-promo
+  [{:keys [promo error]}]
+  (let [status (cond
+                (and (nil? error) (not (nil? promo))) 200
+                (nil? promo) 404
+                :else 500)
+        body (cond
+              (and (nil? error) (not (nil? promo))) (prep-single-promo promo)
+              (nil? promo) nil)]
+    {:status status
+     :body body}))
+
 (defn shape-lookup
   [r]
   (cond
-   (not (contains? r :error)) {:status 200 :body (vec (map shape-promo (:results r)))}
+   (not (contains? r :error)) {:status 200 :body (vec (map prep-single-promo (:results r)))}
    (and (contains? r :error)
         (= (:error r) :site-not-found)) {:status 404
                                          :body "That Site Doesn't Exist"}))
