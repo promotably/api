@@ -222,6 +222,7 @@
   [site-uuid :- s/Uuid]
   (select promos
           (aggregate (count :*) :cnt)
+          (where {:sites.uuid site-uuid})
           (join sites (= :sites.id :site_id))))
 
 (def condition-order
