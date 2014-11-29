@@ -184,8 +184,8 @@
    (s/optional-key :promo-id) s/Int
    (s/required-key :uuid) s/Uuid
    (s/required-key :type) s/Str
-   (s/optional-key :start-date) (s/maybe java.sql.Date)
-   (s/optional-key :end-date) (s/maybe java.sql.Date)
+   (s/optional-key :start-date) (s/maybe java.sql.Timestamp)
+   (s/optional-key :end-date) (s/maybe java.sql.Timestamp)
    (s/optional-key :start-time) (s/maybe java.sql.Timestamp)
    (s/optional-key :end-time) (s/maybe java.sql.Timestamp)
    (s/optional-key :usage-count) (s/maybe s/Int)
@@ -390,8 +390,8 @@
    (s/required-key :uuid) s/Uuid
    (s/required-key :type) s/Str
    (s/optional-key :created-at) (s/maybe java.sql.Timestamp)
-   (s/optional-key :start-date) (s/maybe java.sql.Date)
-   (s/optional-key :end-date) (s/maybe java.sql.Date)
+   (s/optional-key :start-date) (s/maybe java.sql.Timestamp)
+   (s/optional-key :end-date) (s/maybe java.sql.Timestamp)
    (s/optional-key :start-time) (s/maybe java.sql.Timestamp)
    (s/optional-key :end-time) (s/maybe java.sql.Timestamp)
    (s/optional-key :minutes-since-last-offer) (s/maybe s/Int)

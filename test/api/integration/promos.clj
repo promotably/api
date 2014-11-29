@@ -18,7 +18,7 @@
                                  (migrate-up)
                                  (load-fixture-set base/fixture-set)))
                      (after :contents
-                            (migrate-down))]
+                            (comment migrate-down))]
 
   (def site (api.models.site/find-by-name "site-1"))
   (def site-id (:site-id site))
@@ -74,7 +74,9 @@
                                  :reward-tax :after-tax
                                  :reward-applied-to :cart
                                  :exceptions nil
-                                 :conditions []}
+                                 :conditions [{:type "dates"
+                                               :start-date "2014-11-27T05:00:00Z"
+                                               :end-date "2014-11-29T04:59:59Z"}]}
                       r (create-promo new-promo)]
                   (:status r) => 201))
 
@@ -90,7 +92,9 @@
                            :reward-tax :after-tax
                            :reward-applied-to :cart
                            :exceptions nil
-                           :conditions []}
+                           :conditions [{:end-date "2014-11-29T04:59:59Z"
+                                         :start-date "2014-11-27T05:00:00Z"
+                                         :type "dates"}]}
                        r (create-promo (dissoc np ?remove))
                        ac (promo/count-by-site site-id)]
                    (:status r) => 400
@@ -132,7 +136,9 @@
                                          :reward-tax "after-tax"
                                          :reward-applied-to "cart"
                                          :exceptions nil
-                                         :conditions []})])))
+                                         :conditions [{:type "dates"
+                                                       :start-date "2014-11-27T05:00:00Z"
+                                                       :end-date "2014-11-29T04:59:59Z"}]})])))
 
               (facts "Promo Lookup Site Doesn't Exist"
                 (let [bad-site-id (str (java.util.UUID/randomUUID))
@@ -167,7 +173,9 @@
                                          :promo-id string?})
                               (contains {:active true
                                          :code "TWENTYOFF"
-                                         :conditions []
+                                         :conditions [{:type "dates"
+                                                            :start-date "2014-11-27T05:00:00Z"
+                                                            :end-date "2014-11-29T04:59:59Z"}]
                                          :description "You get 20% off. Bitches."
                                          :exceptions nil
                                          :linked-products []
