@@ -80,10 +80,11 @@
 
 (defn show-promo
   [{:keys [params body] :as request}]
-  (let [site (site/find-by-site-uuid (:site-id params))
-        the-promo (promo/find-by-uuid (java.util.UUID/fromString
-                                       (:promo-id params)))]
-    (shape-promo {:promo the-promo})))
+  (let [site-uuid (java.util.UUID/fromString (:site-id params))
+        site (site/find-by-site-uuid site-uuid true)
+        promo-uuid (java.util.UUID/fromString (:promo-id params))
+        promo (promo/find-by-site-and-uuid (:id site) promo-uuid)]
+    (shape-promo {:promo promo})))
 
 ;; TODO: Check auth
 (defn query-promo

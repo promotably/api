@@ -43,7 +43,9 @@
                     (c/first-matcher [custom-matcher
                                       c/string-coercion-matcher]))
          params)
-        found (offer/find-by-site-uuid site-id)]
+        found (offer/find-by-site-uuid (:site-id coerced-params))]
+    (when (= schema.utils.ErrorContainer (type coerced-params))
+      (throw+ {:type ::argument-error :body-params params :error coerced-params}))
     (shape-lookup found)))
 
 (defn show-offer
@@ -82,8 +84,8 @@
                         body-params)]
     (when (= schema.utils.ErrorContainer (type coerced-params))
       (throw+ {:type ::argument-error :body-params params :error coerced-params}))
-    (shape-new-offer
-     (offer/new-offer! (assoc coerced-params :site-id id)))))
+    (let [result (offer/new-offer! (assoc coerced-params :site-id id))]
+      (shape-new-offer result))))
 
 (defn update-offer!
   [{:keys [params body-params] :as request}]

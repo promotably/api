@@ -18,11 +18,11 @@
                                  (migrate-up)
                                  (load-fixture-set base/fixture-set)))
                      (after :contents
-                            (migrate-down))]
+                            (comment migrate-down))]
 
   (def site (api.models.site/find-by-name "site-1"))
   (def site-id (:site-id site))
-  (def promos (api.models.promo/find-by-site-uuid site-id))
+  (def promos (api.models.promo/find-by-site-uuid site-id false))
   (defn- create-offer
     [new-offer]
     (client/post "http://localhost:3000/v1/offers"

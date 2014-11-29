@@ -111,6 +111,7 @@
               (facts "Promo Lookup Happy Path"
                 (let [r (lookup-promos site-id)
                       b (json/read-str (:body r) :key-fn keyword)]
+                  ;; (clojure.pprint/pprint b)
                   (:status r) => 200
                   b => (just [(contains {:active true
                                          :promo-id string?
@@ -127,6 +128,7 @@
                               (contains {:promo-id string?
                                          :code "TWENTYOFF"
                                          :description "You get 20% off. Bitches."
+                                         :linked-products []
                                          :reward-amount 20.0
                                          :reward-type "percent"
                                          :reward-tax "after-tax"
@@ -154,29 +156,39 @@
                                                 :exceptions nil
                                                 :conditions []})
 
-                      u (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)]
+                      u (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)
+                      sorted (sort-by :code u)]
                   (:status r) => 204
-                  u => (just [(contains {:description "alsdkfjlaksdjf"
-                                         :code "EYECATCH"
-                                         :reward-amount 10.0
-                                         :reward-type "percent"
-                                         :reward-tax "after-tax"
-                                         :reward-applied-to "cart"
-                                         :exceptions nil
-                                         :conditions []
-                                         :promo-id string?})
-                              (contains {:active true
-                                         :code "TWENTYOFF"
-                                         :conditions [{:type "dates"
-                                                            :start-date "2014-11-27T05:00:00Z"
-                                                            :end-date "2014-11-29T04:59:59Z"}]
-                                         :description "You get 20% off. Bitches."
-                                         :exceptions nil
-                                         :linked-products []
-                                         :reward-amount 20.0
-                                         :reward-applied-to "cart"
-                                         :reward-tax "after-tax"
-                                         :reward-type "percent"})])))
+                  (first sorted) => (contains
+                                     {:description "Easter Coupon",
+                                      :reward-applied-to "cart",
+                                      :seo-text "Best effing coupon evar",
+                                      :reward-tax "after-tax",
+                                      :reward-amount 20.0,
+                                      :linked-products [],
+                                      :conditions [],
+                                      :active true,
+                                      :code "EASTER",
+                                      :reward-type "percent",
+                                      :exceptions nil,
+                                      :promo-id string?})
+                  (second sorted) => (contains
+                                      {:description "You get 20% off. Bitches.",
+                                       :reward-applied-to "cart",
+                                       :reward-tax "after-tax",
+                                       :reward-amount 20.0,
+                                       :linked-products [],
+                                       :active true,
+                                       :code "TWENTYOFF",
+                                       :reward-type "percent",
+                                       :exceptions nil,
+                                       :promo-id string?})
+                  (-> sorted second :conditions first) =>
+                  (contains
+                   {:start-date "2014-11-27T05:00:00Z",
+                    :type "dates",
+                    :end-date "2014-11-29T04:59:59Z"}
+                   :in-any-order)))
 
               (tabular
                (facts "Promo Update Missing Fields"
@@ -206,41 +218,27 @@
                :conditions)
 
               (facts "Show Promo Happy Path"
-                (let [promo-id (:promo-id
-                                (first
-                                 (json/read-str
-                                  (:body (lookup-promos site-id))
-                                  :key-fn keyword)))
-                      r (show-promo site-id promo-id)]
-                  (:status r) => 200))
-
-              (facts "Promo with Conditions Create & Show Roundtrip"
-                (let [p {:site-id (str site-id)
-                         :code "FALLSALE"
-                         :description "Fall Sale"
-                         :reward-amount 15.0
-                         :reward-type :percent
-                         :reward-tax :before-tax
-                         :reward-applied-to :cart
-                         :exceptions nil
-                         :conditions [{:type :dates
-                                       :start-date "2015-08-01T04:59:59Z"
-                                       :end-date "2015-11-30T04:59:59Z"}]}
-                      cr (create-promo p)
-                      qr (json/read-str
-                          (:body (lookup-promo-by-code "FALLSALE" site-id))
-                          :key-fn keyword)
-                      sr (json/read-str
-                          (:body (show-promo site-id (:promo-id qr)))
-                          :key-fn keyword)]
-                  (:status cr) => 201
-                  qr => (contains {:code "FALLSALE"
-                                   :description "Fall Sale"
-                                   :reward-amount 15.0
-                                   :reward-type "percent"
-                                   :reward-tax "before-tax"
-                                   :reward-applied-to "cart"
-                                   :conditions (just [(contains {:type "dates"
-                                                                 :start-date "2015-08-01T04:59:59Z"
-                                                                 :end-date "2015-11-30T04:59:59Z"})])})
-                  sr => qr))))
+                (let [promos (json/read-str
+                              (:body (lookup-promos site-id))
+                              :key-fn keyword)
+                      promo-id (-> promos second :promo-id)
+                      r (show-promo site-id promo-id)
+                      promo (json/read-str (:body r) :key-fn keyword)]
+                  (:status r) => 200
+                  promo => (contains
+                            {:description "You get 20% off. Bitches.",
+                             :reward-applied-to "cart",
+                             :reward-tax "after-tax",
+                             :reward-amount 20.0,
+                             :linked-products [],
+                             :active true,
+                             :code "TWENTYOFF",
+                             :reward-type "percent",
+                             :exceptions nil,
+                             :promo-id string?})
+                  (-> promo :conditions first) =>
+                  (contains
+                   {:start-date "2014-11-27T05:00:00Z",
+                    :type "dates",
+                    :end-date "2014-11-29T04:59:59Z"}
+                   :in-any-order)))))

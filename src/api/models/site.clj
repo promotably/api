@@ -37,12 +37,13 @@
                (where {:accounts.account_id account-uuid}))))
 
 (defn find-by-site-uuid
-  [site-uuid]
+  [site-uuid & [raw?]]
   (let [u (condp = (class site-uuid)
             java.lang.String (java.util.UUID/fromString site-uuid)
-            java.util.UUID site-uuid)]
-    (db-to-site (first (select sites
-                               (where {:uuid u}))))))
+            java.util.UUID site-uuid)
+        result (first (select sites (where {:uuid u})))]
+    (if raw? result
+        (db-to-site result))))
 
 (defn find-by-site-id
   [site-id]

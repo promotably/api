@@ -72,9 +72,14 @@
                (where {:id promo-id}))))
 
 (defn find-by-site-and-uuid
-  [site-id promo-id]
-  (seq (select promos
-               (where {:site_id site-id :uuid promo-id}))))
+  [site-id promo-id & [raw]]
+  (let [results (select promos
+                        (with promo-conditions)
+                        (with linked-products)
+                        (where {:site_id site-id :uuid promo-id}))]
+    (if raw
+      (first results)
+      (first (map db-to-promo results)))))
 
 (sm/defn find-by-uuid
   "Finds a promo by uuid."

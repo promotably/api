@@ -90,7 +90,8 @@
            offer-id] :as params}]
   (let [{p-type :type p-display-text :display-text p-page :page} presentation
         {:keys [promo-id expiry-in-minutes type]} reward
-        p (first (promo/find-by-site-and-uuid site-id promo-id))]
+        p (promo/find-by-site-and-uuid site-id promo-id true)]
+
     (cond
 
      (exists? site-id code)
@@ -144,7 +145,7 @@
         {:keys [promo-id expiry-in-minutes]} reward
         offer-uuid (java.util.UUID/fromString offer-uuid)
         offer (first (by-offer-uuid site-id offer-uuid))
-        promo (first (promo/find-by-site-and-uuid site-id promo-id))
+        promo (promo/find-by-site-and-uuid site-id promo-id true)
         id (:id offer)]
     (cond
 
@@ -185,11 +186,11 @@
   "Finds all offers for a given site id. Returns a collection (empty
   array if no results found)"
   [site-uuid :- s/Uuid]
-  (map db-to-offer
-       (select offers
-               (with offer-conditions)
-               (join sites (= :sites.id :site_id))
-               (where {:sites.uuid site-uuid}))))
+  (let [results (select offers
+                        (with offer-conditions)
+                        (join sites (= :sites.id :site_id))
+                        (where {:sites.uuid site-uuid}))]
+    (map db-to-offer results)))
 
 (sm/defn find-by-uuid
   "Finds an offer by uuid."
@@ -201,7 +202,6 @@
 (sm/defn delete-by-uuid
   "Deletes a offer by uuid."
   [offer-uuid :- s/Uuid]
-  (prn "delete" offer-uuid)
   (let [found (find-by-uuid offer-uuid)]
     (transaction
      (c/delete-conditions! (:id found))
