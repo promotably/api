@@ -77,9 +77,7 @@
                         (with promo-conditions)
                         (with linked-products)
                         (where {:site_id site-id :uuid promo-id}))]
-    (if raw
-      (first results)
-      (first (map db-to-promo results)))))
+    (first (if raw results (map db-to-promo results)))))
 
 (sm/defn find-by-uuid
   "Finds a promo by uuid."

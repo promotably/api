@@ -30,7 +30,7 @@
   => (just {:success false
             :error :already-exists
             :message "A offer with code TEST already exists"})
-  (provided (api.models.promo/find-by-site-and-uuid 1 ...promo-id...) => [{:id 10}],
+  (provided (api.models.promo/find-by-site-and-uuid 1 ...promo-id... true) => {:id 10},
             (exists? 1 "TEST") => true))
 
 (fact "new-offer! handles when a promo doesn't exist"
@@ -39,7 +39,7 @@
     => (just {:success false
               :error :invalid-promo
               :message (format "Promo %s does not exist" pid)})
-    (provided (api.models.promo/find-by-site-and-uuid ...site-id... pid) => [],
+    (provided (api.models.promo/find-by-site-and-uuid ...site-id... pid true) => nil,
               (exists? ...site-id... ...code...) => false)))
 
 (fact "update-offer! handles when an offer doesn't exist"
@@ -49,9 +49,10 @@
     => (just {:success false
               :error :not-found
               :message (format "Offer id %s does not exist." offer-uuid)})
-    (provided (by-offer-uuid ...site-id... offer-uuid) => [],
+    (provided (by-offer-uuid ...site-id... offer-uuid) => nil,
               (api.models.promo/find-by-site-and-uuid ...site-id...
-                                                      ...promo-id...) => [{:id 1}])))
+                                                      ...promo-id...
+                                                      true) => {:id 1})))
 
 (fact "update-offer! handles when a promo doesn't exist"
   (let [offer-uuid (java.util.UUID/randomUUID)]
@@ -61,7 +62,7 @@
               :error :not-found
               :message (format "Promo id %s does not exist." 1)})
     (provided (by-offer-uuid ...site-id... offer-uuid) => [{:id 2}],
-              (api.models.promo/find-by-site-and-uuid ...site-id... 1) => [])))
+              (api.models.promo/find-by-site-and-uuid ...site-id... 1 true) => nil)))
 
 (fact "get offers for site uses the cache"
   (let [site-uuid (java.util.UUID/randomUUID)]

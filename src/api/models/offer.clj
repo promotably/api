@@ -13,6 +13,7 @@
             [api.models.site :as site]
             [api.models.promo :as promo]
             [api.util :refer [hyphenify-key]]
+            [api.db]
             [clojure.core.cache :as cache]
             [korma.core :refer :all]
             [korma.db :refer [transaction] :as kdb]
@@ -147,6 +148,7 @@
         offer (first (by-offer-uuid site-id offer-uuid))
         promo (promo/find-by-site-and-uuid site-id promo-id true)
         id (:id offer)]
+
     (cond
 
      (not offer)
