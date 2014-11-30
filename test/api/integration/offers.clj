@@ -51,7 +51,8 @@
                                  :presentation {:type :lightbox
                                                 :page :any
                                                 :display-text "presentation text"}
-                                 :conditions []}
+                                 :conditions [{:type :minutes-since-last-offer
+                                               :minutes-since-last-offer 10}]}
                       r (create-offer new-offer)]
                   (:status r) => 201))
 
@@ -71,7 +72,8 @@
                                               :promo-id (-> promos first :uuid str)
                                               :expiry-in-minutes 10}
                                      :code "NEW-VISITOR"
-                                     :conditions []})
+                                     :conditions [{:type "minutes-since-last-offer"
+                                                   :minutes-since-last-offer 10}]})
                                    (contains
                                     {:display-text "display text"
                                      :name "Easter Offer"

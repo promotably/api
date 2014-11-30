@@ -78,6 +78,7 @@
 (defn by-site-uuid-and-offer-uuid
   [site-uuid offer-uuid]
   (seq (select offers
+               (with offer-conditions)
                (join sites (= :sites.id :site_id))
                (where {:sites.uuid site-uuid
                        :uuid offer-uuid}))))
