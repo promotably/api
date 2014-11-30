@@ -148,6 +148,7 @@
                       promo-id (:promo-id (first b))
                       r (update-promo promo-id {:site-id (str site-id)
                                                 :description "alsdkfjlaksdjf"
+                                                :seo-text "duckah p duckah"
                                                 :code "EYECATCH"
                                                 :reward-amount 10.0
                                                 :reward-type :percent
@@ -157,38 +158,20 @@
                                                 :conditions []})
 
                       u (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)
-                      sorted (sort-by :code u)]
+                      filtered (filter #(= (:promo-id %) promo-id) u)]
                   (:status r) => 204
-                  (first sorted) => (contains
-                                     {:description "Easter Coupon",
-                                      :reward-applied-to "cart",
-                                      :seo-text "Best effing coupon evar",
-                                      :reward-tax "after-tax",
-                                      :reward-amount 20.0,
-                                      :linked-products [],
-                                      :conditions [],
-                                      :active true,
-                                      :code "EASTER",
-                                      :reward-type "percent",
-                                      :exceptions nil,
-                                      :promo-id string?})
-                  (second sorted) => (contains
-                                      {:description "You get 20% off. Bitches.",
-                                       :reward-applied-to "cart",
-                                       :reward-tax "after-tax",
-                                       :reward-amount 20.0,
-                                       :linked-products [],
-                                       :active true,
-                                       :code "TWENTYOFF",
-                                       :reward-type "percent",
-                                       :exceptions nil,
-                                       :promo-id string?})
-                  (-> sorted second :conditions first) =>
-                  (contains
-                   {:start-date "2014-11-27T05:00:00Z",
-                    :type "dates",
-                    :end-date "2014-11-29T04:59:59Z"}
-                   :in-any-order)))
+                  (first filtered) => (contains
+                                       {:description "alsdkfjlaksdjf",
+                                        :reward-applied-to "cart",
+                                        :seo-text "duckah p duckah",
+                                        :reward-tax "after-tax",
+                                        :reward-amount 10.0,
+                                        :conditions [],
+                                        :active true,
+                                        :code "EYECATCH",
+                                        :reward-type "percent",
+                                        :exceptions nil,
+                                        :promo-id string?})))
 
               (tabular
                (facts "Promo Update Missing Fields"

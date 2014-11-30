@@ -144,8 +144,7 @@
                     reward-type reward-applied-to reward-tax reward-amount
                     site-id conditions linked-products] :as params}]
   (let [promo-id (java.util.UUID/fromString promo-id)
-        found (first (find-by-site-and-uuid site-id promo-id))
-        id (:id found)]
+        {:keys [id] :as found} (find-by-site-and-uuid site-id promo-id true)]
     (if-not found
       {:success false
        :error :not-found
@@ -164,18 +163,17 @@
                         :updated_at (sqlfn now)}
             result (update promos
                            (set-fields new-values)
-                           (where {:id (:id found)}))]
-        (c/update-conditions! (:id found)
+                           (where {:id id}))]
+        (c/update-conditions! id
                               (map #(-> %
                                         (assoc :uuid (java.util.UUID/randomUUID))
-                                        (assoc :promo-id (:id found)))
+                                        (assoc :promo-id id))
                                    conditions))
-        (lp/update! (:id found)
+        (lp/update! id
                     (map #(-> %
                               (assoc :uuid (java.util.UUID/randomUUID))
-                              (assoc :promo-id (:id found)))
+                              (assoc :promo-id id))
                          linked-products))
-        ;;(to-kinesis! :update (:id found) site-id)
         {:success true}))))
 
 (sm/defn find-by-site-uuid
@@ -202,7 +200,7 @@
 (sm/defn delete-by-uuid
   "Deletes a promo by uuid."
   [site-id promo-uuid :- s/Uuid]
-  (let [found (first (find-by-site-and-uuid site-id promo-uuid))]
+  (let [found (find-by-site-and-uuid site-id promo-uuid)]
     (transaction
      ;;(to-kinesis! :delete (:id found) site-id)
      (c/delete-conditions! (:id found))
