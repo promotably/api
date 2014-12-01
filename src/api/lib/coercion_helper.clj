@@ -25,11 +25,13 @@
     java.sql.Timestamp (to-sql-date thing)
     org.joda.time.DateTime (to-sql-date thing)))
 
-(defn coerce-date
-  [thing]
-  ;; pred is the thing you're trying to coerece FROM
-  (condp = (class thing)
-    java.sql.Date (-> thing from-sql-date to-date)))
+(let [date-formatter (formatters :date-time-no-ms)]
+  (defn coerce-date
+    [thing]
+    ;; pred is the thing you're trying to coerece FROM
+    (condp = (class thing)
+      java.lang.String (to-date (parse date-formatter thing))
+      java.sql.Date (-> thing from-sql-date to-date))))
 
 (defn coerce-sql-timestamp
   [thing]
