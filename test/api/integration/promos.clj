@@ -72,7 +72,6 @@
                                  :reward-type :percent
                                  :reward-tax :after-tax
                                  :reward-applied-to :cart
-                                 :exceptions nil
                                  :conditions [{:type "dates"
                                                :start-date "2014-11-27T05:00:00Z"
                                                :end-date "2014-11-29T04:59:59Z"}]}
@@ -89,7 +88,6 @@
                            :reward-type :percent
                            :reward-tax :after-tax
                            :reward-applied-to :cart
-                           :exceptions nil
                            :conditions [{:end-date "2014-11-29T04:59:59Z"
                                          :start-date "2014-11-27T05:00:00Z"
                                          :type "dates"}]}
@@ -105,7 +103,6 @@
                :reward-type
                :reward-tax
                :reward-applied-to
-               :exceptions
                :conditions)
 
               (facts "Promo Lookup Happy Path"
@@ -119,7 +116,6 @@
                                          :conditions []
                                          :description "Easter Coupon"
                                          :seo-text "Best effing coupon evar"
-                                         :exceptions nil
                                          :linked-products []
                                          :reward-amount 20.0
                                          :reward-applied-to "cart"
@@ -133,7 +129,6 @@
                                          :reward-type "percent"
                                          :reward-tax "after-tax"
                                          :reward-applied-to "cart"
-                                         :exceptions nil
                                          :conditions [{:type "dates"
                                                        :start-date "2014-11-27T05:00:00Z"
                                                        :end-date "2014-11-29T04:59:59Z"}]})])))
@@ -154,7 +149,6 @@
                                                 :reward-type :percent
                                                 :reward-tax :after-tax
                                                 :reward-applied-to :cart
-                                                :exceptions nil
                                                 :conditions []})
 
                       u (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)
@@ -170,7 +164,6 @@
                                         :active true,
                                         :code "EYECATCH",
                                         :reward-type "percent",
-                                        :exceptions nil,
                                         :promo-id string?})))
 
               (tabular
@@ -184,7 +177,6 @@
                                   :reward-type :percent
                                   :reward-tax :after-tax
                                   :reward-applied-to :cart
-                                  :exceptions nil
                                   :conditions []}
                                  ?remove)
                        r (update-promo promo-id p)]
@@ -197,7 +189,6 @@
                :reward-type
                :reward-tax
                :reward-applied-to
-               :exceptions
                :conditions)
 
               (facts "Show Promo Happy Path"
@@ -217,7 +208,6 @@
                              :active true,
                              :code "TWENTYOFF",
                              :reward-type "percent",
-                             :exceptions nil,
                              :promo-id string?})
                   (-> promo :conditions first) =>
                   (contains

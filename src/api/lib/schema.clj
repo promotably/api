@@ -237,7 +237,6 @@
                                                              :all-items
                                                              :delivery
                                                              :one-item))
-                (s/required-key :exceptions) (s/maybe (s/enum :sale-items))
                 (s/required-key :conditions) [PromoCondition]
                 (s/optional-key :created-at) s/Inst
                 (s/optional-key :updated-at) s/Inst})

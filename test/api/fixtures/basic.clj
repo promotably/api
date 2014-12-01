@@ -32,7 +32,6 @@
                    :active true
                    :reward_amount 20
                    :reward_type "percent"
-                   :exceptions nil
                    :reward_tax "after-tax"
                    :reward_applied_to "cart"
                    :description "Easter Coupon"

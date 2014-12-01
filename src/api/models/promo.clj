@@ -27,9 +27,8 @@
   (let [hyphenified-params (underscore-to-dash-keys r)
         cleaned (apply dissoc
                        hyphenified-params
-                       (filter (complement #{:exceptions})
-                               (for [[k v] hyphenified-params
-                                     :when (nil? v)] k)))
+                       (for [[k v] hyphenified-params
+                             :when (nil? v)] k))
 
         conditions (map
                     #(-> (apply dissoc
@@ -100,9 +99,9 @@
 (sm/defn new-promo!
   "Creates a new promo in the database"
   [kinesis-comp
-   {:keys [description seo-text code exceptions
-           reward-type reward-applied-to reward-tax reward-amount
-           site-id linked-products conditions promo-id] :as params}]
+   {:keys [description seo-text code reward-type reward-applied-to
+           reward-tax reward-amount site-id linked-products
+           conditions promo-id] :as params}]
   (transaction
    (if (seq (exists? site-id code))
      {:success false
@@ -112,8 +111,6 @@
                        :site_id site-id
                        :description description
                        :seo_text seo-text
-                       :exceptions (if exceptions
-                                     (clojure.core/name exceptions))
                        :reward_applied_to (clojure.core/name reward-applied-to)
                        :reward_tax (clojure.core/name reward-tax)
                        :reward_type (clojure.core/name reward-type)
@@ -140,9 +137,9 @@
 ;; (sm/defn update-promo!
 (defn update-promo!
   "Updates a promo in the database"
-  [promo-id {:keys [description seo-text code exceptions
-                    reward-type reward-applied-to reward-tax reward-amount
-                    site-id conditions linked-products] :as params}]
+  [promo-id {:keys [description seo-text code reward-type reward-applied-to
+                    reward-tax reward-amount site-id conditions
+                    linked-products] :as params}]
   (let [promo-id (java.util.UUID/fromString promo-id)
         {:keys [id] :as found} (find-by-site-and-uuid site-id promo-id true)]
     (if-not found
@@ -153,8 +150,6 @@
                         :site_id site-id
                         :description description
                         :seo_text seo-text
-                        :exceptions (if exceptions
-                                      (clojure.core/name exceptions))
                         :reward_applied_to (clojure.core/name reward-applied-to)
                         :reward_tax (clojure.core/name reward-tax)
                         :reward_type (clojure.core/name reward-type)
