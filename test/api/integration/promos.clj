@@ -2,12 +2,15 @@
   (:require
    [api.fixtures.basic :as base]
    [api.integration.helper :refer :all]
+   [api.lib.seal :refer [hmac-sha1 url-encode]]
    [api.route :as route]
    [api.core :as core]
    [api.models.site]
    [api.models.promo :as promo]
    [clojure.tools.logging :as log]
    [clj-http.client :as client]
+   [clj-time.core :as t]
+   [clj-time.format :as tf]
    [clojure.data.json :as json]
    [midje.sweet :refer :all]))
 
@@ -61,6 +64,15 @@
                  :content-type :json
                  :accept :json
                  :throw-exceptions false}))
+
+  (defn- validate-promo
+    [code sid body sig]
+    (client/post (str "http://localhost:3000/v1/promos/validation/" code)
+                 {:body body
+                  :headers {:promotably-auth sig}
+                  :content-type :json
+                  :accept :json
+                  :throw-exceptions false}))
 
   (fact-group :integration
 
@@ -190,6 +202,58 @@
                :reward-tax
                :reward-applied-to
                :conditions)
+
+              (facts "Validate Promo Happy Path"
+                (let [b (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)
+                      code (:code (first b))
+                      api-secret (str (:api-secret site))
+                      rq-body (json/write-str {:site-id (str site-id)
+                                               :code code
+                                               :shopper-email "shopper@shop.com"})
+                      body-hash (hmac-sha1 (.getBytes api-secret)
+                                           (.getBytes rq-body))
+                      time-val (tf/unparse (tf/formatters :basic-date-time-no-ms)
+                                           (t/now))
+                      sig-str (hmac-sha1 (.getBytes api-secret)
+                                         (.getBytes (apply str
+                                                           (str site-id) "\n"
+                                                           api-secret "\n"
+                                                           "localhost" "\n"
+                                                           "POST" "\n"
+                                                           (url-encode (str "/v1/promos/validation/" code)) "\n"
+                                                           time-val "\n"
+                                                           body-hash "\n"
+                                                           "" "\n"
+                                                           "" "\n")))
+                      sig-hash (str "hmac-sha1///" time-val "/" sig-str)
+                      r (validate-promo code (str site-id) rq-body sig-hash)]
+                  (:status r) => 201))
+
+              (facts "Validate Promo 403 if auth not properly formed"
+                (let [b (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)
+                      code (:code (first b))
+                      api-secret (str (:api-secret site))
+                      rq-body (json/write-str {:site-id (str site-id)
+                                               :code code
+                                               :shopper-email "shopper@shop.com"})
+                      body-hash (hmac-sha1 (.getBytes api-secret)
+                                           (.getBytes rq-body))
+                      time-val (tf/unparse (tf/formatters :basic-date-time-no-ms)
+                                           (t/now))
+                      sig-str (hmac-sha1 (.getBytes api-secret)
+                                         (.getBytes (apply str
+                                                           (str site-id) "\n"
+                                                           api-secret "\n"
+                                                           "localhost" "\n"
+                                                           "GET" "\n"
+                                                           (url-encode (str "/v1/promos/validation/" code)) "\n"
+                                                           time-val "\n"
+                                                           body-hash "\n"
+                                                           "" "\n"
+                                                           "" "\n")))
+                      sig-hash (str "hmac-sha1///" time-val "/" sig-str)
+                      r (validate-promo code (str site-id) rq-body sig-hash)]
+                  (:status r) => 403))
 
               (facts "Show Promo Happy Path"
                 (let [promos (json/read-str
