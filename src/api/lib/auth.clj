@@ -1,5 +1,6 @@
 (ns api.lib.auth
   (:require clojure.string
+            [clojure.data.json :as json]
             [api.lib.coercion-helper :refer [make-trans]]
             [api.lib.seal :refer [hmac-sha1 url-encode]]))
 
@@ -8,13 +9,15 @@
   (if auth-string
     (let [parts (clojure.string/split (or auth-string "") #"/" 5)
           [scheme headers qs-fields ts sig] parts
-          headers (filter #(not (or (nil? %) (= "" %)))
-                          (clojure.string/split (or headers "") #","))]
+          headers* (filter #(not (or (nil? %) (= "" %)))
+                          (clojure.string/split (or headers "") #","))
+          qs-fields* (filter #(not (or (nil? %) (= "" %)))
+                          (clojure.string/split (or qs-fields "") #","))]
       {:scheme scheme
-       :qs-fields (clojure.string/split qs-fields #",")
+       :qs-fields qs-fields*
        :timestamp ts
        :signature sig
-       :headers headers})))
+       :headers headers*})))
 
 (defn auth-valid?
   [site-id
@@ -25,7 +28,7 @@
     (let [request-headers (:headers request)
           slurped (if (string? (:body request))
                     (:body request)
-                    (try (slurp (:body request)) (catch Throwable t)))
+                    (json/write-str (:body request)))
           body-hmac (if-not (or (= "" slurped) (nil? slurped))
                       (hmac-sha1 (.getBytes ^String (str api-secret))
                                  (.getBytes ^String slurped)))
@@ -56,4 +59,3 @@
   (make-trans #{:promotably-auth}
               (fn [k v]
                 [:auth (parse-auth-string v)])))
-
