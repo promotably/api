@@ -114,12 +114,13 @@
         transform-auth)))
 
 (defn validate-promo
-  [{:keys [params body-params] :as request}]
+  [{:keys [params body-params headers] :as request}]
   (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
         coercer (c/coercer PromoValidionRequest matcher)
         coerced-params (-> body-params
                            (assoc :promotably-auth
-                             (:promotably-auth params))
+                             (or (:promotably-auth params)
+                                 (get headers "promotably-auth")))
                            prep-incoming
                            coercer)
         site-id (-> coerced-params :site :site-id)
