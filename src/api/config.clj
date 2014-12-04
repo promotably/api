@@ -104,9 +104,9 @@
   component/Lifecycle
   (start [component]
     (let [m (lookup)]
-      (if ((:env m) #{:production})
-        (set! *warn-on-reflection* false)
-        (set! *warn-on-reflection* true))
+      (if ((:env m) #{:production :integration})
+        (alter-var-root #'*warn-on-reflection* (constantly false))
+        (alter-var-root #'*warn-on-reflection* (constantly true)))
       (merge component m)))
   (stop
     [component]

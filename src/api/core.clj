@@ -7,11 +7,7 @@
             [api.route :as route]
             [clojure.string :as str]
             [clojure.test :as ct]
-            [midje.config]
-            [amazonica.aws.sns :refer :all]
-            midje.emission.colorize
-            api.version
-            [midje.repl :refer [load-facts]]))
+            api.version))
 
 (defn init [options]
   (alter-var-root #'route/current-system (constantly (components/system options))))
@@ -30,34 +26,6 @@
   (stop)
   (go options))
 
-(defn run-integration-tests
-  []
-  (let [result (atom nil)]
-    (midje.config/with-augmented-config {:colorize "FALSE"}
-      (midje.emission.colorize/init!)
-      (binding [ct/*test-out* (java.io.StringWriter.)]
-        (let [test-stdout (with-out-str
-                            (reset! result (load-facts 'api.integration.* :print-facts)))
-              test-output (-> ^java.io.StringWriter ct/*test-out* .toString)]
-          [test-output test-stdout @result])))))
-
-(defn results-to-sns
-  [topic-name output stdout result]
-  (let [arn (->> (list-topics)
-                 :topics
-                 (map :topic-arn)
-                 (filter #(re-find (re-pattern topic-name) %))
-                 first)]
-    (publish :topic-arn arn
-             :subject "Integration Test Results"
-             :message (format
-                       "== TEST RESULT %s %s\n%s\n\n== TEST OUTPUT\n%s\n== TEST STDOUT\n%s\n"
-                       (System/getenv "STACKNAME")
-                       api.version/version
-                       result
-                       output
-                       stdout))))
-
 (def cli-options
   [["-p" "--port PORT" "Web server listening port" :default 3000]
    ["-r" "--repl-port PORT" "Repl / Cider listening port" :default 55555]
@@ -69,16 +37,17 @@
    ;; A boolean option defaulting to nil
    ["-h" "--help"]])
 
+
+;; Main entry point
+
 (defn -main
-  "lein run entry point"
+  "lein run / daemon entry point"
   [& args]
   (let [{:keys [options summary errors] :as parsed} (parse-opts args cli-options)]
-    (go options)
-    (if (= :integration (-> route/current-system :config :env))
-      (let [[test-output test-stdout result] (run-integration-tests)]
-        (results-to-sns (-> route/current-system :config :test-topic)
-                        test-output test-stdout result)
-        (System/exit 0)))))
+    (go options)))
+
+
+;; For REPL development
 
 (comment
 

@@ -1,7 +1,8 @@
 (defproject api "version placeholder"
   :description "Promotably API server"
   ;; :url "http://example.com/FIXME"
-  :profiles {:dev {:dependencies [[midje "1.6.3"
+  :profiles {:uberjar {:aot :all}
+             :dev {:dependencies [[midje "1.6.3"
                                    :exclusions [joda-time
                                                 org.clojure/tools.macro]]]
                    :plugins [[drift "1.5.2"]
@@ -64,7 +65,4 @@
              ;; "–XX:+UseG1GC"
              "-DEVENT_STREAM_NAME=dev-PromotablyAPIEvents"
              "-DPROMO_STREAM_NAME=dev-PromoStream"]
-  :aws {:beanstalk {:environments [{:name "promotably-api-staging"
-                                    :cname-prefix "promotably-api-staging"
-                                    :env {"ENV" "staging"}}]
-                    :s3-bucket "lein-beanstalk.promotably-api"}})
+  )
