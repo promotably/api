@@ -1,5 +1,8 @@
 (ns api.views.promos
-  (:require [api.views.helper :refer [view-value-helper]]))
+  (:require
+   [schema.core :as s]
+   [schema.utils]
+   [api.views.helper :refer [view-value-helper]]))
 
 (defn- prep-single-promo
   [p]
