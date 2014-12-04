@@ -9,8 +9,10 @@
                              [lein-midje "3.0.0"]]
                    :jvm-opts ["-DKAFKA_BROKERS=localhost:9092"]}}
   :main api.core
+
   :global-vars {*warn-on-reflection* false}
   :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.2"]
+            [org.clojars.strongh/lein-init-script "1.3.1"]
             [cider/cider-nrepl "0.8.0"]]
   :dependencies [[compojure "1.1.9" :exclusions [joda-time]]
                  [org.clojure/tools.cli "0.3.1"]
@@ -59,7 +61,8 @@
                                org.clojure/java.classpath
                                com.fasterxml.jackson.core/jackson-core]]
                  [ring/ring-json "0.3.1"
-                  :exclusions [joda-time com.fasterxml.jackson.core/jackson-core]]]
+                  :exclusions [joda-time com.fasterxml.jackson.core/jackson-core]]
+                 [org.apache.commons/commons-daemon "1.0.9"]]
   :resource-paths ["resources"]
   :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC"
              ;; "–XX:+UseG1GC"

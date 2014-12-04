@@ -1,5 +1,6 @@
 (ns api.core
-  (:gen-class)
+  (:import [org.apache.commons.daemon Daemon DaemonContext])
+  (:gen-class :implements [org.apache.commons.daemon.Daemon])
   (:require [com.stuartsierra.component :as c]
             [clojure.tools.logging :as log]
             [clojure.tools.cli :refer [parse-opts]]
@@ -38,10 +39,27 @@
    ["-h" "--help"]])
 
 
+;; Daemon implementation
+
+(def daemon-args (atom nil))
+
+(defn -init [this ^DaemonContext context]
+  (reset! daemon-args (.getArguments context)))
+
+(defn -start [this]
+  (let [{:keys [options summary errors] :as parsed} (parse-opts
+                                                     @daemon-args
+                                                     cli-options)]
+    (go options)))
+
+(defn -stop [this]
+    (stop))
+
+
 ;; Main entry point
 
 (defn -main
-  "lein run / daemon entry point"
+  "lein run entry point"
   [& args]
   (let [{:keys [options summary errors] :as parsed} (parse-opts args cli-options)]
     (go options)))
