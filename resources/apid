@@ -4,7 +4,7 @@
 
 JSVC=/usr/bin/jsvc
 NAME=api
-VERSION=latest
+VERSION=current
 PID_DIR=/var/run
 PID_FILE=$PID_DIR/$NAME.pid
 LOG_DIR=/var/log/$NAME
@@ -67,7 +67,6 @@ stop() {
                       -errfile "$ERR_FILE" \
                       -pidfile "$PID_FILE" \
                       api.core
-                rm $PID_FILE
         fi
 }
 
