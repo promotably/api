@@ -28,7 +28,7 @@
 
   (defn- create-promo
     [new-promo]
-    (client/post "http://localhost:3000/v1/promos"
+    (client/post "http://localhost:3000/api/v1/promos"
                  {:body (json/write-str new-promo)
                   :content-type :json
                   :accept :json
@@ -36,7 +36,7 @@
 
   (defn- lookup-promos
     [sid]
-    (client/get "http://localhost:3000/v1/promos"
+    (client/get "http://localhost:3000/api/v1/promos"
                 {:query-params {:site-id sid}
                  :content-type :json
                  :accept :json
@@ -44,7 +44,7 @@
 
   (defn- update-promo
     [promo-id value]
-    (client/put (str "http://localhost:3000/v1/promos/" promo-id)
+    (client/put (str "http://localhost:3000/api/v1/promos/" promo-id)
                 {:body (json/write-str value)
                  :content-type :json
                  :accept :json
@@ -52,14 +52,14 @@
 
   (defn- show-promo
     [sid promo-id]
-    (client/get (str "http://localhost:3000/v1/promos/" promo-id)
+    (client/get (str "http://localhost:3000/api/v1/promos/" promo-id)
                 {:query-params {:site-id sid}
                  :accept :json
                  :throw-exceptions false}))
 
   (defn- lookup-promo-by-code
     [code sid]
-    (client/get (str "http://localhost:3000/v1/promos/query/" code)
+    (client/get (str "http://localhost:3000/api/v1/promos/query/" code)
                 {:query-params {:site-id sid}
                  :content-type :json
                  :accept :json
@@ -67,7 +67,7 @@
 
   (defn- validate-promo
     [code sid body sig]
-    (client/post (str "http://localhost:3000/v1/promos/validation/" code)
+    (client/post (str "http://localhost:3000/api/v1/promos/validation/" code)
                  {:body body
                   :headers {:promotably-auth sig}
                   :content-type :json
@@ -220,13 +220,17 @@
                                                            api-secret "\n"
                                                            "localhost" "\n"
                                                            "POST" "\n"
-                                                           (url-encode (str "/v1/promos/validation/" code)) "\n"
+                                                           (url-encode (str "/api/v1/promos/validation/" code)) "\n"
                                                            time-val "\n"
                                                            body-hash "\n"
                                                            "" "\n"
                                                            "" "\n")))
                       sig-hash (str "hmac-sha1///" time-val "/" sig-str)
-                      r (validate-promo code (str site-id) rq-body sig-hash)]
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code "EYECATCH"
+                                              :valid true
+                                              :messages []})
                   (:status r) => 201))
 
               (facts "Validate Promo 403 if auth not properly formed"
@@ -246,7 +250,7 @@
                                                            api-secret "\n"
                                                            "localhost" "\n"
                                                            "GET" "\n"
-                                                           (url-encode (str "/v1/promos/validation/" code)) "\n"
+                                                           (url-encode (str "/api/v1/promos/validation/" code)) "\n"
                                                            time-val "\n"
                                                            body-hash "\n"
                                                            "" "\n"

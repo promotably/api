@@ -25,14 +25,14 @@
   (def promos (api.models.promo/find-by-site-uuid site-id false))
   (defn- create-offer
     [new-offer]
-    (client/post "http://localhost:3000/v1/offers"
+    (client/post "http://localhost:3000/api/v1/offers"
                  {:body (json/write-str new-offer)
                   :content-type :json
                   :accept :json
                   :throw-exceptions false}))
   (defn- update-offer
     [offer-id offer]
-    (client/put (str "http://localhost:3000/v1/offers/" offer-id)
+    (client/put (str "http://localhost:3000/api/v1/offers/" offer-id)
                 {:body (json/write-str offer)
                  :content-type :json
                  :accept :json
@@ -60,7 +60,7 @@
                   (:status r) => 201))
 
               (facts "List Offers"
-                (let [url (str "http://localhost:3000/v1/offers/?site-id="
+                (let [url (str "http://localhost:3000/api/v1/offers/?site-id="
                                (:site-id site))
                       r (client/get url)
                       listed (parse-string (:body r) keyword)]
@@ -97,7 +97,7 @@
                   (:status r) => 200))
 
               (facts "Offer Update"
-                (let [url (str "http://localhost:3000/v1/offers/?site-id="
+                (let [url (str "http://localhost:3000/api/v1/offers/?site-id="
                                (:site-id site))
                       r (client/get url)
                       listed (parse-string (:body r) keyword)

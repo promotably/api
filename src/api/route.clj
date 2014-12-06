@@ -71,7 +71,7 @@
            (PUT ["/:offer-id", :offer-id offer-code-regex] [offer-id] update-offer!)))
 
 (defroutes api-routes
-  (context "/v1" []
+  (context "/api/v1" []
            (GET "/track" req (fn [r] (let [k (:kinesis current-system)] (events/record-event k r))))
            (POST "/email-subscribers" [] create-email-subscriber!)
            (GET "/accounts" [] lookup-account)
