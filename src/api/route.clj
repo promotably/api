@@ -30,11 +30,14 @@
                                             lookup-offers get-available-offers]]
             [api.controllers.accounts :refer [lookup-account create-new-account!
                                               update-account!]]
-            [api.controllers.email-subscribers :refer [create-email-subscriber!]]))
-
+            [api.controllers.email-subscribers :refer [create-email-subscriber!]]
+            [clj-time.core :refer [before? after? now] :as t]
+            [amazonica.aws.s3]
+            [amazonica.aws.s3transfer]))
 
 
 (defonce ^:dynamic current-system nil)
+(defonce cached-index (atom {:cached-at nil :index nil}))
 
 ;;;;;;;;;;;;;;;;;;;
 ;;
@@ -72,7 +75,8 @@
 
 (defroutes api-routes
   (context "/api/v1" []
-           (GET "/track" req (fn [r] (let [k (:kinesis current-system)] (events/record-event k r))))
+           (GET "/track" req (fn [r] (let [k (:kinesis current-system)]
+                                       (events/record-event k r))))
            (POST "/email-subscribers" [] create-email-subscriber!)
            (GET "/accounts" [] lookup-account)
            (POST "/accounts" [] create-new-account!)
@@ -85,10 +89,29 @@
            offer-routes
            promo-routes))
 
+(defn- fetch-index
+  []
+  (try
+    (let [resp (amazonica.aws.s3/get-object "promotably-build-artifacts"
+                                            "/db/latest/index.hml")
+          content (slurp (:object-content resp))]
+      (reset! cached-index {:index content :cached-at (now)}))
+    (catch com.amazonaws.services.s3.model.AmazonS3Exception t
+      (log/logf :error "Can't fetch index file."))))
+
+(defn serve-cached-index
+  [req]
+  ;; if it's old, refresh it, but still return current copy
+  (let [expires (t/plus (now) (t/hours 1))]
+    (if (or (nil? (:index @cached-index))
+            (after? (:cached-at @cached-index) expires))
+      (future (fetch-index))))
+  (:index @cached-index))
+
 (defroutes anonymous-routes
   (GET "/health-check" [] "<h1>I'm here</h1>")
   api-routes
-  (not-found "<h1>4-oh-4</h1>"))
+  (not-found serve-cached-index))
 
 (defroutes all-routes
   (-> anonymous-routes
@@ -206,7 +229,9 @@
    [component]
    (if (:stop! component)
      component
-     (assoc component :ring-routes (ring-routes session-cache))))
+     (do
+       (fetch-index)
+       (assoc component :ring-routes (ring-routes session-cache)))))
   (stop
    [component]
     component))
