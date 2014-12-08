@@ -11,13 +11,13 @@
             api.version))
 
 (defn init [options]
-  (alter-var-root #'route/current-system (constantly (components/system options))))
+  (alter-var-root #'api.system/current-system (constantly (components/system options))))
 
 (defn start []
-  (alter-var-root #'route/current-system c/start))
+  (alter-var-root #'api.system/current-system c/start))
 
 (defn stop []
-  (alter-var-root #'route/current-system #(when % (c/stop %) nil)))
+  (alter-var-root #'api.system/current-system #(when % (c/stop %) nil)))
 
 (defn go [options]
   (init options)

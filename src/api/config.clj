@@ -7,6 +7,10 @@
 ;; Static name of the authorization cookie
 (def auth-cookie-name "promotably-auth")
 
+;; Default build stuff
+(def default-build-bucket "promotably-build-artifacts")
+(def default-index-file "/db/latest/index.hml")
+
 ;; Setup info for logging
 (def base-log-config
   (if-not (empty? (System/getProperty "catalina.base"))
@@ -59,6 +63,8 @@
                 :kinesis {:aws-credential-profile "promotably"
                           :promo-stream-name "dev-PromoStream"
                           :event-stream-name "dev-PromotablyAPIEvents"}
+                :artifact-bucket default-build-bucket
+                :index-filename default-index-file
                 :logging base-log-config
                 :env :dev}
    :test       {:database {:db "promotably_test"
@@ -70,20 +76,28 @@
                 :kinesis  {:aws-credential-profile "promotably"
                            :promo-stream-name "dev-PromoStream"
                            :event-stream-name "dev-PromotablyAPIEvents"}
+                :artifact-bucket default-build-bucket
+                :index-filename default-index-file
                 :logging base-log-config
                 :env :test}
    :staging    {:database (get-database-config)
                 :kinesis (get-kinesis-config)
+                :artifact-bucket default-build-bucket
+                :index-filename default-index-file
                 :logging base-log-config
                 :env :staging}
    :integration {:database (get-database-config)
                  :test-topic (or (System/getenv "TEST_RESULTS_SNS_TOPIC_NAME")
                                  "api-integration-test")
                  :kinesis (get-kinesis-config)
+                 :artifact-bucket default-build-bucket
+                 :index-filename default-index-file
                  :logging base-log-config
                  :env :integration}
    :production {:database (get-database-config)
                 :kinesis (get-kinesis-config)
+                :artifact-bucket default-build-bucket
+                :index-filename default-index-file
                 :logging base-log-config
                 :env :production}})
 

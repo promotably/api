@@ -14,6 +14,7 @@
                                              custom-matcher
                                              underscore-to-dash-keys]]
             [api.lib.auth :refer [parse-auth-string auth-valid? transform-auth]]
+            [api.cloudwatch :refer [put-metric]]
             [schema.coerce :as sc]
             [schema.core :as s]))
 
@@ -96,6 +97,7 @@
 (defn record-event
   [kinesis-comp
    {:keys [params] :as request}]
+  (put-metric "event-record")
   ;; for debug
   ;; (prn "PARAMS" params)
   (let [parsed (parse-event params)

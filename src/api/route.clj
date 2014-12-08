@@ -31,12 +31,12 @@
             [api.controllers.accounts :refer [lookup-account create-new-account!
                                               update-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]
+            [api.cloudwatch :as cw]
+            [api.system :refer [current-system]]
             [clj-time.core :refer [before? after? now] :as t]
             [amazonica.aws.s3]
             [amazonica.aws.s3transfer]))
 
-
-(defonce ^:dynamic current-system nil)
 (defonce cached-index (atom {:cached-at nil :index nil}))
 
 ;;;;;;;;;;;;;;;;;;;
@@ -90,22 +90,27 @@
            promo-routes))
 
 (defn- fetch-index
-  []
-  (try
-    (let [resp (amazonica.aws.s3/get-object "promotably-build-artifacts"
-                                            "/db/latest/index.hml")
-          content (slurp (:object-content resp))]
-      (reset! cached-index {:index content :cached-at (now)}))
-    (catch com.amazonaws.services.s3.model.AmazonS3Exception t
-      (log/logf :error "Can't fetch index file."))))
+  [config]
+  (let [bucket (:artifact-bucket config)
+        filename (:index-filename config)]
+    (try
+      (cw/put-metric "index-fetch" {:config config})
+      (let [resp (amazonica.aws.s3/get-object bucket filename)
+            content (slurp (:object-content resp))]
+        (reset! cached-index {:index content :cached-at (now)}))
+      (catch Throwable t
+        (cw/put-metric "index-missing" {:config config})
+        (log/logf :error "Can't fetch index file '%s'." filename)))))
 
 (defn serve-cached-index
   [req]
   ;; if it's old, refresh it, but still return current copy
-  (let [expires (t/plus (now) (t/hours 1))]
+  (let [expires (t/plus (now) (t/minutes 5))]
     (if (or (nil? (:index @cached-index))
             (after? (:cached-at @cached-index) expires))
-      (future (fetch-index))))
+      (future (fetch-index (:artifact-bucket current-system)
+                           (:index-filename current-system)))))
+  (cw/put-metric "index-serve")
   (:index @cached-index))
 
 (defroutes anonymous-routes
@@ -142,9 +147,11 @@
     (try
       (handler req)
       (catch clojure.lang.ExceptionInfo ex
-        (println (ex-data ex))
+        (cw/put-metric "exception")
+        (log/logf :error (println (ex-data ex)))
         (when-let [exdata (ex-data ex)]
-          (assoc-in (assoc-in (:response exdata) [:body] (pprint (:error exdata)))
+          (assoc-in (assoc-in (:response exdata) [:body]
+                              (pprint (:error exdata)))
                     [:headers "X-Error"] (.getMessage ex)))))))
 
 (defn wrap-stacktrace
@@ -230,7 +237,7 @@
    (if (:stop! component)
      component
      (do
-       (fetch-index)
+       (fetch-index config)
        (assoc component :ring-routes (ring-routes session-cache)))))
   (stop
    [component]

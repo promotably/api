@@ -3,12 +3,13 @@
    [api.integration.helper :refer :all]
    [api.fixtures.basic :as base]
    [api.route :as route]
+   [api.system :as system]
    [api.core :as core]
    [clj-http.client :as client]
    [midje.sweet :refer :all]))
 
 (against-background [(before :contents
-                             (do (when (nil? route/current-system)
+                             (do (when (nil? system/current-system)
                                    (core/go {:port 3000 :repl-port 55555}))
                                  (migrate-down)
                                  (migrate-up)

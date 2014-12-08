@@ -4,6 +4,7 @@
    [api.integration.helper :refer :all]
    [api.lib.seal :refer [hmac-sha1 url-encode]]
    [api.route :as route]
+   [api.system :as system]
    [api.core :as core]
    [api.models.site]
    [api.models.promo :as promo]
@@ -15,7 +16,7 @@
    [midje.sweet :refer :all]))
 
 (against-background [(before :contents
-                             (do (when (nil? route/current-system)
+                             (do (when (nil? system/current-system)
                                    (core/go {:port 3000 :repl-port 55555}))
                                  (migrate-down)
                                  (migrate-up)
