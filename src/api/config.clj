@@ -9,7 +9,7 @@
 
 ;; Default build stuff
 (def default-build-bucket "promotably-build-artifacts")
-(def default-index-file "/db/latest/index.hml")
+(def default-index-file "db/latest/index.html")
 
 ;; Setup info for logging
 (def base-log-config

@@ -89,6 +89,8 @@
            offer-routes
            promo-routes))
 
+;; (amazonica.aws.s3/get-object "promotably-build-artifacts" "db/latest/index.html")
+
 (defn- fetch-index
   [config]
   (let [bucket (:artifact-bucket config)
@@ -113,10 +115,15 @@
   (cw/put-metric "index-serve")
   (:index @cached-index))
 
+(defn serve-404-page
+  [req]
+  {:status 404 :body "<h1>Not Found</h1>"})
+
 (defroutes anonymous-routes
   (GET "/health-check" [] "<h1>I'm here</h1>")
   api-routes
-  (not-found serve-cached-index))
+  (GET "*" [] serve-cached-index)
+  (not-found serve-404-page))
 
 (defroutes all-routes
   (-> anonymous-routes
@@ -127,6 +134,12 @@
 ;; Middleware
 ;;
 ;;;;;;;;;;;;;;;;;;
+
+(defn wrap-if
+  [handler pred wrapper & args]
+  (if pred
+    (apply wrapper handler args)
+    handler))
 
 (defn wrap-request-logging [handler]
   (fn [{:keys [request-method uri] :as req}]
@@ -176,18 +189,19 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn app
-  [options]
+  [{:keys [config session-cache] :as options}]
   (-> all-routes
       (wrap-restful-format :formats [:json-kw :edn])
       jsonp/wrap-json-with-padding
       handler/site
       wrap-params
       wrap-keyword-params
-      (session/wrap-session {:store (:session-cache options)
+      (session/wrap-session {:store session-cache
                              :cookie-name "promotably-session"})
       wrap-exceptions
       wrap-stacktrace
-      wrap-request-logging
+      (wrap-if #((:env config) #{:dev :test :integration})
+               wrap-request-logging)
       wrap-content-type))
 
 
@@ -199,8 +213,9 @@
 
 (defn- ring-routes
   "Returns all routes, with CSRF protection where applicable."
-  [session-cache]
-  (let [app-routes (app {:session-cache session-cache})
+  [config session-cache]
+  (let [app-routes (app {:config config
+                         :session-cache session-cache})
         csrf-routes (-> (compojure/routes
                          ;; All application routes here that you want
                          ;; to have csrf protection...
@@ -238,7 +253,7 @@
      component
      (do
        (fetch-index config)
-       (assoc component :ring-routes (ring-routes session-cache)))))
+       (assoc component :ring-routes (ring-routes config session-cache)))))
   (stop
    [component]
     component))
