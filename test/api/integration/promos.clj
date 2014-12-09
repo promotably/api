@@ -162,7 +162,7 @@
                                                 :reward-type :percent
                                                 :reward-tax :after-tax
                                                 :reward-applied-to :cart
-                                                :conditions []})
+                                                :conditions [{:type :no-sale-items}]})
 
                       u (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)
                       filtered (filter #(= (:promo-id %) promo-id) u)]
@@ -173,7 +173,7 @@
                                         :seo-text "duckah p duckah",
                                         :reward-tax "after-tax",
                                         :reward-amount 10.0,
-                                        :conditions [],
+                                        :conditions [{:type "no-sale-items"}],
                                         :active true,
                                         :code "EYECATCH",
                                         :reward-type "percent",

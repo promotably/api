@@ -157,6 +157,7 @@
           :item-count
           :item-value
           :individual-use
+          :no-sale-items
           :min-order-value))
 
 (def PromoCondition
