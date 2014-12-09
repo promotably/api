@@ -172,9 +172,9 @@
    (s/optional-key :usage-count) (s/maybe s/Int)
    (s/optional-key :total-discounts) (s/maybe s/Num)
    (s/optional-key :product-ids) [s/Str]
-   (s/optional-key :categories-ids) [s/Str]
+   (s/optional-key :category-ids) [s/Str]
    (s/optional-key :not-product-ids) [s/Str]
-   (s/optional-key :not-categories-ids) [s/Str]
+   (s/optional-key :not-category-ids) [s/Str]
    (s/optional-key :combo-product-ids) [s/Str]
    (s/optional-key :item-count) (s/maybe s/Int)
    (s/optional-key :item-value) (s/maybe s/Num)
@@ -194,7 +194,7 @@
    (s/optional-key :product-ids) [s/Str]
    (s/optional-key :category-ids) [s/Str]
    (s/optional-key :not-product-ids) [s/Str]
-   (s/optional-key :not-categories-ids) [s/Str]
+   (s/optional-key :not-category-ids) [s/Str]
    (s/optional-key :combo-product-ids) [s/Str]
    (s/optional-key :item-count) (s/maybe s/Int)
    (s/optional-key :item-value) (s/maybe s/Num)
