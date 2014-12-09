@@ -51,6 +51,7 @@
                  [compojure "1.1.9"]
                  [ring/ring-core "1.3.1" :exclusions [joda-time]]
                  [org.clojars.cvillecsteele/ring-permacookie-middleware "1.3.0"]
+                 [bk/ring-gzip "0.1.1"]
                  [ring.middleware.jsonp "0.1.6"]
                  [com.taoensso.forks/ring-anti-forgery "0.3.1"]
                  [ring-middleware-format "0.4.0"

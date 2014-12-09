@@ -14,6 +14,7 @@
             [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.middleware.session :as session]
             [ring.middleware.jsonp :as jsonp]
+            [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.util.response :refer [response content-type]]
             [ring.middleware.permacookie :refer [wrap-permacookie]]
             [ring.middleware.anti-forgery :as ring-anti-forgery
@@ -202,6 +203,7 @@
       wrap-stacktrace
       (wrap-if #((:env config) #{:dev :test :integration})
                wrap-request-logging)
+      wrap-gzip
       wrap-content-type))
 
 
