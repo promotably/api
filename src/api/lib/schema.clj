@@ -167,8 +167,8 @@
    (s/required-key :type) PromoConditionType
    (s/optional-key :start-date) (s/maybe org.joda.time.DateTime)
    (s/optional-key :end-date) (s/maybe org.joda.time.DateTime)
-   (s/optional-key :start-time) (s/maybe org.joda.time.DateTime)
-   (s/optional-key :end-time) (s/maybe org.joda.time.DateTime)
+   (s/optional-key :start-time) (s/maybe s/Str)
+   (s/optional-key :end-time) (s/maybe s/Str)
    (s/optional-key :usage-count) (s/maybe s/Int)
    (s/optional-key :total-discounts) (s/maybe s/Num)
    (s/optional-key :product-ids) [s/Str]
@@ -187,8 +187,8 @@
    (s/required-key :type) s/Str
    (s/optional-key :start-date) (s/maybe java.sql.Timestamp)
    (s/optional-key :end-date) (s/maybe java.sql.Timestamp)
-   (s/optional-key :start-time) (s/maybe java.sql.Timestamp)
-   (s/optional-key :end-time) (s/maybe java.sql.Timestamp)
+   (s/optional-key :start-time) (s/maybe s/Str)
+   (s/optional-key :end-time) (s/maybe s/Str)
    (s/optional-key :usage-count) (s/maybe s/Int)
    (s/optional-key :total-discounts) (s/maybe s/Num)
    (s/optional-key :product-ids) [s/Str]
@@ -204,16 +204,16 @@
                           (dissoc (s/required-key :uuid))
                           (assoc (s/optional-key :start-date) org.joda.time.DateTime)
                           (assoc (s/optional-key :end-date) org.joda.time.DateTime)
-                          (assoc (s/optional-key :start-time) org.joda.time.DateTime)
-                          (assoc (s/optional-key :end-time) org.joda.time.DateTime)
+                          (assoc (s/optional-key :start-time) s/Str)
+                          (assoc (s/optional-key :end-time) s/Str)
                           (assoc (s/optional-key :uuid) s/Uuid)))
 
 (def OutboundPromoCondition (-> PromoCondition
                                 (dissoc (s/required-key :uuid))
                                 (assoc (s/optional-key :start-date) (s/maybe java.util.Date))
                                 (assoc (s/optional-key :end-date) (s/maybe java.util.Date))
-                                (assoc (s/optional-key :start-time) (s/maybe java.util.Date))
-                                (assoc (s/optional-key :end-time) (s/maybe java.util.Date))
+                                (assoc (s/optional-key :start-time) (s/maybe s/Str))
+                                (assoc (s/optional-key :end-time) (s/maybe s/Str))
                                 (assoc (s/optional-key :uuid) s/Uuid)))
 
 ;; Products ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -316,8 +316,8 @@
                                             :end-date s/Inst})
 
                  #(= (:type %) :times)
-                 (merge BaseOfferCondition {:start-time s/Inst
-                                            :end-time s/Inst})
+                 (merge BaseOfferCondition {:start-time s/Str
+                                            :end-time s/Str})
 
                  #(= (:type %) :minutes-since-last-offer)
                  (merge BaseOfferCondition {:minutes-since-last-offer s/Int})
@@ -371,8 +371,8 @@
       (dissoc (s/required-key :uuid))
       (assoc (s/optional-key :start-date) org.joda.time.DateTime)
       (assoc (s/optional-key :end-date) org.joda.time.DateTime)
-      (assoc (s/optional-key :start-time) org.joda.time.DateTime)
-      (assoc (s/optional-key :end-time) org.joda.time.DateTime)
+      (assoc (s/optional-key :start-time) s/Str)
+      (assoc (s/optional-key :end-time) s/Str)
       (assoc (s/optional-key :uuid) s/Uuid)))
 
 (def OutboundOfferCondition
@@ -380,8 +380,8 @@
       (dissoc (s/required-key :uuid))
       (assoc (s/optional-key :start-date) (s/maybe java.util.Date))
       (assoc (s/optional-key :end-date) (s/maybe java.util.Date))
-      (assoc (s/optional-key :start-time) (s/maybe java.util.Date))
-      (assoc (s/optional-key :end-time) (s/maybe java.util.Date))
+      (assoc (s/optional-key :start-time) (s/maybe s/Str))
+      (assoc (s/optional-key :end-time) (s/maybe s/Str))
       (assoc (s/optional-key :uuid) s/Uuid)))
 
 (def DatabaseOfferCondition
@@ -392,8 +392,8 @@
    (s/optional-key :created-at) (s/maybe java.sql.Timestamp)
    (s/optional-key :start-date) (s/maybe java.sql.Timestamp)
    (s/optional-key :end-date) (s/maybe java.sql.Timestamp)
-   (s/optional-key :start-time) (s/maybe java.sql.Timestamp)
-   (s/optional-key :end-time) (s/maybe java.sql.Timestamp)
+   (s/optional-key :start-time) (s/maybe s/Str)
+   (s/optional-key :end-time) (s/maybe s/Str)
    (s/optional-key :minutes-since-last-offer) (s/maybe s/Int)
    (s/optional-key :minutes-on-site) (s/maybe s/Int)
    (s/optional-key :minutes-since-last-engagement) (s/maybe s/Int)
