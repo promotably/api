@@ -158,6 +158,7 @@
                                                 :description "alsdkfjlaksdjf"
                                                 :seo-text "duckah p duckah"
                                                 :code "EYECATCH"
+                                                :active false
                                                 :reward-amount 10.0
                                                 :reward-type :percent
                                                 :reward-tax :after-tax
@@ -178,7 +179,7 @@
                                         :seo-text "duckah p duckah",
                                         :reward-tax "after-tax",
                                         :reward-amount 10.0,
-                                        :active true,
+                                        :active false,
                                         :code "EYECATCH",
                                         :reward-type "percent",
                                         :promo-id string?})
@@ -188,7 +189,22 @@
                                                         :not-category-ids ["1"]}
                                                        {:type "times"
                                                         :end-time "24:00"
-                                                        :start-time "00:00"}])))
+                                                        :start-time "00:00"}])
+                  (update-promo promo-id {:site-id (str site-id)
+                                          :description "alsdkfjlaksdjf"
+                                          :seo-text "duckah p duckah"
+                                          :code "EYECATCH"
+                                          :active true
+                                          :reward-amount 10.0
+                                          :reward-type :percent
+                                          :reward-tax :after-tax
+                                          :reward-applied-to :cart
+                                          :conditions [{:type :no-sale-items}
+                                                       {:type :not-category-ids
+                                                        :not-category-ids ["1"]}
+                                                       {:type :times
+                                                        :end-time "24:00"
+                                                        :start-time "00:00"}]})))
 
               (tabular
                (facts "Promo Update Missing Fields"
@@ -197,6 +213,7 @@
                        p (dissoc {:site-id (str site-id)
                                   :code "TWENTYOFF"
                                   :description "You get 20% off."
+                                  :active false
                                   :reward-amount 20.0
                                   :reward-type :percent
                                   :reward-tax :after-tax

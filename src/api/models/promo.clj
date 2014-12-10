@@ -138,6 +138,7 @@
 (defn update-promo!
   "Updates a promo in the database"
   [promo-id {:keys [description seo-text code reward-type reward-applied-to
+                    active
                     reward-tax reward-amount site-id conditions
                     linked-products] :as params}]
   (let [promo-id (java.util.UUID/fromString promo-id)
@@ -146,8 +147,7 @@
       {:success false
        :error :not-found
        :message (format "Promo id %s does not exist." promo-id)}
-      (let [new-values {:active true
-                        :site_id site-id
+      (let [new-values {:site_id site-id
                         :description description
                         :seo_text seo-text
                         :reward_applied_to (clojure.core/name reward-applied-to)
@@ -156,6 +156,9 @@
                         :reward_amount reward-amount
                         :code code
                         :updated_at (sqlfn now)}
+            new-values (if-not (nil? active)
+                         (assoc new-values :active active)
+                         new-values)
             result (update promos
                            (set-fields new-values)
                            (where {:id id}))]
