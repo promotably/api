@@ -109,19 +109,15 @@
 (defmethod validate :times
   [context
    {:keys [start-time end-time] :as condition}]
-  (let [start (from-date start-time)
-        end (from-date end-time)
-        ok? (and (after? (now) (today-at (hour start)
-                                         (minute start)))
-                 (before? (now) (today-at (hour end)
-                                          (minute end))))]
+  (let [start (Integer/parseInt (clojure.string/replace start-time #":" ""))
+        end (Integer/parseInt (clojure.string/replace end-time #":" ""))
+        right-now (Integer/parseInt (format "%02d%02d" (hour (now)) (minute (now))))
+        ok? (and (<= start right-now) (<= right-now end))]
     (cond
      (not ok?)
-     (let [msg (format "The coupon is only valid between %d:%d and %d:%d."
-                       (hour start)
-                       (minute start)
-                       (hour end)
-                       (minute end))]
+     (let [msg (format "The coupon is only valid between %s and %s."
+                       start-time
+                       end-time)]
        (update-in context [:errors] conj msg))
      :else context)))
 

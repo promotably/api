@@ -162,9 +162,12 @@
                                                 :reward-type :percent
                                                 :reward-tax :after-tax
                                                 :reward-applied-to :cart
-                                                :conditions [{:type :no-sale-items}]})
-
-                      u (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)
+                                                :conditions [{:type :no-sale-items}
+                                                             {:type :times
+                                                              :end-time "24:00"
+                                                              :start-time "00:00"}]})
+                      lookup-body (:body (lookup-promos site-id))
+                      u (json/read-str lookup-body :key-fn keyword)
                       filtered (filter #(= (:promo-id %) promo-id) u)]
                   (:status r) => 204
                   (first filtered) => (contains
@@ -173,11 +176,15 @@
                                         :seo-text "duckah p duckah",
                                         :reward-tax "after-tax",
                                         :reward-amount 10.0,
-                                        :conditions [{:type "no-sale-items"}],
                                         :active true,
                                         :code "EYECATCH",
                                         :reward-type "percent",
-                                        :promo-id string?})))
+                                        :promo-id string?})
+                  (-> filtered first :conditions) => (contains
+                                                      [{:type "no-sale-items"}
+                                                        {:type "times"
+                                                         :end-time "24:00"
+                                                         :start-time "00:00"}])))
 
               (tabular
                (facts "Promo Update Missing Fields"

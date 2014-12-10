@@ -29,7 +29,7 @@
                             [:product_ids "TEXT[]"]
                             [:category_ids "TEXT[]"]
                             [:not_product_ids "TEXT[]"]
-                            [:not_categories_ids "TEXT[]"]
+                            [:not_category_ids "TEXT[]"]
                             [:combo_product_ids "TEXT[]"]
                             [:item_count "INTEGER"]
                             [:item_value "NUMERIC(16,4)"]
