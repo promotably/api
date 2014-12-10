@@ -163,6 +163,8 @@
                                                 :reward-tax :after-tax
                                                 :reward-applied-to :cart
                                                 :conditions [{:type :no-sale-items}
+                                                             {:type :not-category-ids
+                                                              :not-category-ids ["1"]}
                                                              {:type :times
                                                               :end-time "24:00"
                                                               :start-time "00:00"}]})
@@ -182,9 +184,11 @@
                                         :promo-id string?})
                   (-> filtered first :conditions) => (contains
                                                       [{:type "no-sale-items"}
-                                                        {:type "times"
-                                                         :end-time "24:00"
-                                                         :start-time "00:00"}])))
+                                                       {:type "not-category-ids"
+                                                        :not-category-ids ["1"]}
+                                                       {:type "times"
+                                                        :end-time "24:00"
+                                                        :start-time "00:00"}])))
 
               (tabular
                (facts "Promo Update Missing Fields"
@@ -237,8 +241,8 @@
                       r (validate-promo code (str site-id) rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code "EYECATCH"
-                                              :valid true
-                                              :messages []})
+                                              :valid false
+                                              :messages ["No products match this coupon's categories."]})
                   (:status r) => 201))
 
               (facts "Validate Promo 403 if auth not properly formed"
