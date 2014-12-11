@@ -1,4 +1,5 @@
 (ns api.integration.helper
+  (:import org.postgresql.util.PGobject)
   (:require
    [api.fixtures.basic :as base]
    [api.route :as route]
@@ -15,6 +16,27 @@
    [clj-http.client :as client]
    [clojure.data.json :as json]
    [ring.adapter.jetty :refer (run-jetty)]))
+
+(defn value-to-json-pgobject [value]
+  (doto (PGobject.)
+    (.setType "json")
+    (.setValue (json/write-str value))))
+
+(extend-protocol jdbc/ISQLValue
+  clojure.lang.IPersistentMap
+  (sql-value [value] (value-to-json-pgobject value))
+
+  clojure.lang.IPersistentVector
+  (sql-value [value] (value-to-json-pgobject value)))
+
+(extend-protocol jdbc/IResultSetReadColumn
+  PGobject
+  (result-set-read-column [pgobj metadata idx]
+    (let [type  (.getType pgobj)
+          value (.getValue pgobj)]
+      (case type
+        "json" (json/read-str value :key-fn keyword)
+        :else value))))
 
 (defn migrate-down
   []
@@ -96,3 +118,6 @@
                 :accept :json
                 :throw-exceptions false}))
 
+(let [config (-> system/current-system :config :database)]
+  (jdbc/with-db-transaction [t-con (kdb/postgres config)]
+    (jdbc/query t-con "SELECT * FROM events")))
