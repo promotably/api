@@ -28,14 +28,14 @@
           (fixture :promo-1
                    :uuid (java.util.UUID/randomUUID)
                    :site_id :site-1
-                   :code "EASTER"
+                   :code "P1"
                    :active true
                    :reward_amount 20
                    :reward_type "percent"
                    :reward_tax "after-tax"
                    :reward_applied_to "cart"
-                   :description "Easter Coupon"
-                   :seo_text "Best effing coupon evar"
+                   :description "Description"
+                   :seo_text "SEO"
                    :updated_at (c/to-sql-date (t/now))
                    :created_at (c/to-sql-date (t/now))))
    (table :promo_conditions
@@ -45,7 +45,150 @@
                    :type "dates"
                    :start_date (c/to-sql-time (c/from-string "2014-11-27 00:00:00"))
                    :end_date (c/to-sql-time (c/from-string "2014-11-28 23:59:59"))))
-      (table :offers
+   (table :promos
+          (fixture :promo-2
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "P2"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Description"
+                   :seo_text "SEO"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-2
+                   :promo_id :promo-2
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "dates"
+                   :start_date (c/to-sql-time (c/from-string "2014-11-27 00:00:00"))
+                   :end_date (c/to-sql-time (c/from-string "2020-11-28 23:59:59"))))
+   (table :promos
+          (fixture :promo-3
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "P3"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Description"
+                   :seo_text "SEO"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-3
+                   :promo_id :promo-3
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "times"
+                   :start_time "00:00"
+                   :end_time "00:00"))
+   (table :promos
+          (fixture :promo-4
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "P4"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Description"
+                   :seo_text "SEO"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-4
+                   :promo_id :promo-4
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "times"
+                   :start_time "00:00"
+                   :end_time "23:59"))
+   (table :promos
+          (fixture :promo-5
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "P5"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Description"
+                   :seo_text "SEO"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-5
+                   :promo_id :promo-5
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "usage-count"
+                   :usage_count 0))
+   (table :promos
+          (fixture :promo-6
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "P6"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Description"
+                   :seo_text "SEO"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-6
+                   :promo_id :promo-6
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "usage-count"
+                   :usage_count java.lang.Integer/MAX_VALUE))
+   (table :promos
+          (fixture :promo-7
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "P7"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Description"
+                   :seo_text "SEO"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-7
+                   :promo_id :promo-7
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "total-discounts"
+                   :total_discounts java.lang.Integer/MAX_VALUE))
+   (table :promos
+          (fixture :promo-8
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "P8"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Description"
+                   :seo_text "SEO"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-8
+                   :promo_id :promo-8
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "total-discounts"
+                   :total_discounts 0))
+   (table :offers
           (fixture :offer-1
                    :uuid (java.util.UUID/randomUUID)
                    :site_id :site-1

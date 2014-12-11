@@ -92,6 +92,7 @@
   (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
         coercer (c/coercer query-schema matcher)
         {:keys [site-id code] :as coerced-params} (coercer params)
+        _ (prn coerced-params)
         the-promo (promo/find-by-site-uuid-and-code
                    site-id
                    (clojure.string/upper-case code))]
@@ -123,6 +124,7 @@
                                  (get headers "promotably-auth")))
                            prep-incoming
                            coercer)
+        ;; _ (println (:raw-body request))
         site-id (-> coerced-params :site :site-id)
         code (-> coerced-params :code clojure.string/upper-case)
         the-promo (promo/find-by-site-uuid-and-code site-id code)]
