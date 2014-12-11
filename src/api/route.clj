@@ -1,4 +1,5 @@
 (ns api.route
+  (:import java.io.ByteArrayInputStream)
   (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
             [clojure.core.match :as match :refer (match)]
@@ -76,8 +77,7 @@
 
 (defroutes api-routes
   (context "/api/v1" []
-           (GET "/track" req (fn [r] (let [k (:kinesis current-system)]
-                                       (events/record-event k r))))
+           (GET "/track" req (fn [r] (events/record-event (:kinesis current-system) r)))
            (POST "/email-subscribers" [] create-email-subscriber!)
            (GET "/accounts" [] lookup-account)
            (POST "/accounts" [] create-new-account!)
@@ -183,6 +183,31 @@
                       (println "\n\nREQUEST:\n")
                       (pprint request)))}))))
 
+(defn wrap-stacktrace
+  "ring.middleware.stacktrace only catches exception, not Throwable, so we replace it here."
+  [handler]
+  (fn [request]
+    (try (handler request)
+         (catch Throwable t
+           (log/error t :request request)
+           {:status 500
+            :headers {"Content-Type" "text/plain; charset=UTF-8"}
+            :body (with-out-str
+                    (binding [*err* *out*]
+                      (pst t)
+                      (println "\n\nREQUEST:\n")
+                      (pprint request)))}))))
+
+(defn wrap-save-the-raw-body
+  ""
+  [handler]
+  (fn [request]
+    (if-let [slurped (if (:body request) (-> request :body slurp))]
+      (handler (-> request
+                   (assoc :raw-body slurped)
+                   (assoc :body (ByteArrayInputStream. (.getBytes slurped)))))
+      (handler request))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Main handler entry point
@@ -197,6 +222,7 @@
       handler/site
       wrap-params
       wrap-keyword-params
+      wrap-save-the-raw-body
       (session/wrap-session {:store session-cache
                              :cookie-name "promotably-session"})
       wrap-exceptions

@@ -143,7 +143,9 @@
             (ProfileCredentialsProvider. creds)
             (DefaultAWSCredentialsProviderChain.))
           c (com.amazonaws.services.kinesis.AmazonKinesisClient. cp)]
-      (update-in this [:client] (constantly c))))
+      (merge this
+             (:kinesis config)
+             {:client c})))
   (stop [this]
     (log/logf :info "Kinesis is shutting down.")
     (dissoc this :client)))

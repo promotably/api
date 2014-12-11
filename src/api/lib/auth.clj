@@ -26,9 +26,10 @@
    {:keys [body query-string params] :as request}]
   (if auth-map
     (let [request-headers (:headers request)
-          slurped (if (string? (:body request))
-                    (:body request)
-                    (json/write-str (:body request)))
+          slurped (cond
+                   (string? (:raw-body request)) (:raw-body request)
+                   (nil? (:raw-body request)) nil
+                   :else (-> request :raw-body slurp))
           body-hmac (if-not (or (= "" slurped) (nil? slurped))
                       (hmac-sha1 (.getBytes ^String (str api-secret))
                                  (.getBytes ^String slurped)))

@@ -109,13 +109,17 @@
      {:status 400}
 
      (nil? (:site parsed))
-     {:status 404}
+     (do
+       (put-metric "event-record-req-error")
+       {:status 404})
 
      (not (auth-valid? (-> parsed :site :site-id)
                        (-> parsed :site :api-secret)
                        (:auth parsed)
                        request))
-     {:status 403}
+     (do
+       (put-metric "event-record-auth-error")
+       {:status 403})
 
      :else
      (do
@@ -130,6 +134,7 @@
          (kinesis/record-event! kinesis-comp
                                 (:event-name out)
                                 out)
+         (put-metric "event-record-success")
          (let [response {:headers {"Content-Type" "text/javascript"}
                          :body ""
                          :status 200}]

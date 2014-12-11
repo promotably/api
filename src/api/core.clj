@@ -73,7 +73,7 @@
   (System/setProperty "ENV" "localdev")
   (System/getProperty "ENV")
 
-  (prn route/current-system)
+  (prn api.system/current-system)
   (go {:port 3000 :repl-port 55555})
   (stop)
 

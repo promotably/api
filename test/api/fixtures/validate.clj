@@ -1,4 +1,4 @@
-(ns api.fixtures.basic
+(ns api.fixtures.validate
   (:refer-clojure :exclude [set load])
   (:require
    [clj-time.format :as f]
