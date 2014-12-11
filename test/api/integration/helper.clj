@@ -117,7 +117,3 @@
                 :content-type :json
                 :accept :json
                 :throw-exceptions false}))
-
-(let [config (-> system/current-system :config :database)]
-  (jdbc/with-db-transaction [t-con (kdb/postgres config)]
-    (jdbc/query t-con "SELECT * FROM events")))
