@@ -8,6 +8,7 @@
    [api.db :as db]
    [clj-time.coerce :refer (to-sql-time)]
    [clojure.java.jdbc :as jdbc]
+   [clojure.walk :refer [postwalk]]
    [clj-time.core :refer (now)]
    [drift.execute :as drift]
    [midje.sweet :refer :all]
@@ -29,8 +30,23 @@
     (jdbc/with-db-transaction [t-con (kdb/postgres config)]
       (qfix/load fset
                  (fn [table-name val-map]
-                   (let [result (jdbc/insert! t-con table-name val-map)]
-                     (-> result first :id)))))))
+                   (let [xformed (postwalk #(if (fn? %) (% t-con) %)
+                                           val-map)]
+                   (let [result (jdbc/insert! t-con table-name xformed)]
+                     (-> result first :id))))))))
+
+(comment
+  (let [config (-> system/current-system :config :database)]
+    (jdbc/with-db-transaction [t-con (kdb/postgres config)]
+      (let [conn (jdbc/get-connection t-con)
+            x
+            result (jdbc/insert! t-con "promo_conditions" {"promo_id" 8
+                                                           "uuid" (java.util.UUID/randomUUID)
+                                                           "type" "product_ids"
+                                                           "product_ids" x})]
+        (-> result first :id))))
+
+)
 
 (defn create-promo
   [new-promo]

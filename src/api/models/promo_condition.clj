@@ -139,7 +139,7 @@
                         (or matching-products cart-contents))
         updated-context (assoc context :matching-products keepers)]
     (cond
-     (not= (count (combo-product-ids)) (count (keepers)))
+     (not= (count combo-product-ids) (count keepers))
      (update-in updated-context [:errors] conj
                 "This coupon is not valid for the combination of products selected.")
      :else updated-context)))
@@ -147,7 +147,8 @@
 (defmethod validate :not-product-ids
   [{:keys [cart-contents matching-products] :as context}
    {:keys [not-product-ids] :as condition}]
-  (let [keepers (keep #(not (get (set (not-product-ids)) (:product-id %)))
+  (let [keepers (keep #(if (not (get (set not-product-ids) (:product-id %)))
+                         %)
                       (or matching-products cart-contents))
         updated-context (assoc context :matching-products keepers)]
     (cond
@@ -159,9 +160,10 @@
 (defmethod validate :category-ids
   [{:keys [matching-products cart-contents] :as context}
    {:keys [category-ids] :as condition}]
-  (let [keepers (filter #(clojure.set/intersection
-                          (set category-ids)
-                          (set (:product-categories %)))
+  (let [keepers (filter #(let [i (clojure.set/intersection
+                                  (set category-ids)
+                                  (set (:product-categories %)))]
+                           (seq i))
                         (or matching-products cart-contents))
         updated-context (assoc context :matching-products keepers)]
     (cond
@@ -190,7 +192,7 @@
   (let [quantities (map :quantity (or matching-products cart-contents))
         total (apply + quantities)]
     (cond
-     (<= total item-count)
+     (< total item-count)
      (update-in context [:errors] conj
                 (format "This coupon requires at least %d matching items in your cart."
                         item-count))
@@ -202,7 +204,7 @@
   (let [amounts (map :line-subtotal (or matching-products cart-contents))
         total (or (apply + amounts) 0)]
     (cond
-     (<= total item-value)
+     (< total item-value)
      (update-in context [:errors] conj
                 (format "To qualify for this coupon, the total value of eligible items in your cart must exceed %.2f."
                         item-value))
@@ -214,19 +216,19 @@
   (let [amounts (map :line-total cart-contents)
         total (apply + amounts)]
     (cond
-     (<= total min-order-value)
+     (< total min-order-value)
      (update-in context [:errors] conj
                 (format "To qualify for this coupon your cart value must exceed %.2f."
                         min-order-value))
      :else context)))
 
-;; TODO: context must include all coupons applied.
 (defmethod validate :individual-use
-  [{:keys [matching-products cart-contents] :as context}
+  [{:keys [applied-coupons matching-products cart-contents] :as context}
    condition]
-  (let []
-    (cond
-     :else context)))
+  (cond
+   (> (count applied-coupons) 0)
+   (update-in context [:errors] conj "This coupon can not be used with any others.")
+   :else context))
 
 ;; TODO: Needs database lookup.
 (defmethod validate :total-discounts

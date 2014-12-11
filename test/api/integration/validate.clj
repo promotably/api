@@ -222,6 +222,389 @@
                                               :messages ["..."]})
                   (:status r) => 201))
 
+              (facts "Validate Product ID"
+                (let [code "P9"
+                      api-secret (str (:api-secret site))
+                      rq-body (json/write-str (basic-request-data site-id code))
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid true
+                                              :messages []})
+                  (:status r) => 201))
+
+              (facts "Validate Incorrect Product ID"
+                (let [code "P10"
+                      api-secret (str (:api-secret site))
+                      rq-body (json/write-str (basic-request-data site-id code))
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid false
+                                              :messages ["No products match this coupon."]})
+                  (:status r) => 201))
+
+              (facts "Validate Correct Category ID"
+                (let [code "P11"
+                      api-secret (str (:api-secret site))
+                      rq-body (json/write-str (basic-request-data site-id code))
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid true
+                                              :messages []})
+                  (:status r) => 201))
+
+              (facts "Validate Incorrect Category ID"
+                (let [code "P12"
+                      api-secret (str (:api-secret site))
+                      rq-body (json/write-str (basic-request-data site-id code))
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid false
+                                              :messages ["No products match this coupon's categories."]})
+                  (:status r) => 201))
+
+              (facts "Validate Not Category ID"
+                (let [code "P13"
+                      api-secret (str (:api-secret site))
+                      rq-body (json/write-str (basic-request-data site-id code))
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid false
+                                              :messages ["No products match this coupon's categories."]})
+                  (:status r) => 201))
+
+              (facts "Validate NOT Not Category ID"
+                (let [code "P14"
+                      api-secret (str (:api-secret site))
+                      rq-body (json/write-str (basic-request-data site-id code))
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid true
+                                              :messages []})
+                  (:status r) => 201))
+
+              (facts "Validate NOT Not Product ID"
+                (let [code "P15"
+                      api-secret (str (:api-secret site))
+                      rq-body (json/write-str (basic-request-data site-id code))
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid true
+                                              :messages []})
+                  (:status r) => 201))
+
+              (facts "Validate Not Product ID"
+                (let [code "P16"
+                      api-secret (str (:api-secret site))
+                      rq-body (json/write-str (basic-request-data site-id code))
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid false
+                                              :messages ["None of your items are eligible for this coupon."]})
+                  (:status r) => 201))
+
+              (facts "Validate Not Combo Product IDs"
+                (let [code "P17"
+                      api-secret (str (:api-secret site))
+                      rq-body (json/write-str (basic-request-data site-id code))
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid false
+                                              :messages ["This coupon is not valid for the combination of products selected."]})
+                  (:status r) => 201))
+
+              (facts "Validate Yes Combo Product IDs"
+                (let [code "P17"
+                      api-secret (str (:api-secret site))
+                      data (-> (basic-request-data site-id code)
+                               (update-in [:cart-contents] conj {:product-id "X99",
+                                                                 :variation "",
+                                                                 :variation-id "",
+                                                                 :quantity 1,
+                                                                 :line-total 10,
+                                                                 :line-tax 0,
+                                                                 :line-subtotal 10,
+                                                                 :line-subtotal-tax 0,
+                                                                 :product-categories ["2"]}))
+                      rq-body (json/write-str data)
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid true
+                                              :messages []})
+                  (:status r) => 201))
+
+              (facts "Validate Below Item Count"
+                (let [code "P18"
+                      api-secret (str (:api-secret site))
+                      data (basic-request-data site-id code)
+                      rq-body (json/write-str data)
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid false
+                                              :messages ["This coupon requires at least 10 matching items in your cart."]})
+                  (:status r) => 201))
+
+              (facts "Validate Meets Item Count"
+                (let [code "P18"
+                      api-secret (str (:api-secret site))
+                      data (-> (basic-request-data site-id code)
+                               (update-in [:cart-contents] #(-> %
+                                                                first
+                                                                (assoc :quantity 10)
+                                                                vector)))
+                      rq-body (json/write-str data)
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid true
+                                              :messages []})
+                  (:status r) => 201))
+
+              (facts "Validate Below Item Value"
+                (let [code "P19"
+                      api-secret (str (:api-secret site))
+                      data (-> (basic-request-data site-id code)
+                               (update-in [:cart-contents] conj {:product-id "X99",
+                                                                 :variation "",
+                                                                 :variation-id "",
+                                                                 :quantity 1,
+                                                                 :line-total 10,
+                                                                 :line-tax 0,
+                                                                 :line-subtotal 10,
+                                                                 :line-subtotal-tax 0,
+                                                                 :product-categories ["2"]}))
+                      rq-body (json/write-str data)
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid false
+                                              :messages ["To qualify for this coupon, the total value of eligible items in your cart must exceed 150.00."]})
+                  (:status r) => 201))
+
+              (facts "Validate Meets Item Value"
+                (let [code "P19"
+                      api-secret (str (:api-secret site))
+                      data (-> (basic-request-data site-id code)
+                               (update-in [:cart-contents] conj {:product-id "X99",
+                                                                 :variation "",
+                                                                 :variation-id "",
+                                                                 :quantity 1,
+                                                                 :line-total 100,
+                                                                 :line-tax 0,
+                                                                 :line-subtotal 100,
+                                                                 :line-subtotal-tax 0,
+                                                                 :product-categories ["2"]}))
+                      rq-body (json/write-str data)
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid true
+                                              :messages []})
+                  (:status r) => 201))
+
+              (facts "Validate Below Cart Value"
+                (let [code "P20"
+                      api-secret (str (:api-secret site))
+                      data (-> (basic-request-data site-id code)
+                               (update-in [:cart-contents] conj {:product-id "X99",
+                                                                 :variation "",
+                                                                 :variation-id "",
+                                                                 :quantity 1,
+                                                                 :line-total 10,
+                                                                 :line-tax 0,
+                                                                 :line-subtotal 10,
+                                                                 :line-subtotal-tax 0,
+                                                                 :product-categories ["2"]}))
+                      rq-body (json/write-str data)
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid false
+                                              :messages ["To qualify for this coupon your cart value must exceed 150.00."]})
+                  (:status r) => 201))
+
+              (facts "Validate Meets Cart Value"
+                (let [code "P20"
+                      api-secret (str (:api-secret site))
+                      data (-> (basic-request-data site-id code)
+                               (update-in [:cart-contents] conj {:product-id "X99",
+                                                                 :variation "",
+                                                                 :variation-id "",
+                                                                 :quantity 1,
+                                                                 :line-total 30,
+                                                                 :line-tax 0,
+                                                                 :line-subtotal 30,
+                                                                 :line-subtotal-tax 0,
+                                                                 :product-categories ["2"]}))
+                      rq-body (json/write-str data)
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid true
+                                              :messages []})
+                  (:status r) => 201))
+
+              (facts "Validate Individual Use NOT OK"
+                (let [code "P21"
+                      api-secret (str (:api-secret site))
+                      data (basic-request-data site-id code)
+                      rq-body (json/write-str data)
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid false
+                                              :messages ["This coupon can not be used with any others."]})
+                  (:status r) => 201))
+
+              (facts "Validate Individual Use OK"
+                (let [code "P21"
+                      api-secret (str (:api-secret site))
+                      data (-> (basic-request-data site-id code)
+                               (update-in [:applied-coupons] (constantly [])))
+                      rq-body (json/write-str data)
+                      path (url-encode (str "/api/v1/promos/validation/" code))
+                      sig-hash (compute-sig-hash "localhost"
+                                                 "POST"
+                                                 path
+                                                 rq-body
+                                                 (str site-id)
+                                                 api-secret)
+                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      response-body (json/read-str (:body r) :key-fn keyword)]
+                  response-body => (contains {:code code
+                                              :valid true
+                                              :messages []})
+                  (:status r) => 201))
+
               (facts "Validate Promo 403 if auth not properly formed"
                 (let [b (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)
                       code (:code (first b))
