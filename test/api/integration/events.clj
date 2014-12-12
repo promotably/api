@@ -1,4 +1,4 @@
-(ns api.integration.basic
+(ns api.integration.events
   (:import org.postgresql.util.PGobject)
   (:require
    [clj-http.client :as client]

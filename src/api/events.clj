@@ -106,11 +106,13 @@
     ;; (prn "PARSED" parsed)
     (cond
      (= schema.utils.ErrorContainer (type parsed))
-     {:status 400}
+     (do
+       (put-metric "event-record-parse-error")
+       {:status 400})
 
      (nil? (:site parsed))
      (do
-       (put-metric "event-record-req-error")
+       (put-metric "event-record-unknown-site")
        {:status 404})
 
      (not (auth-valid? (-> parsed :site :site-id)

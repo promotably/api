@@ -8,6 +8,9 @@
    [clj-time.coerce :as c]
    [api.q-fix :refer :all]))
 
+(def shopper-id (java.util.UUID/randomUUID))
+(def session-id (java.util.UUID/randomUUID))
+
 (def fixture-set
   (set
    (table :accounts
@@ -30,7 +33,56 @@
           (fixture :offer-1
                    :site_id :site-1
                    :event_id (java.util.UUID/randomUUID)
-                   :shopper_id (java.util.UUID/randomUUID)
-                   :session_id (java.util.UUID/randomUUID)
-                   :type "some-event"
-                   :data {:foo 12}))))
+                   :shopper_id shopper-id
+                   :session_id session-id
+                   :type "cartview"
+                   :data {:billing-state "",
+                          :shipping-country "US",
+                          :event-name :trackcartview,
+                          :visitor-id "61b02c78-1cda-4636-9367-77c1c36da643",
+                          :shipping-city "",
+                          :billing-postcode "",
+                          :shipping-state "",
+                          :billing-email "colin@promotably.com",
+                          :cart-items
+                          [{:total 120,
+                            :subtotal 120,
+                            :quantity 6,
+                            :variation "",
+                            :variation-id "",
+                            :categories [""],
+                            :title "Widget",
+                            :id "W100"}],
+                          :billing-city "",
+                          :shipping-address-1 "",
+                          :site-id "b7374bc9-274a-4164-b87f-d2a4f454665a",
+                          :shipping-email "",
+                          :billing-country "US",
+                          :shipping-postcode "",
+                          :billing-address-1 ""})
+          (fixture :offer-2
+                   :site_id :site-1
+                   :event_id (java.util.UUID/randomUUID)
+                   :shopper_id shopper-id
+                   :session_id session-id
+                   :type "productview"
+                   :data {:product-id "W100",
+                          :title "Widget",
+                          :auth
+                          {:headers [],
+                           :qs-fields
+                           ["event-name"
+                            "product-id"
+                            "product-name"
+                            "short-description"
+                            "site-id"
+                            "user-id"],
+                           :timestamp "20141130T094421Z",
+                           :signature "Dq/LMz/XA8e+SKIba7Nez6Drii4=",
+                           :scheme "hmac-sha1"},
+                          :modified-at "2014-11-29T15:10:57.000-00:00"
+                          :user-id "1",
+                          :short-description "",
+                          :event-name :trackproductview}))))
+
+
