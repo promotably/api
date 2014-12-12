@@ -148,6 +148,7 @@
 
 (defn get-available-offers
   [{:keys [params session] :as request}]
+  (prn "session is" session)
   (let [site-id (java.util.UUID/fromString (or (:site-id params) (:site_id params)))
         visitor-id (java.util.UUID/fromString (or (:visitor-id params)
                                                   (:visitor_id params)

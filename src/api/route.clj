@@ -36,6 +36,7 @@
             [api.cloudwatch :as cw]
             [api.system :refer [current-system]]
             [clj-time.core :refer [before? after? now] :as t]
+            [joda-time :as jt]
             [amazonica.aws.s3]
             [amazonica.aws.s3transfer]))
 
@@ -208,6 +209,14 @@
                    (assoc :body (ByteArrayInputStream. (.getBytes slurped)))))
       (handler request))))
 
+(defn wrap-ensure-session
+  ""
+  [handler]
+  (fn [request]
+    (let [expires (jt/plus (jt/date-time) (jt/hours 2))]
+      (-> (handler request)
+          (update-in [:session :expires] (constantly expires))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Main handler entry point
@@ -223,6 +232,7 @@
       wrap-params
       wrap-keyword-params
       wrap-save-the-raw-body
+      wrap-ensure-session
       (session/wrap-session {:store session-cache
                              :cookie-name "promotably-session"})
       wrap-exceptions

@@ -53,6 +53,14 @@
      :port db-port
      :make-pool? true}))
 
+(defn- get-redis-config
+  "Checks environment variables for redis config settings. These
+  should always be present on environments deployed to AWS"
+  []
+  (let [host (System/getenv "REDIS_HOST")
+        port (if-let [p (System/getenv "REDIS_PORT")] (read-string p))]
+    {:host host :port port}))
+
 (def app-config
   {:dev        {:database {:db "promotably_dev"
                            :user "p_user"
@@ -60,6 +68,7 @@
                            :host "localhost"
                            :port 5432
                            :make-pool? true}
+                :redis {:host "localhost" :port 6379}
                 :kinesis {:aws-credential-profile "promotably"
                           :promo-stream-name "dev-PromoStream"
                           :event-stream-name "dev-PromotablyAPIEvents"}
@@ -73,6 +82,7 @@
                            :host "localhost"
                            :port 5432
                            :make-pool? true}
+                :redis {:host "localhost" :port 6379}
                 :kinesis  {:aws-credential-profile "promotably"
                            :promo-stream-name "dev-PromoStream"
                            :event-stream-name "dev-PromotablyAPIEvents"}
@@ -82,6 +92,7 @@
                 :env :test}
    :staging    {:database (get-database-config)
                 :kinesis (get-kinesis-config)
+                :redis (get-redis-config)
                 :artifact-bucket default-build-bucket
                 :index-filename default-index-file
                 :logging base-log-config
@@ -89,12 +100,14 @@
    :integration {:database (get-database-config)
                  :test-topic (or (System/getenv "TEST_RESULTS_SNS_TOPIC_NAME")
                                  "api-integration-test")
+                 :redis (get-redis-config)
                  :kinesis (get-kinesis-config)
                  :artifact-bucket default-build-bucket
                  :index-filename default-index-file
                  :logging base-log-config
                  :env :integration}
    :production {:database (get-database-config)
+                :redis (get-redis-config)
                 :kinesis (get-kinesis-config)
                 :artifact-bucket default-build-bucket
                 :index-filename default-index-file

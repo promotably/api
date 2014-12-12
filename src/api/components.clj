@@ -11,8 +11,10 @@
             [clojure.tools.nrepl.server :as nrepl-server]
             [cider.nrepl :refer (cider-nrepl-handler)]
             [clj-logging-config.log4j :as log-config]
+            [taoensso.carmine :as car :refer [wcar]]
             [api.config :as config]
-            [api.route :as route])
+            [api.route :as route]
+            [api.redis :as redis])
   (:import (java.util.concurrent Executors TimeUnit
                                  ScheduledExecutorService)
            [java.util UUID]
@@ -79,50 +81,53 @@
   (stop [this]
     (dissoc this :db)))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; REDIS Component
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defrecord RedisComponent [config logging]
+  component/Lifecycle
+  (start [this]
+    (let [{:keys [host port] :as spec} (-> config :redis)]
+      (log/logf :info "Redis connection %s:%s." host port)
+      (assoc this :conn {:pool {} :spec spec})))
+  (stop [this]
+    (log/logf :info "Goodbye Redis.")
+    (dissoc this :conn)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Session Cache Component
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- clean-cache
-  "The callback for the timer thread that removes expired items."
-  [cache]
-  (swap! cache (fn [c]
-                 (remove (fn [[session-key data]]
-                           (jt/after? (:expires data) (jt/date-time))) c))))
-
-;; Session cache component. Starts a scheduled thread to remove old items
-;; out of the cache.
-(defrecord SessionCacheComponent [config logging]
+(defrecord SessionCacheComponent [config logging redis]
   component/Lifecycle
   (start [this]
-    (log/info :INITIALIZING "Cache is starting...")
-    (let [s (Executors/newSingleThreadScheduledExecutor)
-          c (atom {})]
-      (.scheduleWithFixedDelay s #(clean-cache c) 5 5 TimeUnit/MINUTES)
-      (-> this
-          (assoc :cache c)
-          (assoc :scheduler s))))
+    (log/logf :info "Cache is starting.")
+    this)
   (stop [this]
-    (log/info :SHUTTINGDOWN "Cache is shutting down...")
-    (.shutdownNow ^ScheduledExecutorService (:scheduler this))
-    (reset! (:cache this) nil)
-    (dissoc this :scheduler :cache))
+    (log/logf :info "Cache is shutting down.")
+    this)
+
   ss/SessionStore
   (read-session [this session-id]
     (when session-id
-      (session-id @(:cache this))))
+      (redis/wcar* (car/get session-id))))
   (write-session [this session-id data]
-    (let [session-id* (or session-id
-                          (UUID/randomUUID))
-          expires (jt/plus (jt/date-time) (jt/hours 2))
-          data* (assoc (merge (session-id* @(:cache this)) data)
-                  :expires expires)]
-      (swap! (:cache this) (fn [c] (assoc c session-id* data*)))
+    (if (nil? session-id)
+      ;; Do something if session-id is nil - it's the start of a new session...
+      (comment))
+    (let [session-id* (or session-id (str (UUID/randomUUID)))
+          old-data (redis/wcar* (car/get session-id*))
+          new-data (merge old-data data)]
+      (redis/wcar* (car/set session-id* new-data))
       session-id*))
   (delete-session [this session-id]
-    (swap! (:cache this) (fn [c] (dissoc c [session-id])))
+    (redis/wcar* (car/del session-id))
     nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -189,6 +194,9 @@
    :database      (component/using (map->DatabaseComponent {}) [:config :logging])
    :kinesis       (component/using (map->Kinesis {}) [:config :logging])
    :cider         (component/using (map->ReplComponent {:port repl-port}) [:config :logging])
-   :session-cache (component/using (map->SessionCacheComponent {}) [:config :logging])
+   :redis         (component/using (map->RedisComponent {}) [:config :logging])
+   :session-cache (component/using (map->SessionCacheComponent {}) [:config :logging :redis])
    :router        (component/using (route/map->Router {}) [:config :logging :session-cache])
    :server        (component/using (map->Server {:port port}) [:config :logging :router])))
+
+

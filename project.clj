@@ -25,7 +25,7 @@
                  [clj-time "0.8.0" :exclusions [joda-time]]
                  [clojure.joda-time "0.2.0" :exclusions [joda-time]]
                  [com.stuartsierra/component "0.2.2"]
-                 [com.taoensso/carmine "2.7.0"
+                 [com.taoensso/carmine "2.9.0"
                   :exclusions [com.taoensso/nippy
                                org.clojure/clojure
                                org.tukaani/xz

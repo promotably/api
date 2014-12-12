@@ -14,11 +14,16 @@
                             [:event_id "uuid NOT NULL"]
                             [:type "TEXT NOT NULL"]
                             [:site_id "BIGINT NOT NULL"]
+                            [:promo_id "BIGINT"]
                             [:shopper_id "uuid NOT NULL"]
                             [:session_id "uuid NOT NULL"]
                             [:created_at "timestamp DEFAULT current_timestamp"]
                             [:data "JSON"])
-     "CREATE INDEX events_site_id_shopper_id_idx ON events(site_id, shopper_id)")))
+     "CREATE INDEX events_site_id_shopper_id_idx ON events(site_id, shopper_id)"
+     "CREATE INDEX events_site_id_type_idx ON events(site_id, type)"
+     "CREATE INDEX events_site_id_promo_id_idx ON events(site_id, promo_id)"
+     "CREATE INDEX events_site_id_promo_id_type_idx ON events(site_id, promo_id, type)"
+     "CREATE INDEX events_site_id_shopper_id_type_idx ON events(site_id, shopper_id, type)")))
 
 
 (defn down
