@@ -213,7 +213,8 @@
   ""
   [handler]
   (fn [request]
-    (let [expires (jt/plus (jt/date-time) (jt/hours 2))]
+    (let [s (-> current-system :config :session-length-in-seconds)
+          expires (jt/plus (jt/date-time) (jt/seconds s))]
       (-> (handler request)
           (update-in [:session :expires] (constantly expires))))))
 

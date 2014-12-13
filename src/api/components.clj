@@ -123,8 +123,11 @@
       (comment))
     (let [session-id* (or session-id (str (UUID/randomUUID)))
           old-data (redis/wcar* (car/get session-id*))
-          new-data (merge old-data data)]
-      (redis/wcar* (car/set session-id* new-data))
+          new-data (merge old-data data)
+          s (-> config :session-length-in-seconds)]
+      (redis/wcar*
+       (car/set session-id* new-data)
+       (car/expire session-id* s))
       session-id*))
   (delete-session [this session-id]
     (redis/wcar* (car/del session-id))

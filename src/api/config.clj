@@ -75,6 +75,7 @@
                 :artifact-bucket default-build-bucket
                 :index-filename default-index-file
                 :logging base-log-config
+                :session-length-in-seconds (* 60 60 2)
                 :env :dev}
    :test       {:database {:db "promotably_test"
                            :user "p_user"
@@ -89,6 +90,7 @@
                 :artifact-bucket default-build-bucket
                 :index-filename default-index-file
                 :logging base-log-config
+                :session-length-in-seconds (* 60 60 2)
                 :env :test}
    :staging    {:database (get-database-config)
                 :kinesis (get-kinesis-config)
@@ -96,6 +98,7 @@
                 :artifact-bucket default-build-bucket
                 :index-filename default-index-file
                 :logging base-log-config
+                :session-length-in-seconds (* 60 60 2)
                 :env :staging}
    :integration {:database (get-database-config)
                  :test-topic (or (System/getenv "TEST_RESULTS_SNS_TOPIC_NAME")
@@ -105,6 +108,7 @@
                  :artifact-bucket default-build-bucket
                  :index-filename default-index-file
                  :logging base-log-config
+                 :session-length-in-seconds (* 60 60 2)
                  :env :integration}
    :production {:database (get-database-config)
                 :redis (get-redis-config)
@@ -112,6 +116,7 @@
                 :artifact-bucket default-build-bucket
                 :index-filename default-index-file
                 :logging base-log-config
+                :session-length-in-seconds (* 60 60 2)
                 :env :production}})
 
 (defn lookup
