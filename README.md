@@ -502,7 +502,5 @@ products, line items, etc...
 
 ## License
 
-## I'm a teapot 12345
-
 Copyright © 2014 Promotably
 
