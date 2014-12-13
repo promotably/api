@@ -74,7 +74,6 @@
   (System/getProperty "ENV")
 
   (prn api.system/current-system)
-  (-> api.system/current-system :redis prn)
   (go {:port 3000 :repl-port 55555})
   (stop)
 

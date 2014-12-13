@@ -79,7 +79,7 @@ Use the usual in emacs: `cider-jack-in`.  Open core.clj and load the file in cid
   (System/setProperty "ENV" "localdev")
   (System/getProperty "ENV")
 
-  (prn sys/current-system)
+  (prn api.system/current-system)
   (go {:port 3000 :repl-port 55555})
   (stop)
 ```
