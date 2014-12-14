@@ -11,7 +11,6 @@
   "Records to an AWS Kinesis Stream."
   [^com.amazonaws.services.kinesis.AmazonKinesisClient kinesis-client
    stream-name message-map]
-  (println stream-name)
   (try
     (let [^ByteArrayOutputStream out-stream (ByteArrayOutputStream. 4096)
           writer (transit/writer out-stream :json)]
