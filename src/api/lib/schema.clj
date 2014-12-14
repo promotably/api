@@ -118,6 +118,7 @@
 (def-event OutboundEvent (-> BaseEvent
                              (assoc (s/required-key :site-id) s/Uuid)
                              (assoc (s/required-key :visitor-id) s/Uuid)
+                             (assoc (s/required-key :session-id) s/Uuid)
                              (dissoc (s/required-key :site)
                                      (s/required-key :auth))))
 

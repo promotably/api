@@ -4,6 +4,7 @@
             [clojure.tools.logging :as log]
             [clj-time.format]
             [clj-time.coerce]
+            [api.config :as config]
             [api.kinesis :as kinesis]
             [api.models.helper :refer :all]
             [api.models.site :as site]
@@ -96,7 +97,7 @@
 
 (defn record-event
   [kinesis-comp
-   {:keys [params] :as request}]
+   {:keys [params cookies] :as request}]
   (put-metric "event-record")
   ;; for debug
   ;; (prn "PARAMS" params)
@@ -131,6 +132,7 @@
                      (dissoc :auth :site)
                      (assoc :shopper-id (:visitor-id request))
                      (assoc :site-id (-> parsed :site :site-id))
+                     (assoc :session-id (get-in cookies [config/session-cookie-name :value]))
                      coercer)]
          ;; TODO: check return val...
          (kinesis/record-event! kinesis-comp
