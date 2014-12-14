@@ -21,4 +21,3 @@
     (let [resp (client/get "http://localhost:3000/health-check")]
       (:body resp) => "<h1>I'm here</h1>"
       (get (:cookies resp) "promotably") => truthy)))
-

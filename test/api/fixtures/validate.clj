@@ -466,6 +466,193 @@
                    :promo_id :promo-21
                    :uuid (java.util.UUID/randomUUID)
                    :type "individual-use"))
+
+   (table :promos
+          (fixture :promo-22
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "PM22"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Description"
+                   :seo_text "SEO"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-22-1
+                   :promo_id :promo-22
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "individual-use")
+          (fixture :pc-22-2
+                   :promo_id :promo-22
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "dates"
+                   :start_date (c/to-sql-time (c/from-string "2014-11-27 00:00:00"))
+                   :end_date (c/to-sql-time (c/from-string "2020-11-28 23:59:59")))
+          (fixture :pc-22-3
+                   :promo_id :promo-22
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "min-order-value"
+                   :min_order_value 150))
+   (table :promos
+          (fixture :promo-23
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "PM23"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Description"
+                   :seo_text "SEO"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-23-1
+                   :promo_id :promo-23
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "times"
+                   :start_time "00:00"
+                   :end_time "00:00")
+          (fixture :pc-23-2
+                   :promo_id :promo-23
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "dates"
+                   :start_date (c/to-sql-time (c/from-string "2014-11-27 00:00:00"))
+                   :end_date (c/to-sql-time (c/from-string "2020-11-28 23:59:59"))))
+   (table :promos
+          (fixture :promo-24
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "PM24"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Description"
+                   :seo_text "SEO"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-24-1
+                   :promo_id :promo-24
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "times"
+                   :start_time "00:00"
+                   :end_time "23:59")
+          (fixture :pc-24-2
+                   :promo_id :promo-24
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "dates"
+                   :start_date (c/to-sql-time (c/from-string "2014-11-27 00:00:00"))
+                   :end_date (c/to-sql-time (c/from-string "2020-11-28 23:59:59"))))
+(table :promos
+          (fixture :promo-25
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "PM25"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Description"
+                   :seo_text "SEO"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-25-1
+                   :promo_id :promo-25
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "product-ids"
+                   :product_ids #(.createArrayOf (jdbc/get-connection %)
+                                                 "varchar"
+                                                 (into-array String ["X99"])))
+          (fixture :pc-25-2
+                   :promo_id :promo-25
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "times"
+                   :start_time "00:00"
+                   :end_time "23:59")
+          (fixture :pc-25-3
+                   :promo_id :promo-25
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "dates"
+                   :start_date (c/to-sql-time (c/from-string "2014-11-27 00:00:00"))
+                   :end_date (c/to-sql-time (c/from-string "2020-11-28 23:59:59"))))
+   (table :promos
+          (fixture :promo-26
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "PM26"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Description"
+                   :seo_text "SEO"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-26-1
+                   :promo_id :promo-26
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "product-ids"
+                   :product_ids #(.createArrayOf (jdbc/get-connection %)
+                                                 "varchar"
+                                                 (into-array String ["W100"])))
+          (fixture :pc-26-2
+                   :promo_id :promo-26
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "times"
+                   :start_time "00:00"
+                   :end_time "23:59")
+          (fixture :pc-26-3
+                   :promo_id :promo-26
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "dates"
+                   :start_date (c/to-sql-time (c/from-string "2014-11-27 00:00:00"))
+                   :end_date (c/to-sql-time (c/from-string "2020-11-28 23:59:59"))))
+   (table :promos
+          (fixture :promo-27
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "PM27"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Description"
+                   :seo_text "SEO"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-27-1
+                   :promo_id :promo-27
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "combo-product-ids"
+                   :combo_product_ids #(.createArrayOf (jdbc/get-connection %)
+                                                       "varchar"
+                                                       (into-array String ["X99" "W100"])))
+          (fixture :pc-27-2
+                   :promo_id :promo-27
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "times"
+                   :start_time "00:00"
+                   :end_time "23:59")
+          (fixture :pc-27-3
+                   :promo_id :promo-27
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "dates"
+                   :start_date (c/to-sql-time (c/from-string "2014-11-27 00:00:00"))
+                   :end_date (c/to-sql-time (c/from-string "2020-11-28 23:59:59"))))
    (table :offers
           (fixture :offer-1
                    :uuid (java.util.UUID/randomUUID)

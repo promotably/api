@@ -19,7 +19,7 @@
                                  (migrate-up)
                                  (load-fixture-set base/fixture-set)))
                      (after :contents
-                            (comment migrate-down))]
+                            (migrate-down))]
 
   (def site (api.models.site/find-by-name "site-1"))
   (def site-id (:site-id site))
