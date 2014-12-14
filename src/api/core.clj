@@ -29,7 +29,7 @@
 
 (def cli-options
   [["-p" "--port PORT" "Web server listening port" :default 3000]
-   ["-r" "--repl-port PORT" "Repl / Cider listening port" :default 55556]
+   ["-r" "--repl-port PORT" "Repl / Cider listening port" :default 55555]
    ;; A non-idempotent option
    ["-v" nil "Verbosity level"
     :id :verbosity
