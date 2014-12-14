@@ -22,7 +22,7 @@
    (s/required-key :auth) Auth
    (s/optional-key :user-id) s/Str
    (s/required-key :site) s/Any
-   (s/optional-key :shopper-id) (s/maybe s/Str)})
+   (s/optional-key :shopper-id) (s/maybe s/Uuid)})
 
 (def CartItem
   {:id s/Str
@@ -117,7 +117,6 @@
 (def-event InboundEvent BaseEvent)
 (def-event OutboundEvent (-> BaseEvent
                              (assoc (s/required-key :site-id) s/Uuid)
-                             (assoc (s/required-key :visitor-id) s/Uuid)
                              (assoc (s/required-key :session-id) s/Uuid)
                              (dissoc (s/required-key :site)
                                      (s/required-key :auth))))
