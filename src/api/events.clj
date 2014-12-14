@@ -129,7 +129,7 @@
              coercer (sc/coercer OutboundEvent matcher)
              out (-> parsed
                      (dissoc :auth :site)
-                     (assoc :visitor-id (:visitor-id request))
+                     (assoc :shopper-id (:visitor-id request))
                      (assoc :site-id (-> parsed :site :site-id))
                      coercer)]
          ;; TODO: check return val...
