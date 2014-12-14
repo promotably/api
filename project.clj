@@ -66,7 +66,7 @@
                   :exclusions [joda-time com.fasterxml.jackson.core/jackson-core]]
                  [org.apache.commons/commons-daemon "1.0.9"]]
   :resource-paths ["resources"]
-  :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC"
+  :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC" "-XX:MaxPermSize=256m"
              ;; "–XX:+UseG1GC"
              "-DEVENT_STREAM_NAME=dev-PromotablyAPIEvents"
              "-DPROMO_STREAM_NAME=dev-PromoStream"]
