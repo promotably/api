@@ -5,7 +5,7 @@
 (defn record-product-view
   [site-id visitor-id product-id]
   (record-event!
-   {:event-stream-name "dev-PromotablyAPIEvents"}
+   (:kinesis api.system/current-system)
    :trackproductview
    {:visitor-id visitor-id
     :product-id product-id

@@ -11,6 +11,7 @@
   "Records to an AWS Kinesis Stream."
   [^com.amazonaws.services.kinesis.AmazonKinesisClient kinesis-client
    stream-name message-map]
+  (println stream-name)
   (try
     (let [^ByteArrayOutputStream out-stream (ByteArrayOutputStream. 4096)
           writer (transit/writer out-stream :json)]
@@ -28,7 +29,7 @@
   [kinesis event-name attributes]
   (future
     (record! (:client kinesis)
-             (:event-stream-name kinesis)
+             (get-in kinesis [:config :kinesis :event-stream-name])
              {:message-id (java.util.UUID/randomUUID)
               :event-name event-name
               :attributes attributes})))
@@ -37,7 +38,7 @@
   [kinesis action promo site]
   (future
     (record! (:client kinesis)
-             (:promo-stream-name kinesis)
+             (get-in kinesis [:config :kinesis :promo-stream-name])
              {:message-id (java.util.UUID/randomUUID)
               :action action
               :promo promo
