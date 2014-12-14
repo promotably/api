@@ -197,6 +197,6 @@
    :redis         (component/using (map->RedisComponent {}) [:config :logging])
    :session-cache (component/using (map->SessionCacheComponent {}) [:config :logging :redis])
    :router        (component/using (route/map->Router {}) [:config :logging :session-cache])
-   :server        (component/using (map->Server {:port port}) [:config :logging :router])))
+   :server        (component/using (map->Server {:port (java.lang.Integer. port)}) [:config :logging :router])))
 
 
