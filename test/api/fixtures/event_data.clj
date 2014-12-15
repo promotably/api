@@ -10,6 +10,7 @@
 
 (def shopper-id (java.util.UUID/randomUUID))
 (def session-id (java.util.UUID/randomUUID))
+(def site-uuid (java.util.UUID/randomUUID))
 
 (def fixture-set
   (set
@@ -25,13 +26,13 @@
                    :name "site-1"
                    :updated_at (c/to-sql-date (t/now))
                    :created_at (c/to-sql-date (t/now))
-                   :uuid (java.util.UUID/randomUUID)
+                   :uuid site-uuid
                    :site_code "site1"
                    :api_secret (java.util.UUID/randomUUID)
                    :site_url "http://sekrit.com"))
       (table :events
           (fixture :offer-1
-                   :site_id :site-1
+                   :site_id site-uuid
                    :event_id (java.util.UUID/randomUUID)
                    :shopper_id shopper-id
                    :session_id session-id
@@ -61,7 +62,7 @@
                           :shipping-postcode "",
                           :billing-address-1 ""})
           (fixture :offer-2
-                   :site_id :site-1
+                   :site_id site-uuid
                    :event_id (java.util.UUID/randomUUID)
                    :shopper_id shopper-id
                    :session_id session-id

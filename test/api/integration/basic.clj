@@ -15,7 +15,7 @@
                                  (migrate-up)
                                  (load-fixture-set base/fixture-set)))
                      (after :contents
-                            (migrate-down))]
+                            (comment migrate-down))]
 
   (facts "Health check"
     (let [resp (client/get "http://localhost:3000/health-check")]

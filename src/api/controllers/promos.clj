@@ -131,13 +131,14 @@
 
     (cond
      (not the-promo)
-     {:status 404 :body "Can't find that promo"}
+     {:status 404 :body "Can't find that promo" :session (:session request)}
 
      (not (auth-valid? site-id
                        (-> coerced-params :site :api-secret)
                        (:auth coerced-params)
                        (assoc request :body body-params)))
-     {:status 403}
+     {:status 403
+      :session (:session request)}
 
      :else
      (let [[v errors] (promo/valid? the-promo coerced-params)
@@ -146,6 +147,7 @@
                          {:valid false :messages errors}
                          {:valid true :messages []}))]
        {:status 201
+        :session (:session request)
         :body (shape-validate resp)}))))
 
 (defn calculate-promo
@@ -162,18 +164,23 @@
         [context errors] (promo/valid? the-promo coerced-params)]
     (cond
      (not the-promo)
-     {:status 404 :body "Can't find that promo"}
+     {:status 404
+      :body "Can't find that promo"
+      :session (:session request)}
 
      errors
-     {:status 400}
+     {:status 400
+      :session (:session request)}
 
      (not (auth-valid? site-id
                        (-> coerced-params :site :api-secret)
                        (:auth coerced-params)
                        (assoc request :body body-params)))
-     {:status 403}
+     {:status 403
+      :session (:session request)}
 
      :else
       (let [amt (promo/discount-amount the-promo context errors)]
         {:status 201
+         :session (:session request)
          :body (shape-calculate {:valid true :discount amt})}))))

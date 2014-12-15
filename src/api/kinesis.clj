@@ -26,6 +26,7 @@
 
 (defn record-event!
   [kinesis event-name attributes]
+  ;; TODO: this is grossly inefficient...
   (future
     (record! (:client kinesis)
              (get-in kinesis [:config :kinesis :event-stream-name])

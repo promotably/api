@@ -4,16 +4,19 @@
             [korma.core :refer :all]
             [korma.db :refer [defdb postgres]]
             [clojure.java.jdbc :as jdbc]
-            [joda-time :as jt]
             [clojure.core.reducers :as r]
             [clojure.tools.logging :as log]
             [ring.middleware.session.store :as ss]
             [clojure.tools.nrepl.server :as nrepl-server]
             [cider.nrepl :refer (cider-nrepl-handler)]
             [clj-logging-config.log4j :as log-config]
+            [clj-time.core :refer [before? after? now] :as t]
+            [clj-time.coerce :as t-coerce]
             [taoensso.carmine :as car :refer [wcar]]
+            [api.cloudwatch :as cw]
             [api.config :as config]
             [api.route :as route]
+            [api.kinesis :as kinesis]
             [api.redis :as redis])
   (:import (java.util.concurrent Executors TimeUnit
                                  ScheduledExecutorService)
@@ -104,7 +107,7 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defrecord SessionCacheComponent [config logging redis]
+(defrecord SessionCacheComponent [config logging redis kinesis]
   component/Lifecycle
   (start [this]
     (log/logf :info "Cache is starting.")
@@ -116,22 +119,36 @@
   ss/SessionStore
   (read-session [this session-id]
     (when session-id
-      (redis/wcar* (car/get session-id))))
+      (let [data (redis/wcar* (car/get session-id))]
+        (or data {}))))
   (write-session [this session-id data]
-    (if (nil? session-id)
-      ;; TODO: something if session-id is nil - it's the start of a new session...
-      (comment))
     (let [session-id* (or session-id (str (UUID/randomUUID)))
           old-data (redis/wcar* (car/get session-id*))
-          new-data (merge old-data data)
+          new-data (if (or (nil? session-id) (nil? old-data))
+                     (assoc data :started-at (t-coerce/to-string (t/now)))
+                     data)
           s (-> config :session-length-in-seconds)]
-      ;; TODO: catch errors talking to redis & send to cloudwatch
-      (redis/wcar*
-       (car/set session-id* new-data)
-       (car/expire session-id* s))
+      (if (nil? session-id)
+        ;; TODO: more data?  Visitor's browser, etc???
+        (let [k-data {:created-at (t-coerce/to-string (t/now))
+                      :shopper-id (:visitor-id data)
+                      :session-id session-id*}
+              k-data (if (:site-id data) (update-in k-data [:site-id] (constantly (:site-id data))))]
+          (kinesis/record-event! kinesis "session-start" k-data)))
+      (try
+        (redis/wcar*
+         (car/set session-id* new-data)
+         (car/expire session-id* s))
+        (catch Throwable t
+          (log/logf :error "Session redis error: %s" (pr-str t))
+          (cw/put-metric "session-error" {:config config})))
       session-id*))
   (delete-session [this session-id]
-    (redis/wcar* (car/del session-id))
+    (try
+      (redis/wcar* (car/del session-id))
+      (catch Throwable t
+        (log/logf :error "Session redis error: %s" (pr-str t))
+        (cw/put-metric "session-error" {:config config})))
     nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -199,7 +216,7 @@
    :kinesis       (component/using (map->Kinesis {}) [:config :logging])
    :cider         (component/using (map->ReplComponent {:port repl-port}) [:config :logging])
    :redis         (component/using (map->RedisComponent {}) [:config :logging])
-   :session-cache (component/using (map->SessionCacheComponent {}) [:config :logging :redis])
+   :session-cache (component/using (map->SessionCacheComponent {}) [:config :logging :redis :kinesis])
    :router        (component/using (route/map->Router {}) [:config :logging :session-cache])
    :server        (component/using (map->Server {:port (java.lang.Integer. port)}) [:config :logging :router])))
 

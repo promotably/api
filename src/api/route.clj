@@ -15,6 +15,9 @@
             [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.middleware.session :as session]
             [ring.middleware.jsonp :as jsonp]
+            [ring.middleware.nested-params :refer [wrap-nested-params]]
+            [ring.middleware.multipart-params :refer [wrap-multipart-params]]
+            [ring.middleware.cookies :refer [wrap-cookies]]
             [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.util.response :refer [response content-type]]
             [ring.middleware.permacookie :refer [wrap-permacookie]]
@@ -36,7 +39,7 @@
             [api.cloudwatch :as cw]
             [api.system :refer [current-system]]
             [clj-time.core :refer [before? after? now] :as t]
-            [joda-time :as jt]
+            [clj-time.coerce :as t-coerce]
             [amazonica.aws.s3]
             [amazonica.aws.s3transfer]))
 
@@ -91,8 +94,6 @@
            offer-routes
            promo-routes))
 
-;; (amazonica.aws.s3/get-object "promotably-build-artifacts" "db/latest/index.html")
-
 (defn- fetch-index
   [config]
   (let [bucket (:artifact-bucket config)
@@ -126,10 +127,6 @@
   api-routes
   (GET "*" [] serve-cached-index)
   (not-found serve-404-page))
-
-(defroutes all-routes
-  (-> anonymous-routes
-      (wrap-permacookie {:name "promotably"})))
 
 ;;;;;;;;;;;;;;;;;;
 ;;
@@ -213,10 +210,20 @@
   ""
   [handler]
   (fn [request]
-    (let [s (-> current-system :config :session-length-in-seconds)
-          expires (jt/plus (jt/date-time) (jt/seconds s))]
-      (-> (handler request)
-          (update-in [:session :expires] (constantly expires))))))
+    (let [sid (or
+               (-> request :form-params :site-id)
+               (-> request :query-params :site-id)
+               (-> request :multipart-params :site-id)
+               (-> request :body-params :site-id)
+               (-> request :params :site-id))
+          s (-> current-system :config :session-length-in-seconds)
+          expires (t-coerce/to-string (t/plus (t/now) (t/seconds s)))
+          response (cond->
+                    (handler request)
+                    sid (update-in [:session :site-id] (constantly sid))
+                    true (update-in [:session :expires] (constantly expires))
+                    true (update-in [:session :shopper-id] (constantly (:visitor-id request))))]
+      response)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -226,16 +233,19 @@
 
 (defn app
   [{:keys [config session-cache] :as options}]
-  (-> all-routes
+  (-> anonymous-routes
+      wrap-ensure-session
+      (wrap-permacookie {:name "promotably"})
       (wrap-restful-format :formats [:json-kw :edn])
       jsonp/wrap-json-with-padding
-      handler/site
-      wrap-params
-      wrap-keyword-params
-      wrap-save-the-raw-body
-      wrap-ensure-session
       (session/wrap-session {:store session-cache
                              :cookie-name "promotably-session"})
+      wrap-cookies
+      wrap-keyword-params
+      wrap-multipart-params
+      wrap-params
+      wrap-nested-params
+      wrap-save-the-raw-body
       wrap-exceptions
       wrap-stacktrace
       (wrap-if #((:env config) #{:dev :test :integration})

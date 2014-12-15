@@ -96,25 +96,23 @@
         coercer)))
 
 (defn record-event
-  [kinesis-comp
-   {:keys [params cookies] :as request}]
+  [kinesis-comp {:keys [params cookies] :as request}]
   (put-metric "event-record")
   ;; for debug
   ;; (prn "PARAMS" params)
-  (let [parsed (parse-event params)
-        product-view-count (get-in request [:session :product-view-count] 0)]
+  (let [parsed (parse-event params)]
     ;; for debug
     ;; (prn "PARSED" parsed)
     (cond
      (= schema.utils.ErrorContainer (type parsed))
      (do
        (put-metric "event-record-parse-error")
-       {:status 400})
+       {:status 400 :session (:session request)})
 
      (nil? (:site parsed))
      (do
        (put-metric "event-record-unknown-site")
-       {:status 404})
+       {:status 404 :session (:session request)})
 
      (not (auth-valid? (-> parsed :site :site-id)
                        (-> parsed :site :api-secret)
@@ -122,7 +120,7 @@
                        request))
      (do
        (put-metric "event-record-auth-error")
-       {:status 403})
+       {:status 403 :session (:session request)})
 
      :else
      (do
@@ -134,14 +132,10 @@
                      (assoc :site-id (-> parsed :site :site-id))
                      (assoc :session-id (get-in cookies [config/session-cookie-name :value]))
                      coercer)]
-         ;; TODO: check return val...
-         (kinesis/record-event! kinesis-comp
-                                (:event-name out)
-                                out)
+         (kinesis/record-event! kinesis-comp (:event-name out) out)
          (put-metric "event-record-success")
          (let [response {:headers {"Content-Type" "text/javascript"}
                          :body ""
+                         :session (:session request)
                          :status 200}]
-           (if (= (:event-name out) :trackproductview)
-             (merge response {:session {:product-view-count (inc product-view-count)}})
-             response)))))))
+           response))))))

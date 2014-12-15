@@ -148,19 +148,11 @@
 
 (defn get-available-offers
   [{:keys [params session] :as request}]
-  (prn "session is" session)
   (let [site-id (java.util.UUID/fromString (or (:site-id params) (:site_id params)))
         visitor-id (java.util.UUID/fromString (or (:visitor-id params)
                                                   (:visitor_id params)
-                                                  (:visitor-id request)))
-        mock? (if-not (nil? (:mock params))
-                (Boolean/parseBoolean (:mock params))
-                false)
-        product-view-count (get-in session [:product-view-count] 0)
-        resp (if (or mock? (>= product-view-count 3))
-               (mock-offers-response)
-               (real-life-offers-response site-id visitor-id))]
-    (if (>= product-view-count 3)
-      {:body resp
-       :session {:product-view-count 0}}
-      {:body resp})))
+                                                  (:visitor-id request)))]
+    {:session session
+     :headers {"Content-Type" "text/javascript"}
+     :status 200
+     :body (real-life-offers-response site-id visitor-id)}))
