@@ -54,13 +54,16 @@
 
 (def fix-cart-items
   (make-trans
-   #{:cart-item}
+   #{"cart-item[]"}
    (fn [k items]
      [:cart-items
-      (if (seq items)
-        (mapcat #(let [[id title category var-id var q subtotal total]
+      (let [items (cond
+                   (string? items) [items]
+                   (seq items) items
+                   :else nil)]
+        (mapcat #(let [[sku title category var-id var q subtotal total]
                        (clojure.string/split % #"," 8)]
-                   [{:id id
+                   [{:sku sku
                      :title title
                      :categories (clojure.string/split category #"\|")
                      :variation-id var-id
@@ -132,6 +135,7 @@
                      (assoc :site-id (-> parsed :site :site-id))
                      (assoc :session-id (get-in cookies [config/session-cookie-name :value]))
                      coercer)]
+         ;; (clojure.pprint/pprint out)
          (kinesis/record-event! kinesis-comp (:event-name out) out)
          (put-metric "event-record-success")
          (let [response {:headers {"Content-Type" "text/javascript"}

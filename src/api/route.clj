@@ -246,7 +246,7 @@
       wrap-params
       wrap-nested-params
       wrap-save-the-raw-body
-      wrap-exceptions
+      ;; wrap-exceptions
       wrap-stacktrace
       (wrap-if #((:env config) #{:dev :test :integration})
                wrap-request-logging)

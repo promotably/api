@@ -53,7 +53,7 @@
                             :variation-id "",
                             :categories [""],
                             :title "Widget",
-                            :id "W100"}],
+                            :sku "W100"}],
                           :billing-city "",
                           :shipping-address-1 "",
                           :site-id "b7374bc9-274a-4164-b87f-d2a4f454665a",
@@ -67,13 +67,13 @@
                    :shopper_id shopper-id
                    :session_id session-id
                    :type "productview"
-                   :data {:product-id "W100",
+                   :data {:sku "W100",
                           :title "Widget",
                           :auth
                           {:headers [],
                            :qs-fields
                            ["event-name"
-                            "product-id"
+                            "sku"
                             "product-name"
                             "short-description"
                             "site-id"

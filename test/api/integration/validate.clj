@@ -53,7 +53,7 @@
      :code code
      :shopper-email "colin@promotably.com",
      :shopper-id nil,
-     :cart-contents [{:product-id "W100",
+     :cart-contents [{:sku "W100",
                       :variation "",
                       :variation-id "",
                       :quantity 6,
@@ -388,7 +388,7 @@
                 (let [code "P17"
                       api-secret (str (:api-secret site))
                       data (-> (basic-request-data site-id code)
-                               (update-in [:cart-contents] conj {:product-id "X99",
+                               (update-in [:cart-contents] conj {:sku "X99",
                                                                  :variation "",
                                                                  :variation-id "",
                                                                  :quantity 1,
@@ -458,7 +458,7 @@
                 (let [code "P19"
                       api-secret (str (:api-secret site))
                       data (-> (basic-request-data site-id code)
-                               (update-in [:cart-contents] conj {:product-id "X99",
+                               (update-in [:cart-contents] conj {:sku "X99",
                                                                  :variation "",
                                                                  :variation-id "",
                                                                  :quantity 1,
@@ -486,7 +486,7 @@
                 (let [code "P19"
                       api-secret (str (:api-secret site))
                       data (-> (basic-request-data site-id code)
-                               (update-in [:cart-contents] conj {:product-id "X99",
+                               (update-in [:cart-contents] conj {:sku "X99",
                                                                  :variation "",
                                                                  :variation-id "",
                                                                  :quantity 1,
@@ -514,7 +514,7 @@
                 (let [code "P20"
                       api-secret (str (:api-secret site))
                       data (-> (basic-request-data site-id code)
-                               (update-in [:cart-contents] conj {:product-id "X99",
+                               (update-in [:cart-contents] conj {:sku "X99",
                                                                  :variation "",
                                                                  :variation-id "",
                                                                  :quantity 1,
@@ -542,7 +542,7 @@
                 (let [code "P20"
                       api-secret (str (:api-secret site))
                       data (-> (basic-request-data site-id code)
-                               (update-in [:cart-contents] conj {:product-id "X99",
+                               (update-in [:cart-contents] conj {:sku "X99",
                                                                  :variation "",
                                                                  :variation-id "",
                                                                  :quantity 1,
@@ -631,7 +631,7 @@
                       api-secret (str (:api-secret site))
                       data (-> (basic-request-data site-id code)
                                (update-in [:applied-coupons] (constantly []))
-                               (update-in [:cart-contents] conj {:product-id "X99",
+                               (update-in [:cart-contents] conj {:sku "X99",
                                                                  :variation "",
                                                                  :variation-id "",
                                                                  :quantity 1,
@@ -755,7 +755,7 @@
                 (let [code "PM27"
                       api-secret (str (:api-secret site))
                       data (-> (basic-request-data site-id code)
-                               (update-in [:cart-contents] conj {:product-id "X99",
+                               (update-in [:cart-contents] conj {:sku "X99",
                                                                  :variation "",
                                                                  :variation-id "",
                                                                  :quantity 1,

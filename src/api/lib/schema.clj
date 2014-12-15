@@ -25,7 +25,7 @@
    (s/optional-key :shopper-id) (s/maybe s/Uuid)})
 
 (def CartItem
-  {:id s/Str
+  {:sku s/Str
    :title s/Str
    :categories [s/Str]
    :variation-id s/Str
@@ -50,7 +50,7 @@
   `(def ~the-event
      (s/conditional #(= (:event-name %) :trackproductview)
                     (merge ~base-event
-                           {(s/required-key :product-id) s/Str
+                           {(s/required-key :sku) s/Str
                             (s/optional-key :title) (s/maybe s/Str)
                             (s/optional-key :description) (s/maybe s/Str)
                             (s/optional-key :short-description) (s/maybe s/Str)
@@ -58,7 +58,7 @@
                             (s/optional-key :variation) (s/maybe s/Str)})
                     #(= (:event-name %) :trackproductadd)
                     (merge ~base-event
-                           {(s/required-key :product-id) s/Str
+                           {(s/required-key :sku) s/Str
                             (s/optional-key :category-id) (s/maybe s/Str)
                             (s/optional-key :quantity) s/Int
                             (s/optional-key :variation) (s/maybe s/Str)})
@@ -98,12 +98,14 @@
                     (merge ~base-event
                            {(s/required-key :order-id) (s/maybe s/Str)
                             (s/required-key :order-date) (s/maybe s/Str)
+                            (s/optional-key :billing-address) (s/maybe s/Str)
                             (s/optional-key :billing-address-1) (s/maybe s/Str)
                             (s/optional-key :billing-city) (s/maybe s/Str)
                             (s/optional-key :billing-state) (s/maybe s/Str)
                             (s/optional-key :billing-country) (s/maybe s/Str)
                             (s/optional-key :billing-postcode) (s/maybe s/Str)
                             (s/optional-key :billing-email) (s/maybe s/Str)
+                            (s/optional-key :shipping-address) (s/maybe s/Str)
                             (s/optional-key :shipping-address-1) (s/maybe s/Str)
                             (s/optional-key :shipping-city) (s/maybe s/Str)
                             (s/optional-key :shipping-state) (s/maybe s/Str)
@@ -464,7 +466,7 @@
    (s/optional-key :billing-country) s/Str
    (s/optional-key :billing-postcode) s/Str
    (s/optional-key :billing-email) s/Str
-   (s/optional-key :cart-contents) [{(s/required-key :product-id) s/Str
+   (s/optional-key :cart-contents) [{(s/required-key :sku) s/Str
                                      (s/optional-key :product-title) s/Str
                                      (s/optional-key :product-type) s/Str
                                      (s/optional-key :product-categories) [s/Str]

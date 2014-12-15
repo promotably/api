@@ -83,7 +83,7 @@
 ;; Woocommerce asks for validation in stages.  In the first stage, elements of
 ;; cart-contents will look like:
 ;;
-;;   {:product-id "8", :quantity 2, product-categories ["6"], variation-id "", :variation ""}
+;;   {:sku "T100", :quantity 2, product-categories ["6"], variation-id "", :variation ""}
 ;;
 ;; In the second stage, the element will also have:
 ;;
@@ -124,7 +124,7 @@
 (defmethod validate :product-ids
   [{:keys [cart-contents matching-products] :as context}
    {:keys [product-ids] :as condition}]
-  (let [keepers (filter #(get (set product-ids) (:product-id %))
+  (let [keepers (filter #(get (set product-ids) (:sku %))
                         cart-contents)
         updated-context (assoc context :matching-products keepers)]
     (cond
@@ -135,7 +135,7 @@
 (defmethod validate :combo-product-ids
   [{:keys [matching-products cart-contents] :as context}
    {:keys [combo-product-ids] :as condition}]
-  (let [keepers (filter #(get (set combo-product-ids) (:product-id %))
+  (let [keepers (filter #(get (set combo-product-ids) (:sku %))
                         (or matching-products cart-contents))
         updated-context (assoc context :matching-products keepers)]
     (cond
@@ -147,7 +147,7 @@
 (defmethod validate :not-product-ids
   [{:keys [cart-contents matching-products] :as context}
    {:keys [not-product-ids] :as condition}]
-  (let [keepers (keep #(if (not (get (set not-product-ids) (:product-id %)))
+  (let [keepers (keep #(if (not (get (set not-product-ids) (:sku %)))
                          %)
                       (or matching-products cart-contents))
         updated-context (assoc context :matching-products keepers)]
