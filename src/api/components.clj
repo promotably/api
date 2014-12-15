@@ -119,12 +119,13 @@
       (redis/wcar* (car/get session-id))))
   (write-session [this session-id data]
     (if (nil? session-id)
-      ;; Do something if session-id is nil - it's the start of a new session...
+      ;; TODO: something if session-id is nil - it's the start of a new session...
       (comment))
     (let [session-id* (or session-id (str (UUID/randomUUID)))
           old-data (redis/wcar* (car/get session-id*))
           new-data (merge old-data data)
           s (-> config :session-length-in-seconds)]
+      ;; TODO: catch errors talking to redis & send to cloudwatch
       (redis/wcar*
        (car/set session-id* new-data)
        (car/expire session-id* s))
