@@ -92,7 +92,6 @@
   (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
         coercer (c/coercer query-schema matcher)
         {:keys [site-id code] :as coerced-params} (coercer params)
-        _ (prn coerced-params)
         the-promo (promo/find-by-site-uuid-and-code
                    site-id
                    (clojure.string/upper-case code))]
@@ -179,7 +178,9 @@
       :session (:session request)}
 
      :else
-      (let [amt (promo/discount-amount the-promo context errors)]
+      (let [[amt context errors] (promo/discount-amount the-promo
+                                                        context
+                                                        errors)]
         {:status 201
          :session (:session request)
          :body (shape-calculate {:valid true :discount amt})}))))

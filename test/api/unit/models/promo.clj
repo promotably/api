@@ -54,3 +54,145 @@
                                           :uuid promo-uuid
                                           :reward-amount 10.0000M
                                           :conditions (just [(contains {:type :dates})])})))
+
+(def the-context {:billing-state "VA",
+                  :shipping-country "US",
+                  :shipping-city "Dallas",
+                  :site {},
+                  :billing-postcode "75219",
+                  :shopper-email "colin@promotably.com",
+                  :applied-coupons ["p4"],
+                  :product-ids-on-sale [],
+                  :shipping-state "VA",
+                  :billing-email "colin@promotably.com",
+                  :billing-city "Dallas",
+                  :shipping-address-1 "Suite 1450",
+                  :code "p4",
+                  :cart-contents [{:quantity 3,
+                                   :line-tax 0,
+                                   :product-categories [],
+                                   :line-subtotal-tax 0,
+                                   :sku "W100",
+                                   :variation-id "",
+                                   :variation "",
+                                   :line-subtotal 60,
+                                   :line-total 60}
+                                  {:quantity 1,
+                                   :line-tax 0,
+                                   :product-categories [],
+                                   :line-subtotal-tax 0,
+                                   :sku "T100",
+                                   :variation-id "",
+                                   :variation "",
+                                   :line-subtotal 10,
+                                   :line-total 10}],
+                  :shipping-email "",
+                  :billing-country "US",
+                  :shipping-postcode "75219",
+                  :billing-address-1 "Suite 1450"})
+
+(fact "Calculate percent off cart"
+  (let [promo {:description "Description",
+               :reward-applied-to :cart,
+               :seo-text "SEO",
+               :reward-tax :after-tax,
+               :reward-amount 20,
+               :linked-products [],
+               :conditions [{:end-time "23:59", :type :times, :start-time "00:00"}],
+               :active true,
+               :code "P4",
+               :reward-type :percent}
+        context the-context
+        [amount return-context errors] (discount-amount promo context nil)]
+    amount => "14.0000"))
+
+(fact "Calculate percent off matching items"
+  (let [promo {:description "Description",
+               :reward-applied-to :all-items,
+               :seo-text "SEO",
+               :reward-tax :after-tax,
+               :reward-amount 20,
+               :linked-products [],
+               :conditions [{:type :product-ids :product-ids ["W100"]}],
+               :active true,
+               :code "P4",
+               :reward-type :percent}
+        [context errors] (valid? promo the-context)
+        [amount return-context errors] (discount-amount promo context errors)]
+    amount => "12.0000"))
+
+(fact "Calculate percent off matching items"
+  (let [promo {:description "Description",
+               :reward-applied-to :all-items,
+               :seo-text "SEO",
+               :reward-tax :after-tax,
+               :reward-amount 20,
+               :linked-products [],
+               :conditions [{:type :product-ids :product-ids ["T100"]}],
+               :active true,
+               :code "P4",
+               :reward-type :percent}
+        [context errors] (valid? promo the-context)
+        [amount return-context errors] (discount-amount promo context errors)]
+    amount => "2.0000"))
+
+(fact "Calculate percent off NO matching items"
+  (let [promo {:description "Description",
+               :reward-applied-to :all-items,
+               :seo-text "SEO",
+               :reward-tax :after-tax,
+               :reward-amount 20,
+               :linked-products [],
+               :conditions [{:type :product-ids :product-ids ["FOO"]}],
+               :active true,
+               :code "P4",
+               :reward-type :percent}
+        [context errors] (valid? promo the-context)
+        [amount return-context errors] (discount-amount promo context errors)]
+    amount => "0"))
+
+(fact "Calculate dollar off one matching item"
+  (let [promo {:description "Description",
+               :reward-applied-to :all-items,
+               :seo-text "SEO",
+               :reward-tax :after-tax,
+               :reward-amount 10,
+               :linked-products [],
+               :conditions [{:type :product-ids :product-ids ["T100"]}],
+               :active true,
+               :code "P4",
+               :reward-type :dollar}
+        [context errors] (valid? promo the-context)
+        [amount return-context errors] (discount-amount promo context errors)]
+    amount => "10.0000"))
+
+(fact "Calculate dollar off multiple matching items"
+  (let [promo {:description "Description",
+               :reward-applied-to :all-items,
+               :seo-text "SEO",
+               :reward-tax :after-tax,
+               :reward-amount 10,
+               :linked-products [],
+               :conditions [{:type :product-ids :product-ids ["W100"]}],
+               :active true,
+               :code "P4",
+               :reward-type :dollar}
+        [context errors] (valid? promo the-context)
+        [amount return-context errors] (discount-amount promo context errors)]
+    amount => "30.0000"))
+
+(fact "Calculate dollar off one matching item, discount exceeds price"
+  (let [promo {:description "Description",
+               :reward-applied-to :all-items,
+               :seo-text "SEO",
+               :reward-tax :after-tax,
+               :reward-amount 100,
+               :linked-products [],
+               :conditions [{:type :product-ids :product-ids ["T100"]}],
+               :active true,
+               :code "P4",
+               :reward-type :dollar}
+        [context errors] (valid? promo the-context)
+        [amount return-context errors] (discount-amount promo context errors)]
+    amount => "10.0000"))
+

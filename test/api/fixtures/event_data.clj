@@ -6,32 +6,19 @@
    [clj-time.format :as f]
    [clj-time.core :as t]
    [clj-time.coerce :as c]
+   [api.fixtures.common :refer [site-uuid default-account default-site]]
    [api.q-fix :refer :all]))
 
-(def shopper-id (java.util.UUID/randomUUID))
-(def session-id (java.util.UUID/randomUUID))
-(def site-uuid (java.util.UUID/randomUUID))
+(def site-id (str site-uuid))
+(def session-id #uuid "95f1b8b2-a77b-4fec-a2fe-334f1afa2858")
+(def shopper-id #uuid "7f2fe574-974e-4f48-87fd-5ada3a4cb2bb")
 
 (def fixture-set
   (set
-   (table :accounts
-          (fixture :account-1
-                   :company_name "company name"
-                   :updated_at (c/to-sql-date (t/now))
-                   :created_at (c/to-sql-date (t/now))
-                   :account_id (java.util.UUID/randomUUID)))
-   (table :sites
-          (fixture :site-1
-                   :account_id :account-1
-                   :name "site-1"
-                   :updated_at (c/to-sql-date (t/now))
-                   :created_at (c/to-sql-date (t/now))
-                   :uuid site-uuid
-                   :site_code "site1"
-                   :api_secret (java.util.UUID/randomUUID)
-                   :site_url "http://sekrit.com"))
-      (table :events
-          (fixture :offer-1
+   default-account
+   default-site
+   (table :events
+          (fixture :event-1
                    :site_id site-uuid
                    :event_id (java.util.UUID/randomUUID)
                    :shopper_id shopper-id
@@ -40,7 +27,8 @@
                    :data {:billing-state "",
                           :shipping-country "US",
                           :event-name :trackcartview,
-                          :visitor-id "61b02c78-1cda-4636-9367-77c1c36da643",
+                          :shopper-id (str shopper-id),
+                          :site-id site-id,
                           :shipping-city "",
                           :billing-postcode "",
                           :shipping-state "",
@@ -56,12 +44,11 @@
                             :sku "W100"}],
                           :billing-city "",
                           :shipping-address-1 "",
-                          :site-id "b7374bc9-274a-4164-b87f-d2a4f454665a",
                           :shipping-email "",
                           :billing-country "US",
                           :shipping-postcode "",
                           :billing-address-1 ""})
-          (fixture :offer-2
+          (fixture :event-2
                    :site_id site-uuid
                    :event_id (java.util.UUID/randomUUID)
                    :shopper_id shopper-id
@@ -69,21 +56,78 @@
                    :type "productview"
                    :data {:sku "W100",
                           :title "Widget",
-                          :auth
-                          {:headers [],
-                           :qs-fields
-                           ["event-name"
-                            "sku"
-                            "product-name"
-                            "short-description"
-                            "site-id"
-                            "user-id"],
-                           :timestamp "20141130T094421Z",
-                           :signature "Dq/LMz/XA8e+SKIba7Nez6Drii4=",
-                           :scheme "hmac-sha1"},
+                          :site-id site-id,
+                          :shopper-id (str shopper-id),
+                          :session-id (str session-id),
                           :modified-at "2014-11-29T15:10:57.000-00:00"
                           :user-id "1",
                           :short-description "",
-                          :event-name :trackproductview}))))
-
+                          :event-name :trackproductview})
+          (fixture :event-3
+                   :site_id site-uuid
+                   :event_id (java.util.UUID/randomUUID)
+                   :shopper_id shopper-id
+                   :session_id session-id
+                   :type "productadd"
+                   :data {:quantity 1,
+                          :site-id site-id,
+                          :shopper-id (str shopper-id),
+                          :sku "T100",
+                          :variation "",
+                          :event-name :trackproductadd,
+                          :session-id (str session-id)})
+          (fixture :event-4
+                   :site_id site-uuid
+                   :event_id (java.util.UUID/randomUUID)
+                   :shopper_id shopper-id
+                   :session_id session-id
+                   :type "checkout"
+                   :data {:billing-state "VA",
+                          :session-id (str session-id),
+                          :shopper-id (str shopper-id),
+                          :site-id site-id,
+                          :shipping-country "US",
+                          :event-name :trackcheckout,
+                          :shipping-city "Dallas",
+                          :billing-postcode "75219",
+                          :shipping-state "VA",
+                          :billing-email "colin@promotably.com",
+                          :cart-items
+                          [{:total 10,
+                            :subtotal 10,
+                            :quantity 1,
+                            :variation "",
+                            :variation-id "",
+                            :categories [""],
+                            :title "THNEED",
+                            :sku "T100"}],
+                          :billing-city "Dallas",
+                          :shipping-address-1 "Suite 1450",
+                          :shipping-email "",
+                          :billing-country "US",
+                          :shipping-postcode "75219",
+                          :billing-address-1 "Suite 1450"})
+          (fixture :event-5
+                   :site_id site-uuid
+                   :event_id (java.util.UUID/randomUUID)
+                   :shopper_id shopper-id
+                   :session_id session-id
+                   :type "thankyou"
+                   :data {:site-id site-id,
+                          :shopper-id (str shopper-id),
+                          :billing-address "Colin,Steele,Suite 1450,,Dallas,VA,75219,US,",
+                          :cart-items
+                          [{:quantity 1,
+                            :variation "",
+                            :variation-id "0",
+                            :categories [""],
+                            :title "THNEED",
+                            :sku "T100",
+                            :subtotal 10,
+                            :total 10}],
+                          :shipping-address "Colin,Steele,Suite 1450,,Dallas,VA,75219,US",
+                          :order-id "13",
+                          :order-date "2014-12-14 02:25:42",
+                          :event-name :trackthankyou,
+                          :session-id (str session-id)}))))
 

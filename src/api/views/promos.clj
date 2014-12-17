@@ -54,11 +54,12 @@
 
 (defn shape-validate
   [r]
-  (reduce-kv (fn [m k v]
-               (assoc m k (view-value-helper v)))
-             {} r))
+  (reduce-kv (fn [m k v] (assoc m k (view-value-helper v)))
+             {}
+             r))
 
 (defn shape-calculate
   [r]
-  (reduce-kv (fn [m k v]
-               (assoc m k (view-value-helper v)))))
+  (reduce-kv (fn [m k v] (assoc m k (view-value-helper v)))
+             {}
+             r))

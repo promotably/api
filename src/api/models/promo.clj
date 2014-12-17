@@ -4,6 +4,7 @@
             [clj-time.coerce :refer [from-sql-date]]
             [clojure.set :refer [rename-keys intersection]]
             [clojure.walk :refer [postwalk]]
+            [clojure.java.jdbc :as jdbc]
             [api.models.helper :refer :all]
             [api.entities :refer :all]
             [api.lib.coercion-helper :refer [custom-matcher underscore-to-dash-keys]]
@@ -13,6 +14,7 @@
             [api.models.redemption :as rd]
             [api.models.site :as site]
             [api.util :refer [hyphenify-key]]
+            [api.system :refer [current-system]]
             [korma.core :refer :all]
             [korma.db :refer [transaction] :as kdb]
             [api.kinesis :as kinesis]
@@ -256,37 +258,68 @@
 
 (defn discount-amount
   [{:keys [reward-applied-to reward-type reward-amount active conditions] :as promo}
-   {:keys [cart-contents matching-products selected-product-id] :as context}
+   {:keys [cart-contents matching-products selected-product-sku] :as context}
    errors]
-
-  (let [selected-cart-item (if selected-product-id
-                             (first (filter #(= selected-product-id (:product-id %))
-                                            (or matching-products cart-contents))))
-        {:keys [line-subtotal quantity product-categories]} selected-cart-item
-        unit-price (if (and line-subtotal quantity)
-                     (/ line-subtotal quantity)
-                     0)]
-
+  (let [selected-cart-contents (if selected-product-sku
+                                 (first (filter #(= selected-product-sku (:sku %))
+                                                (or matching-products cart-contents)))
+                                 (or matching-products cart-contents))]
     (cond
 
      errors
-     [context errors]
+     ["0" context errors]
 
-     (not selected-cart-item)
-     0
+     (not selected-cart-contents)
+     ["0" context nil]
 
      :else
-     (let [discount-amount-per-item (cond (= :percent reward-type)
-                                          (* (/ reward-amount 100.0) unit-price)
-                                          (= :dollar reward-type)
-                                          reward-amount)]
+     (let [sort-fn (fn [a b]
+                     (let [{:keys [line-subtotal quantity]} a
+                           unit-price-a (if (and line-subtotal quantity)
+                                          (/ line-subtotal quantity) 0)
+                           {:keys [line-subtotal quantity]} b
+                           unit-price-b (if (and line-subtotal quantity)
+                                          (/ line-subtotal quantity) 0)]
+                       (compare unit-price-a unit-price-b)))
+           sorted-by-unit-price (->>
+                                 (sort sort-fn selected-cart-contents)
+                                 (remove #(= 0 (:line-subtotal %))))]
        (cond
 
+        ;; Applies to ONE of the lowest unit cost item in selected-cart-contents
         (= :one-item reward-applied-to)
-        (format "%.4f" (/ (float discount-amount-per-item) quantity))
+        (let [{:keys [line-subtotal quantity]} (first sorted-by-unit-price)
+              unit-price (if (and line-subtotal quantity)
+                           (/ line-subtotal quantity) 0)
+              discount-amount-per-item (cond (= :percent reward-type)
+                                             (* (/ reward-amount 100.0) unit-price)
+                                             (= :dollar reward-type)
+                                             (min unit-price reward-amount))
+              discount-amount-per-item (min unit-price discount-amount-per-item)]
+          [(format "%.4f" (float discount-amount-per-item)) context nil])
 
+        ;; Discount applies to everything in selected-cart-contents
         (= :all-items reward-applied-to)
-        discount-amount-per-item
+        (let [total (apply + (map :line-subtotal selected-cart-contents))
+              qty (apply + (map :quantity selected-cart-contents))
+              discount (cond (= :percent reward-type)
+                             (* (/ reward-amount 100.0) total)
+                             (= :dollar reward-type)
+                             (min total (* reward-amount qty)))]
+          [(format "%.4f" (float discount)) context nil])
 
+        ;; Discount applies to everything in cart-contents
         (= :cart reward-applied-to)
-        discount-amount-per-item)))))
+        (let [cart-total (apply + (map :line-subtotal cart-contents))
+              discount (cond (= :percent reward-type)
+                             (* (/ reward-amount 100.0) cart-total)
+                             (= :dollar reward-type)
+                             (min cart-total reward-amount))]
+          [(format "%.4f" (float discount)) context nil]))))))
+
+(defn total-redemptions
+  [site-id promo-id config]
+  (jdbc/with-db-transaction [t-con (kdb/postgres config)]
+    (jdbc/db-do-prepared t-con "select * from events")))
+
+;; (total-redemptions 1 2 (-> current-system :config :database))

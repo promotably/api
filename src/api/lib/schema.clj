@@ -478,5 +478,5 @@
                                      (s/optional-key :line-tax) s/Num
                                      (s/optional-key :line-subtotal-tax) s/Num}]
    (s/optional-key :product-ids-on-sale) [s/Str]
-   (s/optional-key :selected-product-id) s/Str})
+   (s/optional-key :selected-product-sku) s/Str})
 
