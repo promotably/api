@@ -113,11 +113,23 @@
                    :shopper_id shopper-id
                    :session_id session-id
                    :type "thankyou"
-                   :data {:site-id site-id,
-                          :shopper-id (str shopper-id),
-                          :billing-address "Colin,Steele,Suite 1450,,Dallas,VA,75219,US,",
+                   :data {:session-id (str session-id),
+                          :event-name :trackthankyou,
+                          :order-date "2014-12-14 09:04:27",
+                          :applied-coupons [{:discount "28", :code "p4"}],
+                          :shipping-methods [{:cost "0", :method "free_shipping"}],
+                          :tax "0",
+                          :shipping-address "Colin,Steele,Suite 1450,,Dallas,VA,75219,US",
                           :cart-items
-                          [{:quantity 1,
+                          [{:quantity 3,
+                            :variation "",
+                            :variation-id "0",
+                            :categories [""],
+                            :title "WIDGET",
+                            :sku "W100",
+                            :subtotal 60,
+                            :total 60}
+                           {:quantity 1,
                             :variation "",
                             :variation-id "0",
                             :categories [""],
@@ -125,9 +137,11 @@
                             :sku "T100",
                             :subtotal 10,
                             :total 10}],
-                          :shipping-address "Colin,Steele,Suite 1450,,Dallas,VA,75219,US",
-                          :order-id "13",
-                          :order-date "2014-12-14 02:25:42",
-                          :event-name :trackthankyou,
-                          :session-id (str session-id)}))))
+                          :total "112",
+                          :order-id "16",
+                          :billing-address "Colin,Steele,Suite 1450,,Dallas,VA,75219,US,",
+                          :shopper-id (str shopper-id),
+                          :site-id site-id,
+                          :shipping "0",
+                          :discount "28"}))))
 

@@ -41,9 +41,13 @@
       (assoc :subtotal s/Num)
       (assoc :total s/Num)))
 
-;; TODO: WIP
 (def AppliedCoupon
-  {(s/required-key :code) s/Str})
+  {(s/required-key :code) s/Str
+   (s/required-key :discount) s/Str})
+
+(def ShippingMethod
+  {(s/required-key :method) s/Str
+   (s/required-key :cost) s/Str})
 
 (defmacro def-event
   [the-event base-event & body]
@@ -65,6 +69,7 @@
                     #(= (:event-name %) :trackcartview)
                     (merge ~base-event
                            {(s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
+                            (s/optional-key :shipping-methods) (s/maybe [ShippingMethod])
                             (s/optional-key :billing-address-1) (s/maybe s/Str)
                             (s/optional-key :billing-city) (s/maybe s/Str)
                             (s/optional-key :billing-state) (s/maybe s/Str)
@@ -93,6 +98,7 @@
                             (s/optional-key :shipping-postcode) (s/maybe s/Str)
                             (s/optional-key :shipping-email) (s/maybe s/Str)
                             (s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
+                            (s/optional-key :shipping-methods) (s/maybe [ShippingMethod])
                             (s/required-key :cart-items) [CartItem]})
                     #(= (:event-name %) :trackthankyou)
                     (merge ~base-event
@@ -113,7 +119,12 @@
                             (s/optional-key :shipping-postcode) (s/maybe s/Str)
                             (s/optional-key :shipping-email) (s/maybe s/Str)
                             (s/optional-key :shopper-email) (s/maybe s/Str)
+                            (s/optional-key :total) (s/maybe s/Str)
+                            (s/optional-key :tax) (s/maybe s/Str)
+                            (s/optional-key :shipping) (s/maybe s/Str)
+                            (s/optional-key :discount) (s/maybe s/Str)
                             (s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
+                            (s/optional-key :shipping-methods) (s/maybe [ShippingMethod])
                             (s/required-key :cart-items) [LineItem]}))))
 
 (def-event InboundEvent BaseEvent)

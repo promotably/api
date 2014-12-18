@@ -41,10 +41,31 @@
                                 keyword)))))
 
 (def fix-applied-coupons
-  (make-trans #{:applied-coupons}
-              #(do
-                 ;; (prn %1 %2 (mapcat (fn [c] [{:code c}]) %2))
-                 (vector %1 (mapcat (fn [c] [{:code c}]) %2)))))
+  (make-trans
+   #{"applied-coupon[]"}
+   (fn [k items]
+     [:applied-coupons
+      (let [items (cond
+                   (string? items) [items]
+                   (seq items) items
+                   :else nil)]
+        (mapcat #(let [[code discount] (clojure.string/split % #"," 2)]
+                   [{:code code
+                     :discount (str discount)}])
+                items))])))
+
+(def fix-shipping-methods
+  (make-trans
+   #{"shipping-method[]"}
+   (fn [k items]
+     [:shipping-methods
+      (let [items (cond
+                   (string? items) [items]
+                   (seq items) items
+                   :else nil)]
+        (mapcat #(let [[method cost] (clojure.string/split % #"," 2)]
+                   [{:cost cost :method method}])
+                items))])))
 
 (def coerce-site-id
   (make-trans #{:site-id}
@@ -83,6 +104,7 @@
         ;; (doto dbg)
         fix-en
         fix-cart-items
+        fix-shipping-methods
         transform-auth
         fix-applied-coupons
         coerce-site-id
@@ -109,6 +131,7 @@
     (cond
      (= schema.utils.ErrorContainer (type parsed))
      (do
+       (log/logf :error "Event parse error: %s" (pr-str parsed))
        (put-metric "event-record-parse-error")
        {:status 400 :session (:session request)})
 
@@ -135,6 +158,7 @@
                      (assoc :site-id (-> parsed :site :site-id))
                      (assoc :session-id (get-in cookies [config/session-cookie-name :value]))
                      coercer)]
+         ;; For debugging
          ;; (clojure.pprint/pprint out)
          (kinesis/record-event! kinesis-comp (:event-name out) out)
          (put-metric "event-record-success")

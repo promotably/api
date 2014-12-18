@@ -127,6 +127,10 @@
         code (-> coerced-params :code clojure.string/upper-case)
         the-promo (promo/find-by-site-uuid-and-code site-id code)]
 
+    ;; For debugging
+    (clojure.pprint/pprint the-promo)
+    (clojure.pprint/pprint coerced-params)
+
     (cond
      (not the-promo)
      {:status 404 :body "Can't find that promo" :session (:session request)}
