@@ -128,8 +128,8 @@
         the-promo (promo/find-by-site-uuid-and-code site-id code)]
 
     ;; For debugging
-    (clojure.pprint/pprint the-promo)
-    (clojure.pprint/pprint coerced-params)
+    ;; (clojure.pprint/pprint the-promo)
+    ;; (clojure.pprint/pprint coerced-params)
 
     (cond
      (not the-promo)
