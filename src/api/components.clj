@@ -214,7 +214,7 @@
    :logging       (component/using (map->LoggingComponent {}) [:config])
    :database      (component/using (map->DatabaseComponent {}) [:config :logging])
    :kinesis       (component/using (map->Kinesis {}) [:config :logging])
-   :cider         (component/using (map->ReplComponent {:port repl-port}) [:config :logging])
+   :cider         (component/using (map->ReplComponent {:port (java.lang.Integer. repl-port)}) [:config :logging])
    :redis         (component/using (map->RedisComponent {}) [:config :logging])
    :session-cache (component/using (map->SessionCacheComponent {}) [:config :logging :redis :kinesis])
    :router        (component/using (route/map->Router {}) [:config :logging :session-cache])
