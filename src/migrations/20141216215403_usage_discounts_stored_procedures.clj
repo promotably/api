@@ -32,10 +32,12 @@
                                                   AND json_extract_path_text(events.data, 'order-id')=json_extract_path_text(_data, 'order-id'))) THEN
               INSERT INTO events (event_id, type, site_id, shopper_id, session_id, data)
                                  VALUES (eventId, _type, siteId, shopperId, sessionId, _data);
+              NULL
           END IF;
       ELSIF NOT EXISTS (SELECT 1 FROM events WHERE (events.event_id=eventId)) THEN
           INSERT INTO events (event_id, type, site_id, shopper_id, session_id, promo_id, data)
                              VALUES (eventId, _type, siteId, shopperId, sessionId, promoId, _data);
+          NULL
       END IF;
       END;
       $$ LANGUAGE plpgsql;")))
