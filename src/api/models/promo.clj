@@ -286,25 +286,13 @@
                                  (remove #(= 0 (:line-subtotal %))))]
        (cond
 
-        ;; Applies to ONE of the lowest unit cost item in selected-cart-contents
-        (= :one-item reward-applied-to)
-        (let [{:keys [line-subtotal quantity]} (first sorted-by-unit-price)
-              unit-price (if (and line-subtotal quantity)
-                           (/ line-subtotal quantity) 0)
-              discount-amount-per-item (cond (= :percent reward-type)
-                                             (* (/ reward-amount 100.0) unit-price)
-                                             (= :dollar reward-type)
-                                             (min unit-price reward-amount))
-              discount-amount-per-item (min unit-price discount-amount-per-item)]
-          [(format "%.4f" (float discount-amount-per-item)) context nil])
-
         ;; Discount applies to everything in selected-cart-contents
-        (= :all-items reward-applied-to)
+        (= :matching-items reward-applied-to)
         (let [total (apply + (map :line-subtotal selected-cart-contents))
               qty (apply + (map :quantity selected-cart-contents))
               discount (cond (= :percent reward-type)
                              (* (/ reward-amount 100.0) total)
-                             (= :dollar reward-type)
+                             (= :fixed reward-type)
                              (min total (* reward-amount qty)))]
           [(format "%.4f" (float discount)) context nil])
 
@@ -313,7 +301,7 @@
         (let [cart-total (apply + (map :line-subtotal cart-contents))
               discount (cond (= :percent reward-type)
                              (* (/ reward-amount 100.0) cart-total)
-                             (= :dollar reward-type)
+                             (= :fixed reward-type)
                              (min cart-total reward-amount))]
           [(format "%.4f" (float discount)) context nil]))))))
 

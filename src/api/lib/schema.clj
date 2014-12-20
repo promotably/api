@@ -244,13 +244,12 @@
                 (s/optional-key :seo-text) (s/maybe s/Str)
                 (s/optional-key :active) s/Bool
                 (s/required-key :reward-amount) (s/maybe s/Num)
-                (s/required-key :reward-type) (s/maybe (s/enum :dollar :percent))
+                (s/required-key :reward-type) (s/maybe (s/enum :fixed :percent))
                 (s/required-key :reward-tax) (s/maybe (s/enum :after-tax :before-tax))
                 (s/required-key :reward-applied-to) (s/maybe
                                                      (s/enum :cart
-                                                             :all-items
-                                                             :delivery
-                                                             :one-item))
+                                                             :matching-items
+                                                             :delivery))
                 (s/required-key :conditions) [PromoCondition]
                 (s/optional-key :created-at) s/Inst
                 (s/optional-key :updated-at) s/Inst})

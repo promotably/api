@@ -6,13 +6,11 @@
                                    :exclusions [joda-time
                                                 org.clojure/tools.macro]]]
                    :plugins [[drift "1.5.2"]
-                             [lein-midje "3.0.0"]]
-                   :jvm-opts ["-DKAFKA_BROKERS=localhost:9092"]}}
+                             [lein-midje "3.0.0"]]}}
   :main api.core
 
   :global-vars {*warn-on-reflection* false}
   :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.2"]
-            [org.clojars.strongh/lein-init-script "1.3.1"]
             [cider/cider-nrepl "0.8.0"]]
   :dependencies [[compojure "1.1.9" :exclusions [joda-time]]
                  [org.clojure/tools.cli "0.3.1"]
@@ -24,6 +22,7 @@
                  [clj-logging-config "1.9.12"]
                  [clj-time "0.8.0" :exclusions [joda-time]]
                  [clojure.joda-time "0.2.0" :exclusions [joda-time]]
+                 [joda-time/joda-time "2.5"]
                  [com.stuartsierra/component "0.2.2"]
                  [com.taoensso/carmine "2.9.0"
                   :exclusions [com.taoensso/nippy
@@ -46,7 +45,6 @@
                  [prismatic/schema "0.2.6"]
                  [com.stuartsierra/dependency "0.1.1"]
                  [drift "1.5.2"]
-                 [joda-time/joda-time "2.5"]
                  [http-kit "2.1.18"]
                  [com.taoensso/sente "0.14.1"]
                  [compojure "1.1.9"]

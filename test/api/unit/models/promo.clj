@@ -108,7 +108,7 @@
 
 (fact "Calculate percent off matching items"
   (let [promo {:description "Description",
-               :reward-applied-to :all-items,
+               :reward-applied-to :matching-items,
                :seo-text "SEO",
                :reward-tax :after-tax,
                :reward-amount 20,
@@ -123,7 +123,7 @@
 
 (fact "Calculate percent off matching items"
   (let [promo {:description "Description",
-               :reward-applied-to :all-items,
+               :reward-applied-to :matching-items,
                :seo-text "SEO",
                :reward-tax :after-tax,
                :reward-amount 20,
@@ -138,7 +138,7 @@
 
 (fact "Calculate percent off NO matching items"
   (let [promo {:description "Description",
-               :reward-applied-to :all-items,
+               :reward-applied-to :matching-items,
                :seo-text "SEO",
                :reward-tax :after-tax,
                :reward-amount 20,
@@ -153,7 +153,7 @@
 
 (fact "Calculate dollar off one matching item"
   (let [promo {:description "Description",
-               :reward-applied-to :all-items,
+               :reward-applied-to :matching-items,
                :seo-text "SEO",
                :reward-tax :after-tax,
                :reward-amount 10,
@@ -161,14 +161,14 @@
                :conditions [{:type :product-ids :product-ids ["T100"]}],
                :active true,
                :code "P4",
-               :reward-type :dollar}
+               :reward-type :fixed}
         [context errors] (valid? promo the-context)
         [amount return-context errors] (discount-amount promo context errors)]
     amount => "10.0000"))
 
 (fact "Calculate dollar off multiple matching items"
   (let [promo {:description "Description",
-               :reward-applied-to :all-items,
+               :reward-applied-to :matching-items,
                :seo-text "SEO",
                :reward-tax :after-tax,
                :reward-amount 10,
@@ -176,14 +176,14 @@
                :conditions [{:type :product-ids :product-ids ["W100"]}],
                :active true,
                :code "P4",
-               :reward-type :dollar}
+               :reward-type :fixed}
         [context errors] (valid? promo the-context)
         [amount return-context errors] (discount-amount promo context errors)]
     amount => "30.0000"))
 
 (fact "Calculate dollar off one matching item, discount exceeds price"
   (let [promo {:description "Description",
-               :reward-applied-to :all-items,
+               :reward-applied-to :matching-items,
                :seo-text "SEO",
                :reward-tax :after-tax,
                :reward-amount 100,
@@ -191,7 +191,7 @@
                :conditions [{:type :product-ids :product-ids ["T100"]}],
                :active true,
                :code "P4",
-               :reward-type :dollar}
+               :reward-type :fixed}
         [context errors] (valid? promo the-context)
         [amount return-context errors] (discount-amount promo context errors)]
     amount => "10.0000"))
