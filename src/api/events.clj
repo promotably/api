@@ -157,7 +157,8 @@
                      (assoc :shopper-id (:visitor-id request))
                      (assoc :site-id (-> parsed :site :site-id))
                      (assoc :session-id (get-in cookies [config/session-cookie-name :value]))
-                     coercer)]
+                     coercer
+                     (assoc :event-format-version "1"))]
          ;; For debugging
          ;; (clojure.pprint/pprint out)
          (kinesis/record-event! kinesis-comp (:event-name out) out)
