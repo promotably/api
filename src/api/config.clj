@@ -28,6 +28,15 @@
            (org.apache.log4j.PatternLayout.
             "%d{HH:mm:ss} %-5p %22.22t %-22.22c{2} %m%n"))}))
 
+(defn- get-dashboard-config
+  "Checks environment variables for dashboard config settings. These
+  should always be present on environments deployed to AWS"
+  []
+  (let [bucket (System/getenv "ARTIFACT_BUCKET")
+        path (System/getenv "DASHBOARD_INDEX_PATH")]
+    {:artifact-bucket (or bucket default-build-bucket)
+     :index-filename (or path default-index-file})))
+
 (defn- get-kinesis-config
   "Checks environment variables for kinesis config settings. These
   should always be present on environments deployed to AWS"
@@ -72,8 +81,7 @@
                 :kinesis {:aws-credential-profile "promotably"
                           :promo-stream-name "dev-PromoStream"
                           :event-stream-name "dev-PromotablyAPIEvents"}
-                :artifact-bucket default-build-bucket
-                :index-filename default-index-file
+                :dashboard (get-dashboard-config)
                 :logging base-log-config
                 :session-length-in-seconds (* 60 60 2)
                 :env :dev}
@@ -87,16 +95,14 @@
                 :kinesis  {:aws-credential-profile "promotably"
                            :promo-stream-name "dev-PromoStream"
                            :event-stream-name "dev-PromotablyAPIEvents"}
-                :artifact-bucket default-build-bucket
-                :index-filename default-index-file
+                :dashboard (get-dashboard-config)
                 :logging base-log-config
                 :session-length-in-seconds (* 60 60 2)
                 :env :test}
    :staging    {:database (get-database-config)
                 :kinesis (get-kinesis-config)
                 :redis (get-redis-config)
-                :artifact-bucket default-build-bucket
-                :index-filename default-index-file
+                :dashboard (get-dashboard-config)
                 :logging base-log-config
                 :session-length-in-seconds (* 60 60 2)
                 :env :staging}
@@ -105,16 +111,14 @@
                                  "api-integration-test")
                  :redis (get-redis-config)
                  :kinesis (get-kinesis-config)
-                 :artifact-bucket default-build-bucket
-                 :index-filename default-index-file
+                 :dashboard (get-dashboard-config)
                  :logging base-log-config
                  :session-length-in-seconds (* 60 60 2)
                  :env :integration}
    :production {:database (get-database-config)
                 :redis (get-redis-config)
                 :kinesis (get-kinesis-config)
-                :artifact-bucket default-build-bucket
-                :index-filename default-index-file
+                :dashboard (get-dashboard-config)
                 :logging base-log-config
                 :session-length-in-seconds (* 60 60 2)
                 :env :production}})

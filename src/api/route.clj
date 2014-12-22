@@ -96,8 +96,8 @@
 
 (defn- fetch-index
   [config]
-  (let [bucket (:artifact-bucket config)
-        filename (:index-filename config)]
+  (let [bucket (-> config :dashboard :artifact-bucket)
+        filename (-> config :dashboard :index-filename)]
     (try
       (cw/put-metric "index-fetch" {:config config})
       (let [resp (amazonica.aws.s3/get-object bucket filename)
