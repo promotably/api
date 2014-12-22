@@ -207,7 +207,6 @@
   [offer-uuid :- s/Uuid]
   (let [found (find-by-uuid offer-uuid)]
     (transaction
-     (c/delete-conditions! (:id found))
      (delete offers (where {:offers.uuid offer-uuid})))))
 
 (sm/defn ^:always-validate find-by-site-uuid-and-code

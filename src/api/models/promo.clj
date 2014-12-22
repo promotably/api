@@ -203,8 +203,6 @@
   (let [found (find-by-site-and-uuid site-id promo-uuid)]
     (transaction
      ;;(to-kinesis! :delete (:id found) site-id)
-     (c/delete-conditions! (:id found))
-     (lp/delete! (:id found))
      (delete promos (where {:promos.uuid promo-uuid})))))
 
 (sm/defn ^:always-validate find-by-site-uuid-and-code
