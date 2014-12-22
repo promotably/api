@@ -35,7 +35,7 @@
   (let [bucket (System/getenv "ARTIFACT_BUCKET")
         path (System/getenv "DASHBOARD_INDEX_PATH")]
     {:artifact-bucket (or bucket default-build-bucket)
-     :index-filename (or path default-index-file})))
+     :index-filename (or path default-index-file)}))
 
 (defn- get-kinesis-config
   "Checks environment variables for kinesis config settings. These
