@@ -116,4 +116,6 @@
                 :headers {:promotably-auth sig}
                 :content-type :json
                 :accept :json
-                :throw-exceptions false}))
+                :throw-exceptions false
+                :socket-timeout 10000
+                :conn-timeout 10000}))

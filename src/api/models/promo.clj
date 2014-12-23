@@ -239,6 +239,19 @@
    :usage-count
    :total-discounts])
 
+(defn total-usage
+  [site-id promo-id]
+  (try
+    (let [statement (.prepareCall (.getConnection (:datasource @(:pool @korma.db/_default)))
+                                  "{?= call promoUsageCount(?,?)}")]
+      (.execute (doto statement
+                  (.registerOutParameter 1 java.sql.Types/INTEGER)
+                  (.setObject 2 site-id)
+                  (.setObject 3 promo-id)))
+      (.getInt statement 1))
+    (catch java.sql.BatchUpdateException ex
+      (println (.getNextException ex)))))
+
 (defn valid?
   [{:keys [active conditions] :as promo}
    {:keys [cart-contents] :as context}]
@@ -246,9 +259,13 @@
     [context ["That promo is currently inactive"]]
     (let [ordered-conditions (mapcat #(filter (fn [c] (= % (:type c))) conditions)
                                      condition-order)
+          c2 (if (some? (filterv #(= (:type %) :usage-count) conditions))
+               (assoc context :current-usage-count (total-usage (:site-id context)
+                                                                (:uuid promo)))
+               context)
           validation (reduce
                       #(c/validate %1 %2)
-                      context
+                      c2
                       ordered-conditions)
           errors (:errors validation)
           errors (if errors (reverse errors))]
@@ -302,10 +319,3 @@
                              (= :fixed reward-type)
                              (min cart-total reward-amount))]
           [(format "%.4f" (float discount)) context nil]))))))
-
-(defn total-redemptions
-  [site-id promo-id config]
-  (jdbc/with-db-transaction [t-con (kdb/postgres config)]
-    (jdbc/db-do-prepared t-con "select * from events")))
-
-;; (total-redemptions 1 2 (-> current-system :config :database))

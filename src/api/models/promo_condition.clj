@@ -237,9 +237,10 @@
   (cond
    :else context))
 
-;; TODO: Needs database lookup.
 (defmethod validate :usage-count
-  [{:keys [shopper-email] :as context}
+  [{:keys [current-usage-count] :as context}
    {:keys [usage-count] :as condition}]
   (cond
+   (> current-usage-count usage-count)
+   (update-in context [:errors] conj "This promotion has ended")
    :else context))
