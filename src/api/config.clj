@@ -1,6 +1,9 @@
 (ns api.config
   (:require [com.stuartsierra.component :as component]))
 
+;; File-based config data
+(def configfile-data {})
+
 ;; Static name of the ns session cookie
 (def session-cookie-name "promotably-session")
 
@@ -28,12 +31,18 @@
            (org.apache.log4j.PatternLayout.
             "%d{HH:mm:ss} %-5p %22.22t %-22.22c{2} %m%n"))}))
 
+(defn- get-config-value
+  [key & [default]]
+  (or (System/getenv key)
+      (System/getProperty key)
+      (get configfile-data key default)))
+
 (defn- get-dashboard-config
   "Checks environment variables for dashboard config settings. These
   should always be present on environments deployed to AWS"
   []
-  (let [bucket (System/getenv "ARTIFACT_BUCKET")
-        path (System/getenv "DASHBOARD_INDEX_PATH")]
+  (let [bucket (get-config-value "ARTIFACT_BUCKET")
+        path (get-config-value "DASHBOARD_INDEX_PATH")]
     {:artifact-bucket (or bucket default-build-bucket)
      :index-filename (or path default-index-file)}))
 
@@ -41,8 +50,8 @@
   "Checks environment variables for kinesis config settings. These
   should always be present on environments deployed to AWS"
   []
-  (let [event-stream-name (System/getenv "KINESIS_A")
-        promo-stream-name (System/getenv "KINESIS_B")]
+  (let [event-stream-name (get-config-value "KINESIS_A")
+        promo-stream-name (get-config-value "KINESIS_B")]
     {:promo-stream-name promo-stream-name
      :event-stream-name event-stream-name}))
 
@@ -50,11 +59,11 @@
   "Checks environment variables for database config settings. These
   should always be present on environments deployed to AWS"
   []
-  (let [db-host (System/getenv "RDS_HOST")
-        db-name (System/getenv "RDS_DB_NAME")
-        db-port (if-let [p (System/getenv "RDS_PORT")] (read-string p))
-        db-user (System/getenv "RDS_USER")
-        db-pwd (System/getenv "RDS_PW")]
+  (let [db-host (get-config-value "RDS_HOST")
+        db-name (get-config-value "RDS_DB_NAME")
+        db-port (if-let [p (get-config-value "RDS_PORT")] (read-string p))
+        db-user (get-config-value "RDS_USER")
+        db-pwd (get-config-value "RDS_PW")]
     {:db db-name
      :user db-user
      :password db-pwd
@@ -66,8 +75,8 @@
   "Checks environment variables for redis config settings. These
   should always be present on environments deployed to AWS"
   []
-  (let [host (System/getenv "REDIS_HOST")
-        port (if-let [p (System/getenv "REDIS_PORT")] (read-string p))]
+  (let [host (get-config-value "REDIS_HOST")
+        port (if-let [p (get-config-value "REDIS_PORT")] (read-string p))]
     {:host host :port port}))
 
 (def app-config
@@ -107,7 +116,7 @@
                 :session-length-in-seconds (* 60 60 2)
                 :env :staging}
    :integration {:database (get-database-config)
-                 :test-topic (or (System/getenv "TEST_RESULTS_SNS_TOPIC_NAME")
+                 :test-topic (or (get-config-value "TEST_RESULTS_SNS_TOPIC_NAME")
                                  "api-integration-test")
                  :redis (get-redis-config)
                  :kinesis (get-kinesis-config)
@@ -125,9 +134,7 @@
 
 (defn lookup
   []
-  (let [sys-env (keyword (or (System/getProperty "ENV")
-                             (System/getenv "ENV")
-                             "dev"))]
+  (let [sys-env (keyword (get-config-value "ENV" "dev"))]
     (sys-env app-config)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -136,9 +143,11 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defrecord Config []
+(defrecord Config [config-file]
   component/Lifecycle
   (start [component]
+    (if config-file
+      (alter-var-root #'configfile-data (-> config-file slurp read-string constantly)))
     (let [m (lookup)]
       (if ((:env m) #{:production :integration})
         (alter-var-root #'*warn-on-reflection* (constantly false))

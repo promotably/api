@@ -208,9 +208,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn system
-  [{:keys [port repl-port] :as options}]
+  [{:keys [config-file port repl-port] :as options}]
   (component/system-map
-   :config        (component/using (config/map->Config {}) [])
+   :config        (component/using (config/map->Config options) [])
    :logging       (component/using (map->LoggingComponent {}) [:config])
    :database      (component/using (map->DatabaseComponent {}) [:config :logging])
    :kinesis       (component/using (map->Kinesis {}) [:config :logging])
