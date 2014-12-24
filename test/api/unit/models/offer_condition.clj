@@ -21,9 +21,9 @@
    (let [oc {:type :product-views
              :product-views ?oc-product-views}
          site-id (java.util.UUID/randomUUID)
-         visitor-id (java.util.UUID/randomUUID)
+         shopper-id (java.util.UUID/randomUUID)
          context {:site-id site-id
-                  :visitor-id visitor-id}]
+                  :shopper-id shopper-id}]
      (validate context oc) => ?result
      (provided (api.lib.redis/get-integer anything)
                => ?actual-product-views)))
@@ -38,9 +38,9 @@
    (let [oc {:type :num-lifetime-orders
              :num-lifetime-orders ?oc-num-lifetime-orders}
          site-id (java.util.UUID/randomUUID)
-         visitor-id (java.util.UUID/randomUUID)
+         shopper-id (java.util.UUID/randomUUID)
          context {:site-id site-id
-                  :visitor-id visitor-id}]
+                  :shopper-id shopper-id}]
      (validate context oc) => ?result
      (provided (api.lib.redis/get-integer anything)
                => ?actual-lifetime-orders)))

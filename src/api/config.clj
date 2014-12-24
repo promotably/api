@@ -79,7 +79,8 @@
         port (if-let [p (get-config-value "REDIS_PORT")] (read-string p))]
     {:host host :port port}))
 
-(def app-config
+(defn app-config
+  []
   {:dev        {:database {:db "promotably_dev"
                            :user "p_user"
                            :password "pr0m0"
@@ -135,7 +136,7 @@
 (defn lookup
   []
   (let [sys-env (keyword (get-config-value "ENV" "dev"))]
-    (sys-env app-config)))
+    (sys-env (app-config))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -146,8 +147,9 @@
 (defrecord Config [config-file]
   component/Lifecycle
   (start [component]
-    (if config-file
-      (alter-var-root #'configfile-data (-> config-file slurp read-string constantly)))
+    (when config-file
+      (let [data (-> config-file slurp read-string)]
+        (alter-var-root #'configfile-data (constantly data))))
     (let [m (lookup)]
       (if ((:env m) #{:production :integration})
         (alter-var-root #'*warn-on-reflection* (constantly false))
