@@ -129,9 +129,9 @@
                      data)
           s (-> config :session-length-in-seconds)]
       (if (nil? session-id)
-        ;; TODO: more data?  Visitor's browser, etc???
+        ;; TODO: more data? Shopper's browser, etc???
         (let [k-data {:created-at (t-coerce/to-string (t/now))
-                      :shopper-id (:visitor-id data)
+                      :shopper-id (:shopper-id data)
                       :session-id session-id*}
               k-data (if (:site-id data) (update-in k-data [:site-id] (constantly (:site-id data))))]
           (kinesis/record-event! kinesis "session-start" k-data)))

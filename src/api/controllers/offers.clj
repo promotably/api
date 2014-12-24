@@ -140,7 +140,7 @@
                                                        (range 6)))))
 
 (defn- real-life-offers-response
-  [site-id visitor-id]
+  [site-id shopper-id]
   (let [available-offers (offer/get-offers-for-site site-id)
         ;;valid-offers (shape-lookup (filter offer/valid? available-offers))
         ]
@@ -149,10 +149,9 @@
 (defn get-available-offers
   [{:keys [params session] :as request}]
   (let [site-id (java.util.UUID/fromString (or (:site-id params) (:site_id params)))
-        visitor-id (java.util.UUID/fromString (or (:visitor-id params)
-                                                  (:visitor_id params)
-                                                  (:visitor-id request)))]
+        shopper-id (java.util.UUID/fromString (or (:shopper-id params)
+                                                  (:shopper-id request)))]
     {:session session
      :headers {"Content-Type" "text/javascript"}
      :status 200
-     :body (real-life-offers-response site-id visitor-id)}))
+     :body (real-life-offers-response site-id shopper-id)}))

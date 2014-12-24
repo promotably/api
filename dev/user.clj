@@ -3,11 +3,11 @@
 
 
 (defn record-product-view
-  [site-id visitor-id product-id]
+  [site-id shopper-id product-id]
   (record-event!
    (:kinesis api.system/current-system)
    :trackproductview
-   {:visitor-id visitor-id
+   {:shopper-id shopper-id
     :product-id product-id
     :site-id site-id}))
 

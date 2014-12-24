@@ -154,7 +154,7 @@
              coercer (sc/coercer OutboundEvent matcher)
              out (-> parsed
                      (dissoc :auth :site)
-                     (assoc :shopper-id (:visitor-id request))
+                     (assoc :shopper-id (:shopper-id request))
                      (assoc :site-id (-> parsed :site :site-id))
                      (assoc :session-id (get-in cookies [config/session-cookie-name :value]))
                      coercer

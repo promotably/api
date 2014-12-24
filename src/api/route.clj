@@ -222,7 +222,7 @@
                     (handler request)
                     sid (update-in [:session :site-id] (constantly sid))
                     true (update-in [:session :expires] (constantly expires))
-                    true (update-in [:session :shopper-id] (constantly (:visitor-id request))))]
+                    true (update-in [:session :shopper-id] (constantly (:shopper-id request))))]
       response)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -235,7 +235,7 @@
   [{:keys [config session-cache] :as options}]
   (-> anonymous-routes
       wrap-ensure-session
-      (wrap-permacookie {:name "promotably"})
+      (wrap-permacookie {:name "promotably" :request-key :shopper-id})
       (wrap-restful-format :formats [:json-kw :edn])
       jsonp/wrap-json-with-padding
       (session/wrap-session {:store session-cache
