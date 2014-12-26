@@ -150,7 +150,7 @@
                                               :messages []})
                   (:status r) => 201))
 
-              (future-facts "Validate Exceeded Usage Count"
+              (facts "Validate Exceeded Usage Count"
                             (let [code "P5"
                                   api-secret (str (:api-secret site))
                                   rq-body (json/write-str (basic-request-data site-id code))
@@ -165,10 +165,10 @@
                                   response-body (json/read-str (:body r) :key-fn keyword)]
                               response-body => (contains {:code code
                                                           :valid false
-                                                          :messages []})
+                                                          :messages (just ["This promotion has ended"])})
                               (:status r) => 201))
 
-              (future-facts "Validate Non-Exceeded Usage Count"
+              (facts "Validate Non-Exceeded Usage Count"
                             (let [code "P6"
                                   api-secret (str (:api-secret site))
                                   rq-body (json/write-str (basic-request-data site-id code))
