@@ -242,7 +242,6 @@
 (defn total-usage
   [site-id promo-id]
   (try
-    (prn korma.db/_default)
     (let [statement (.prepareCall (.getConnection (:datasource @(:pool @korma.db/_default)))
                                   "{?= call promoUsageCount(?,?)}")]
       (.execute (doto statement
@@ -251,9 +250,7 @@
                   (.setObject 3 promo-id)))
       (.getInt statement 1))
     (catch java.sql.BatchUpdateException ex
-      (println (.getNextException ex)))
-    (catch Throwable t
-      (prn "WTF" t))))
+      (println (.getNextException ex)))))
 
 (defn valid?
   [{:keys [active conditions] :as promo}
