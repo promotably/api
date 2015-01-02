@@ -134,7 +134,8 @@
                       :shopper-id (:shopper-id data)
                       :session-id session-id*}
               k-data (if (:site-id data) (update-in k-data [:site-id] (constantly (:site-id data))))]
-          (kinesis/record-event! kinesis "session-start" k-data)))
+          ;;(kinesis/record-event! kinesis "session-start" k-data)
+          ))
       (try
         (redis/wcar*
          (car/set session-id* new-data)
