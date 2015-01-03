@@ -250,7 +250,20 @@
                   (.setObject 3 promo-id)))
       (.getInt statement 1))
     (catch java.sql.BatchUpdateException ex
-      (println (.getNextException ex)))))
+      (log/error (.getNextException ex) "Exception in total-usage"))))
+
+(defn total-discounts
+  [site-id promo-id]
+  (try
+    (let [statement (.prepareCall (.getConnection (:datasource @(:pool @korma.db/_default)))
+                                  "{?= call promoTotalDiscounts(?,?)}")]
+      (.execute (doto statement
+                  (.registerOutParameter 1 java.sql.Types/NUMERIC)
+                  (.setObject 2 site-id)
+                  (.setObject 3 promo-id)))
+      (.getBigDecimal statement 1))
+    (catch java.sql.BatchUpdateException ex
+      (log/error (.getNextException ex) "Exception in total-discounts"))))
 
 (defn valid?
   [{:keys [active conditions] :as promo}
