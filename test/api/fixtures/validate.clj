@@ -412,7 +412,7 @@
                    :active true
                    :reward_amount 20
                    :reward_type "percent"
-                   :reward_tax "after-tax"
+                   :reward_tax "before-tax"
                    :reward_applied_to "cart"
                    :description "Description"
                    :seo_text "SEO"
