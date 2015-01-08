@@ -273,7 +273,7 @@
     (let [ordered-conditions (mapcat #(filter (fn [c] (= % (:type c))) conditions)
                                      condition-order)
           c2 (if (seq (filterv #(= (:type %) :usage-count) conditions))
-               (assoc context :current-usage-count (total-usage (:site-id context)
+               (assoc context :current-usage-count (total-usage (get-in context [:site :site-id])
                                                                 (:uuid promo)))
                context)
           validation (reduce

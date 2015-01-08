@@ -100,40 +100,40 @@
                    (:status r) => 201))
 
                (facts "Validate Non-Exceeded Usage Count"
-                 (let [code "P6"
-                       api-secret (str (:api-secret site))
-                       rq-body (json/write-str (basic-request-data site-id code))
-                       path (url-encode (str "/api/v1/promos/validation/" code))
-                       sig-hash (compute-sig-hash "localhost"
-                                                  "POST"
-                                                  path
-                                                  rq-body
-                                                  (str site-id)
-                                                  api-secret)
-                       r (validate-promo code (str site-id) rq-body sig-hash)
-                       response-body (json/read-str (:body r) :key-fn keyword)]
-                   response-body => (contains {:code code
-                                               :valid true
-                                               :messages []})
-                   (:status r) => 201))
+                   (let [code "P6"
+                         api-secret (str (:api-secret site))
+                         rq-body (json/write-str (basic-request-data site-id code))
+                         path (url-encode (str "/api/v1/promos/validation/" code))
+                         sig-hash (compute-sig-hash "localhost"
+                                                    "POST"
+                                                    path
+                                                    rq-body
+                                                    (str site-id)
+                                                    api-secret)
+                         r (validate-promo code (str site-id) rq-body sig-hash)
+                         response-body (json/read-str (:body r) :key-fn keyword)]
+                     response-body => (contains {:code code
+                                                 :valid true
+                                                 :messages []})
+                     (:status r) => 201))
 
                (facts "Validate Non-Exceeded Total Discounts"
-                 (let [code "P7"
-                       api-secret (str (:api-secret site))
-                       rq-body (json/write-str (basic-request-data site-id code))
-                       path (url-encode (str "/api/v1/promos/validation/" code))
-                       sig-hash (compute-sig-hash "localhost"
-                                                  "POST"
-                                                  path
-                                                  rq-body
-                                                  (str site-id)
-                                                  api-secret)
-                       r (validate-promo code (str site-id) rq-body sig-hash)
-                       response-body (json/read-str (:body r) :key-fn keyword)]
-                   response-body => (contains {:code code
-                                               :valid true
-                                               :messages []})
-                   (:status r) => 201))
+                   (let [code "P7"
+                         api-secret (str (:api-secret site))
+                         rq-body (json/write-str (basic-request-data site-id code))
+                         path (url-encode (str "/api/v1/promos/validation/" code))
+                         sig-hash (compute-sig-hash "localhost"
+                                                    "POST"
+                                                    path
+                                                    rq-body
+                                                    (str site-id)
+                                                    api-secret)
+                         r (validate-promo code (str site-id) rq-body sig-hash)
+                         response-body (json/read-str (:body r) :key-fn keyword)]
+                     response-body => (contains {:code code
+                                                 :valid true
+                                                 :messages []})
+                     (:status r) => 201))
 
                (facts "Validate Exceeded Total Discounts"
                  (let [code "P8"
