@@ -150,5 +150,5 @@
                        response-body (json/read-str (:body r) :key-fn keyword)]
                    response-body => (contains {:code code
                                                :valid false
-                                               :messages ["..."]})
+                                               :messages ["This promotion has ended"]})
                    (:status r) => 201))))

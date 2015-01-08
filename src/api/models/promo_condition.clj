@@ -231,9 +231,11 @@
    :else context))
 
 (defmethod validate :total-discounts
-  [context
+  [{:keys [current-total-discounts] :as context}
    {:keys [total-discounts] :as condition}]
   (cond
+   (>= current-total-discounts total-discounts)
+   (update-in context [:errors] conj "This promotion has ended")
    :else context))
 
 (defmethod validate :usage-count
