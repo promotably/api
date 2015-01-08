@@ -265,6 +265,24 @@
     (catch java.sql.BatchUpdateException ex
       (log/error (.getNextException ex) "Exception in total-discounts"))))
 
+(defn- add-current-usage-count
+  "Adds current-usage-count to the context, but only if there are promo
+  conditions that need it"
+  [{:keys [conditions] :as promo} context]
+  (if (seq (filterv #(= (:type %) :usage-count) conditions))
+    (assoc context :current-usage-count (total-usage (get-in context [:site :site-id])
+                                                     (:uuid promo)))
+    context))
+
+(defn- add-current-total-discounts
+  "Adds current-total-discounts to the context, but only if there are promo
+  conditions that need it"
+  [{:keys [conditions] :as promo} context]
+  (if (seq (filterv #(= (:type %) :total-discounts) conditions))
+    (assoc context :current-total-discounts (total-discounts (get-in context [:site :site-id])
+                                                             (:uuid promo)))
+    context))
+
 (defn valid?
   [{:keys [active conditions] :as promo}
    {:keys [cart-contents] :as context}]
@@ -272,10 +290,9 @@
     [context ["That promo is currently inactive"]]
     (let [ordered-conditions (mapcat #(filter (fn [c] (= % (:type c))) conditions)
                                      condition-order)
-          c2 (if (seq (filterv #(= (:type %) :usage-count) conditions))
-               (assoc context :current-usage-count (total-usage (:site-id context)
-                                                                (:uuid promo)))
-               context)
+          c2 (->> context
+                  (add-current-usage-count promo)
+                  (add-current-total-discounts promo))
           validation (reduce
                       #(c/validate %1 %2)
                       c2

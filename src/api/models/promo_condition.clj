@@ -230,16 +230,19 @@
    (update-in context [:errors] conj "This coupon can not be used with any others.")
    :else context))
 
-;; TODO: Needs database lookup.
 (defmethod validate :total-discounts
-  [context
+  [{:keys [current-total-discounts] :as context}
    {:keys [total-discounts] :as condition}]
   (cond
+   (>= current-total-discounts total-discounts)
+   (update-in context [:errors] conj "This promotion has ended")
    :else context))
 
 (defmethod validate :usage-count
   [{:keys [current-usage-count] :as context}
    {:keys [usage-count] :as condition}]
+  (println current-usage-count)
+  (println usage-count)
   (cond
    (>= current-usage-count usage-count)
    (update-in context [:errors] conj "This promotion has ended")
