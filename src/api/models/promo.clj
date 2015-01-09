@@ -240,15 +240,14 @@
    :total-discounts])
 
 (defn total-usage
-  [site-id promo-id]
+  [site-id promo-id & {:keys [start end]}]
   (try
-    (let [statement (.prepareCall (.getConnection (:datasource @(:pool @korma.db/_default)))
-                                  "{?= call promoUsageCount(?,?)}")]
-      (.execute (doto statement
-                  (.registerOutParameter 1 java.sql.Types/INTEGER)
-                  (.setObject 2 site-id)
-                  (.setObject 3 promo-id)))
-      (.getInt statement 1))
+    (:cnt (select promo-redemptions
+                  (aggregate (count :promo_redemptions.id) :cnt)
+                  (join promos (= :promos.id :promo_id))
+                  (join sites (= :sites.id :promos.site_id))
+                  (where {:sites.uuid site-id
+                          :promos.uuid promo-id})))
     (catch java.sql.BatchUpdateException ex
       (log/error (.getNextException ex) "Exception in total-usage"))))
 

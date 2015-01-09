@@ -93,6 +93,7 @@
                                                   (str site-id)
                                                   api-secret)
                        r (validate-promo code (str site-id) rq-body sig-hash)
+                       _ (println r)
                        response-body (json/read-str (:body r) :key-fn keyword)]
                    response-body => (contains {:code code
                                                :valid false
