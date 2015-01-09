@@ -74,25 +74,30 @@
                                nil))))
 
 (def fix-cart-items
-  (make-trans
-   #{"cart-item[]"}
-   (fn [k items]
-     [:cart-items
-      (let [items (cond
-                   (string? items) [items]
-                   (seq items) items
-                   :else nil)]
-        (mapcat #(let [[sku title category var-id var q subtotal total]
-                       (clojure.string/split % #"," 8)]
-                   [{:sku sku
-                     :title title
-                     :categories (clojure.string/split category #"\|")
-                     :variation-id var-id
-                     :variation var
-                     :quantity q
-                     :subtotal subtotal
-                     :total total}])
-                items))])))
+  (comp
+   (fn [m]
+     (if (contains? m :cart-items)
+       m
+       (assoc m :cart-items [])))
+   (make-trans
+    #{"cart-item[]"}
+    (fn [k items]
+      [:cart-items
+       (let [items (cond
+                    (string? items) [items]
+                    (seq items) items
+                    :else nil)]
+         (mapcat #(let [[sku title category var-id var q subtotal total]
+                        (clojure.string/split % #"," 8)]
+                    [{:sku sku
+                      :title title
+                      :categories (clojure.string/split category #"\|")
+                      :variation-id var-id
+                      :variation var
+                      :quantity q
+                      :subtotal subtotal
+                      :total total}])
+                 items))]))))
 
 (defn prep-incoming
   [params]
@@ -154,6 +159,7 @@
              coercer (sc/coercer OutboundEvent matcher)
              out (-> parsed
                      (dissoc :auth :site)
+                     (assoc :site-shopper-id (-> request :params :site-shopper-id))
                      (assoc :shopper-id (:shopper-id request))
                      (assoc :site-id (-> parsed :site :site-id))
                      (assoc :session-id (get-in cookies [config/session-cookie-name :value]))

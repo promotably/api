@@ -22,7 +22,8 @@
    (s/required-key :auth) Auth
    (s/optional-key :user-id) s/Str
    (s/required-key :site) s/Any
-   (s/optional-key :shopper-id) (s/maybe s/Uuid)})
+   (s/optional-key :shopper-id) (s/maybe s/Uuid)
+   (s/optional-key :site-shopper-id) (s/maybe s/Uuid)})
 
 (def CartItem
   {:sku s/Str
@@ -460,6 +461,7 @@
    (s/required-key :code) s/Str
    (s/optional-key :auth) Auth
    (s/optional-key :shopper-id) (s/maybe s/Str)
+   (s/optional-key :site-shopper-id) (s/maybe s/Str)
    (s/required-key :shopper-email) s/Str
    (s/optional-key :applied-coupons) [s/Str]
    (s/optional-key :shipping-address-1) s/Str
