@@ -24,5 +24,4 @@
                             [:created_at "timestamp"])
      "CREATE INDEX idx_redemptions_promoId_shopperId ON redemptions ( promo_id, shopper_id )"
      "CREATE INDEX idx_redemptions_promoId_shopperEmail ON redemptions ( promo_id, shopper_email )"
-     "CREATE INDEX idx_redemptions_promoId ON redemptions ( promo_id )"
-     "ALTER TABLE ONLY promos ALTER COLUMN usage_limit_per_user SET DEFAULT NULL")))
+     "CREATE INDEX idx_redemptions_promoId ON redemptions ( promo_id )")))
