@@ -152,4 +152,35 @@
                    :promo_id :promo-8
                    :discount 8.25
                    :shopper_id (java.util.UUID/randomUUID)
-                   :session_id (java.util.UUID/randomUUID)))))
+                   :session_id (java.util.UUID/randomUUID)))
+
+      (table :promos
+          (fixture :promo-9
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "P9"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "This promo has a daily-usage-count condition"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-9
+                   :promo_id :promo-9
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "daily-usage-count"
+                   :usage_count 1))
+   (table :promo_redemptions
+          (fixture :pr-p9
+                   :event_id (java.util.UUID/randomUUID)
+                   :site_id api.fixtures.common/site-uuid
+                   :order_id "1234"
+                   :promo_code "P9"
+                   :promo_id :promo-9
+                   :discount 3.25
+                   :shopper_id (java.util.UUID/randomUUID)
+                   :session_id (java.util.UUID/randomUUID)
+                   :created_at (c/to-sql-time (t/now))))))

@@ -162,6 +162,7 @@
   (s/enum :dates
           :times
           :usage-count
+          :daily-usage-count
           :total-discounts
           :product-ids
           :category-ids

@@ -1,7 +1,8 @@
 (ns api.models.promo
   (:require [clojure.tools.logging :as log]
-            [clj-time.core :refer [before? after? now]]
-            [clj-time.coerce :refer [from-sql-date]]
+            [clj-time.core :refer [before? after? now today-at today-at-midnight epoch
+                                   plus days]]
+            [clj-time.coerce :refer [from-sql-date to-sql-date to-sql-time]]
             [clojure.set :refer [rename-keys intersection]]
             [clojure.walk :refer [postwalk]]
             [clojure.java.jdbc :as jdbc]
@@ -236,18 +237,22 @@
    :item-value
    :individual-use
    :min-order-value
+   :daily-usage-count
    :usage-count
    :total-discounts])
 
 (defn total-usage
-  [site-id promo-id & {:keys [start end]}]
+  [site-id promo-id & {:keys [start end] :or {start (epoch)
+                                              end (plus (today-at-midnight) (days 1))}}]
   (try
     (let [{cnt :cnt} (first (select promo-redemptions
-                                    (aggregate (count :promo_redemptions.id) :cnt)
-                                    (join promos (= :promos.id :promo_id))
-                                    (join sites (= :sites.id :promos.site_id))
-                                    (where {:sites.uuid site-id
-                                            :promos.uuid promo-id})))]
+                                     (aggregate (count :promo_redemptions.id) :cnt)
+                                     (join promos (= :promos.id :promo_id))
+                                     (join sites (= :sites.id :promos.site_id))
+                                     (where {:sites.uuid site-id
+                                             :promos.uuid promo-id})
+                                     (where {:created_at [>= (to-sql-time start)]})
+                                     (where {:created_at [<= (to-sql-time end)]})))]
       (if-not (nil? cnt)
         cnt
         0))
@@ -276,6 +281,17 @@
       (assoc context :current-usage-count cut))
     context))
 
+(defn- add-current-daily-usage-count
+  "Adds current-daily-usage-count to the context, but only if there are
+  promo conditions that need it"
+  [{:keys [conditions] :as promo} context]
+  (if (seq (filterv #(= (:type %) :daily-usage-count) conditions))
+    (assoc context :current-daily-usage-count
+           (total-usage (get-in context [:site :site-id])
+                        (:uuid promo)
+                        :start (today-at 00 00)))
+    context))
+
 (defn- add-current-total-discounts
   "Adds current-total-discounts to the context, but only if there are promo
   conditions that need it"
@@ -294,6 +310,7 @@
                                      condition-order)
           c2 (->> context
                   (add-current-usage-count promo)
+                  (add-current-daily-usage-count promo)
                   (add-current-total-discounts promo))
           validation (reduce
                       #(c/validate %1 %2)

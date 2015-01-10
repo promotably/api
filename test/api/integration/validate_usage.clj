@@ -151,4 +151,22 @@
                    response-body => (contains {:code code
                                                :valid false
                                                :messages ["This promotion has ended"]})
-                   (:status r) => 201))))
+                   (:status r) => 201))
+
+               (facts "Validate Exceeded Daily Usage Count"
+                   (let [code "P9"
+                         api-secret (str (:api-secret site))
+                         rq-body (json/write-str (basic-request-data site-id code))
+                         path (url-encode (str "/api/v1/promos/validation/" code))
+                         sig-hash (compute-sig-hash "localhost"
+                                                    "POST"
+                                                    path
+                                                    rq-body
+                                                    (str site-id)
+                                                    api-secret)
+                         r (validate-promo code (str site-id) rq-body sig-hash)
+                         response-body (json/read-str (:body r) :key-fn keyword)]
+                     response-body => (contains {:code code
+                                                 :valid false
+                                                 :messages ["No more for today, check back tomorrow!"]})
+                     (:status r) => 201))))

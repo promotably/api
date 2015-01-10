@@ -246,3 +246,10 @@
    (>= current-usage-count usage-count)
    (update-in context [:errors] conj "This promotion has ended")
    :else context))
+
+(defmethod validate :daily-usage-count
+  [{:keys [current-daily-usage-count] :as context}
+   {:keys [usage-count] :as promo}]
+  (cond
+    (>= current-daily-usage-count usage-count)
+    (update-in context [:errors] conj "No more for today, check back tomorrow!")))
