@@ -28,9 +28,8 @@
   (has-many linked-products {:fk :promo_id})
   (has-many redemptions {:fk :promo_id}))
 
-(defentity redemptions
-  (table "redemptions")
-  (belongs-to promos {:fk :promo_id}))
+(defentity promo-redemptions
+  (table "promo_redemptions"))
 
 (defentity promo-conditions
   (table "promo_conditions")
