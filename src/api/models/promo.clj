@@ -242,12 +242,15 @@
 (defn total-usage
   [site-id promo-id & {:keys [start end]}]
   (try
-    (:cnt (select promo-redemptions
-                  (aggregate (count :promo_redemptions.id) :cnt)
-                  (join promos (= :promos.id :promo_id))
-                  (join sites (= :sites.id :promos.site_id))
-                  (where {:sites.uuid site-id
-                          :promos.uuid promo-id})))
+    (let [{cnt :cnt} (first (select promo-redemptions
+                                    (aggregate (count :promo_redemptions.id) :cnt)
+                                    (join promos (= :promos.id :promo_id))
+                                    (join sites (= :sites.id :promos.site_id))
+                                    (where {:sites.uuid site-id
+                                            :promos.uuid promo-id})))]
+      (if-not (nil? cnt)
+        cnt
+        0))
     (catch java.sql.BatchUpdateException ex
       (log/error (.getNextException ex) "Exception in total-usage"))))
 
@@ -269,8 +272,9 @@
   conditions that need it"
   [{:keys [conditions] :as promo} context]
   (if (seq (filterv #(= (:type %) :usage-count) conditions))
-    (assoc context :current-usage-count (total-usage (get-in context [:site :site-id])
-                                                     (:uuid promo)))
+    (let [cut (total-usage (get-in context [:site :site-id]) (:uuid promo))]
+      (log/infof "%d for promo %s" cut (:uuid promo))
+      (assoc context :current-usage-count cut))
     context))
 
 (defn- add-current-total-discounts
