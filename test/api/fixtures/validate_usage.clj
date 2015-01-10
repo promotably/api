@@ -41,6 +41,15 @@
                    :promo_id :promo-5
                    :discount 12.56
                    :shopper_id (java.util.UUID/randomUUID)
+                   :session_id (java.util.UUID/randomUUID))
+          (fixture :pr-p5-2
+                   :event_id (java.util.UUID/randomUUID)
+                   :site_id api.fixtures.common/site-uuid
+                   :order_id "12345"
+                   :promo_code "P5"
+                   :promo_id :promo-5
+                   :discount 145.90
+                   :shopper_id (java.util.UUID/randomUUID)
                    :session_id (java.util.UUID/randomUUID)))
 
    (table :promos

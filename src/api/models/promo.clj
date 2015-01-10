@@ -273,7 +273,6 @@
   [{:keys [conditions] :as promo} context]
   (if (seq (filterv #(= (:type %) :usage-count) conditions))
     (let [cut (total-usage (get-in context [:site :site-id]) (:uuid promo))]
-      (log/infof "%d for promo %s" cut (:uuid promo))
       (assoc context :current-usage-count cut))
     context))
 
