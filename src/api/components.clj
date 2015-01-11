@@ -128,14 +128,13 @@
                      (assoc data :started-at (t-coerce/to-string (t/now)))
                      data)
           s (-> config :session-length-in-seconds)]
-      (if (nil? session-id)
+      (when (nil? session-id)
         ;; TODO: more data? Shopper's browser, etc???
         (let [k-data {:created-at (t-coerce/to-string (t/now))
                       :shopper-id (:shopper-id data)
                       :session-id session-id*}
               k-data (if (:site-id data) (update-in k-data [:site-id] (constantly (:site-id data))))]
-          ;;(kinesis/record-event! kinesis "session-start" k-data)
-          ))
+          (kinesis/record-event! kinesis "session-start" k-data)))
       (try
         (redis/wcar*
          (car/set session-id* new-data)
