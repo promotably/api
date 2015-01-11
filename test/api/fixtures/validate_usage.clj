@@ -8,6 +8,7 @@
    [api.fixtures.common :refer [default-account default-site]]
    [api.q-fix :refer :all]))
 
+
 (def fixture-set
   (set
    default-account
@@ -41,6 +42,7 @@
                    :promo_id :promo-5
                    :discount 12.56
                    :shopper_id (java.util.UUID/randomUUID)
+                   :site_shopper_id (java.util.UUID/randomUUID)
                    :session_id (java.util.UUID/randomUUID))
           (fixture :pr-p5-2
                    :event_id (java.util.UUID/randomUUID)
@@ -50,6 +52,7 @@
                    :promo_id :promo-5
                    :discount 145.90
                    :shopper_id (java.util.UUID/randomUUID)
+                   :site_shopper_id (java.util.UUID/randomUUID)
                    :session_id (java.util.UUID/randomUUID)))
 
    (table :promos
@@ -81,6 +84,7 @@
                    :promo_id :promo-6
                    :discount 12.56
                    :shopper_id (java.util.UUID/randomUUID)
+                   :site_shopper_id (java.util.UUID/randomUUID)
                    :session_id (java.util.UUID/randomUUID)))
 
    (table :promos
@@ -112,6 +116,7 @@
                    :promo_id :promo-7
                    :discount 121.56
                    :shopper_id (java.util.UUID/randomUUID)
+                   :site_shopper_id (java.util.UUID/randomUUID)
                    :session_id (java.util.UUID/randomUUID)))
 
    (table :promos
@@ -143,6 +148,7 @@
                    :promo_id :promo-8
                    :discount 3.25
                    :shopper_id (java.util.UUID/randomUUID)
+                   :site_shopper_id (java.util.UUID/randomUUID)
                    :session_id (java.util.UUID/randomUUID))
           (fixture :pr-p8-2
                    :event_id (java.util.UUID/randomUUID)
@@ -152,6 +158,7 @@
                    :promo_id :promo-8
                    :discount 8.25
                    :shopper_id (java.util.UUID/randomUUID)
+                   :site_shopper_id (java.util.UUID/randomUUID)
                    :session_id (java.util.UUID/randomUUID)))
 
    (table :promos
@@ -182,6 +189,7 @@
                    :promo_id :promo-9
                    :discount 3.25
                    :shopper_id (java.util.UUID/randomUUID)
+                   :site_shopper_id (java.util.UUID/randomUUID)
                    :session_id (java.util.UUID/randomUUID)
                    :created_at (c/to-sql-time (t/now))))
 
@@ -213,6 +221,7 @@
                    :promo_id :promo-10
                    :discount 3.25
                    :shopper_id (java.util.UUID/randomUUID)
+                   :site_shopper_id (java.util.UUID/randomUUID)
                    :session_id (java.util.UUID/randomUUID)
                    :created_at (c/to-sql-time (t/now)))
           (fixture :pr-p10-2
@@ -223,6 +232,7 @@
                    :promo_id :promo-10
                    :discount 7.50
                    :shopper_id (java.util.UUID/randomUUID)
+                   :site_shopper_id (java.util.UUID/randomUUID)
                    :session_id (java.util.UUID/randomUUID)
                    :created_at (c/to-sql-time (t/now))))
 
@@ -254,5 +264,6 @@
                    :promo_id :promo-11
                    :discount 3.25
                    :shopper_id (java.util.UUID/randomUUID)
+                   :site_shopper_id (java.util.UUID/randomUUID)
                    :session_id (java.util.UUID/randomUUID)
                    :created_at (c/to-sql-time (t/now))))))

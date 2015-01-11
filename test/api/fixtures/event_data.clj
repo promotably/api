@@ -12,6 +12,7 @@
 (def site-id (str site-uuid))
 (def session-id #uuid "95f1b8b2-a77b-4fec-a2fe-334f1afa2858")
 (def shopper-id #uuid "7f2fe574-974e-4f48-87fd-5ada3a4cb2bb")
+(def site-shopper-id #uuid "001fd699-9d50-4b7c-af3b-3e022d379647")
 
 (def fixture-set
   (set
@@ -22,6 +23,7 @@
                    :site_id site-uuid
                    :event_id (java.util.UUID/randomUUID)
                    :shopper_id shopper-id
+                   :site_shopper_id site-shopper-id
                    :session_id session-id
                    :type "cartview"
                    :data {:billing-state "",
@@ -52,6 +54,7 @@
                    :site_id site-uuid
                    :event_id (java.util.UUID/randomUUID)
                    :shopper_id shopper-id
+                   :site_shopper_id site-shopper-id
                    :session_id session-id
                    :type "productview"
                    :data {:sku "W100",
@@ -67,6 +70,7 @@
                    :site_id site-uuid
                    :event_id (java.util.UUID/randomUUID)
                    :shopper_id shopper-id
+                   :site_shopper_id site-shopper-id
                    :session_id session-id
                    :type "productadd"
                    :data {:quantity 1,
@@ -80,6 +84,7 @@
                    :site_id site-uuid
                    :event_id (java.util.UUID/randomUUID)
                    :shopper_id shopper-id
+                   :site_shopper_id site-shopper-id
                    :session_id session-id
                    :type "checkout"
                    :data {:billing-state "VA",
@@ -111,6 +116,7 @@
                    :site_id site-uuid
                    :event_id (java.util.UUID/randomUUID)
                    :shopper_id shopper-id
+                   :site_shopper_id site-shopper-id
                    :session_id session-id
                    :type "thankyou"
                    :data {:session-id (str session-id),
