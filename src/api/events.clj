@@ -136,7 +136,7 @@
     (cond
      (= schema.utils.ErrorContainer (type parsed))
      (do
-       (log/logf :error "Event parse error: %s" (pr-str parsed))
+       (log/logf :error "Event parse error: %s, for event-name %s" (pr-str parsed) (:event-name params))
        (put-metric "event-record-parse-error")
        {:status 400 :session (:session request)})
 

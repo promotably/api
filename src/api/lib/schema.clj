@@ -67,7 +67,8 @@
                            {(s/required-key :sku) s/Str
                             (s/optional-key :category-id) (s/maybe s/Str)
                             (s/optional-key :quantity) s/Int
-                            (s/optional-key :variation) (s/maybe s/Str)})
+                            (s/optional-key :variation) (s/maybe s/Str)
+                            (s/required-key :cart-items) [CartItem]})
                     #(= (:event-name %) :trackcartview)
                     (merge ~base-event
                            {(s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
