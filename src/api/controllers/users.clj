@@ -11,6 +11,7 @@
 (let [inbound-schema {(s/required-key :email) s/Str
                       (s/required-key :user-social-id) s/Str
                       (s/required-key :account-id) s/Uuid
+                      (s/required-key :password) s/Str
                       (s/optional-key :username) s/Str
                       (s/optional-key :phone) s/Str
                       (s/optional-key :job-title) s/Str
@@ -26,7 +27,6 @@
           result (user/new-user! coerced-params)]
       (println result)
       (shape-create-user result))))
-
 
 (let [inbound-schema {(s/required-key :user-id) s/Uuid
                       (s/optional-key :email) s/Str

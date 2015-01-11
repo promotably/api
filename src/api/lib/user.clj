@@ -4,12 +4,6 @@
 
 (def SqlErrorEnum (s/enum :username-exists :email-exists))
 
-(defn salted-pass
-  "Adds a sprinkle of salt to the password"
-  [pw-str]
-  (clojure.string/join
-   (concat "b00t5" pw-str "|24nt5")))
-
 (sm/defn parse-sql-exception :- SqlErrorEnum
   "Attempts to make sense of a user-related SQL error"
   [ex :- org.postgresql.util.PSQLException]

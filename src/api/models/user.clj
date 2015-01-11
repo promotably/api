@@ -3,7 +3,8 @@
             [clojure.tools.logging :as log]
             [api.entities :refer [users accounts]]
             [api.lib.coercion-helper :refer [dash-to-underscore-keys]]
-            [api.lib.user :refer [salted-pass parse-sql-exception]]
+            [api.lib.crypto :as crypto]
+            [api.lib.user :refer [parse-sql-exception]]
             [api.util :refer [hyphenify-key]]
             [korma.core :refer :all]
             [schema.core :as s]
@@ -17,8 +18,9 @@
                      (s/optional-key :last-name) (s/maybe s/Str)})
 
 (def InboundUserSchema (merge BaseUserSchema
-                              {(s/required-key :user-social-id) s/Str
-                               (s/optional-key :account-id) s/Uuid}))
+                              {(s/optional-key :user-social-id) s/Str
+                               (s/optional-key :account-id) s/Uuid
+                               (s/optional-key :password) s/Str}))
 
 (def OutboundUserSchema (merge BaseUserSchema
                                {(s/required-key :created-at) s/Inst
@@ -36,8 +38,9 @@
 (sm/defn new-user!
   "Creates a new user in the database"
   [params :- InboundUserSchema]
-  (let [{:keys [username email company-name phone job-title
-                user-social-id account-id]} params]
+  (let [{:keys [username email password company-name phone job-title
+                user-social-id account-id]} params
+        [encrypted-pw salt] (crypto/encrypt-password password)]
     (try
       {:status :success
        :user (safe-db-to-user
@@ -50,6 +53,8 @@
                         ;;more fields?
                         (values {:username username
                                  :email email
+                                 :password encrypted-pw
+                                 :password_salt salt
                                  :user_social_id user-social-id
                                  :phone phone
                                  :job_title job-title

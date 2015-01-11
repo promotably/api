@@ -38,7 +38,7 @@
   (let [sc (if (:user result) 200 404)]
     {:status sc
      :body (-> result
-               (assoc-in [:user] (dissoc (:user result) :id :account-id))
+               (assoc-in [:user] (dissoc (:user result) :id :account-id :password :password-salt))
                (assoc-in [:account] (dissoc (:account result) :id)))}))
 
 (defn shape-create-user
@@ -49,7 +49,7 @@
                400
                500))]
     {:status sc
-     :body result}))
+     :body (dissoc result :password :password-salt)}))
 
 (defn shape-update-user
   [result]

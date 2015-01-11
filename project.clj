@@ -41,6 +41,7 @@
                   :exclusions [com.fasterxml.jackson.core/jackson-databind
                                com.fasterxml.jackson.core/jackson-core]]
                  [slingshot "0.12.1"]
+                 [clojurewerkz/scrypt "1.2.0"]
                  [org.clojure/core.match "0.3.0-alpha1"]
                  [prismatic/schema "0.2.6"]
                  [com.stuartsierra/dependency "0.1.1"]
