@@ -239,6 +239,7 @@
    :min-order-value
    :daily-usage-count
    :usage-count
+   :daily-total-discounts
    :total-discounts])
 
 (defn total-usage
@@ -246,13 +247,13 @@
                                               end (plus (today-at-midnight) (days 1))}}]
   (try
     (let [{cnt :cnt} (first (select promo-redemptions
-                                     (aggregate (count :promo_redemptions.id) :cnt)
-                                     (join promos (= :promos.id :promo_id))
-                                     (join sites (= :sites.id :promos.site_id))
-                                     (where {:sites.uuid site-id
-                                             :promos.uuid promo-id})
-                                     (where {:created_at [>= (to-sql-time start)]})
-                                     (where {:created_at [<= (to-sql-time end)]})))]
+                                    (aggregate (count :promo_redemptions.id) :cnt)
+                                    (join promos (= :promos.id :promo_id))
+                                    (join sites (= :sites.id :promos.site_id))
+                                    (where {:sites.uuid site-id
+                                            :promos.uuid promo-id})
+                                    (where {:created_at [>= (to-sql-time start)]})
+                                    (where {:created_at [<= (to-sql-time end)]})))]
       (if-not (nil? cnt)
         cnt
         0))
@@ -260,15 +261,20 @@
       (log/error (.getNextException ex) "Exception in total-usage"))))
 
 (defn total-discounts
-  [site-id promo-id]
+  [site-id promo-id & {:keys [start end] :or {start (epoch)
+                                              end (plus (today-at-midnight) (days 1))}}]
   (try
-    (let [statement (.prepareCall (.getConnection (:datasource @(:pool @korma.db/_default)))
-                                  "{?= call promoTotalDiscounts(?,?)}")]
-      (.execute (doto statement
-                  (.registerOutParameter 1 java.sql.Types/NUMERIC)
-                  (.setObject 2 site-id)
-                  (.setObject 3 promo-id)))
-      (.getBigDecimal statement 1))
+    (let [{total :total} (first (select promo-redemptions
+                                        (aggregate (sum :promo_redemptions.discount) :total)
+                                        (join promos (= :promos.id :promo_id))
+                                        (join sites (= :sites.id :promos.site_id))
+                                        (where {:sites.uuid site-id
+                                                :promos.uuid promo-id})
+                                        (where {:created_at [>= (to-sql-time start)]})
+                                        (where {:created_at [<= (to-sql-time end)]})))]
+      (if-not (nil? total)
+        total
+        0))
     (catch java.sql.BatchUpdateException ex
       (log/error (.getNextException ex) "Exception in total-discounts"))))
 
@@ -301,6 +307,16 @@
                                                              (:uuid promo)))
     context))
 
+(defn- add-current-daily-total-discounts
+  "Adds current-daily-total-discounts to the context, but only if there are promo
+  conditions that need it"
+  [{:keys [conditions] :as promo} context]
+  (if (seq (filterv #(= (:type %) :daily-total-discounts) conditions))
+    (assoc context :current-daily-total-discounts (total-discounts (get-in context [:site :site-id])
+                                                                   (:uuid promo)
+                                                                   :start (today-at 00 00)))
+    context))
+
 (defn valid?
   [{:keys [active conditions] :as promo}
    {:keys [cart-contents] :as context}]
@@ -311,7 +327,8 @@
           c2 (->> context
                   (add-current-usage-count promo)
                   (add-current-daily-usage-count promo)
-                  (add-current-total-discounts promo))
+                  (add-current-total-discounts promo)
+                  (add-current-daily-total-discounts promo))
           validation (reduce
                       #(c/validate %1 %2)
                       c2

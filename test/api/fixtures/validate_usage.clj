@@ -154,7 +154,7 @@
                    :shopper_id (java.util.UUID/randomUUID)
                    :session_id (java.util.UUID/randomUUID)))
 
-      (table :promos
+   (table :promos
           (fixture :promo-9
                    :uuid (java.util.UUID/randomUUID)
                    :site_id :site-1
@@ -180,6 +180,78 @@
                    :order_id "1234"
                    :promo_code "P9"
                    :promo_id :promo-9
+                   :discount 3.25
+                   :shopper_id (java.util.UUID/randomUUID)
+                   :session_id (java.util.UUID/randomUUID)
+                   :created_at (c/to-sql-time (t/now))))
+
+    (table :promos
+          (fixture :promo-10
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "P10"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "This promo has a daily-total-discounts condition"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-10
+                   :promo_id :promo-10
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "daily-total-discounts"
+                   :total_discounts 10.00))
+   (table :promo_redemptions
+          (fixture :pr-p10
+                   :event_id (java.util.UUID/randomUUID)
+                   :site_id api.fixtures.common/site-uuid
+                   :order_id "123490"
+                   :promo_code "P10"
+                   :promo_id :promo-10
+                   :discount 3.25
+                   :shopper_id (java.util.UUID/randomUUID)
+                   :session_id (java.util.UUID/randomUUID)
+                   :created_at (c/to-sql-time (t/now)))
+          (fixture :pr-p10-2
+                   :event_id (java.util.UUID/randomUUID)
+                   :site_id api.fixtures.common/site-uuid
+                   :order_id "123490"
+                   :promo_code "P10"
+                   :promo_id :promo-10
+                   :discount 7.50
+                   :shopper_id (java.util.UUID/randomUUID)
+                   :session_id (java.util.UUID/randomUUID)
+                   :created_at (c/to-sql-time (t/now))))
+
+   (table :promos
+          (fixture :promo-11
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "P11"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "This promo has a daily-total-discounts condition"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-11
+                   :promo_id :promo-11
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "daily-total-discounts"
+                   :total_discounts 10.00))
+   (table :promo_redemptions
+          (fixture :pr-p11
+                   :event_id (java.util.UUID/randomUUID)
+                   :site_id api.fixtures.common/site-uuid
+                   :order_id "123490"
+                   :promo_code "P11"
+                   :promo_id :promo-11
                    :discount 3.25
                    :shopper_id (java.util.UUID/randomUUID)
                    :session_id (java.util.UUID/randomUUID)

@@ -164,6 +164,7 @@
           :usage-count
           :daily-usage-count
           :total-discounts
+          :daily-total-discounts
           :product-ids
           :category-ids
           :not-product-ids
