@@ -60,7 +60,8 @@
                             (s/optional-key :description) (s/maybe s/Str)
                             (s/optional-key :short-description) (s/maybe s/Str)
                             (s/optional-key :modified-at) (s/maybe s/Inst)
-                            (s/optional-key :variation) (s/maybe s/Str)})
+                            (s/optional-key :variation) (s/maybe s/Str)
+                            (s/required-key :cart-items) [CartItem]})
                     #(= (:event-name %) :trackproductadd)
                     (merge ~base-event
                            {(s/required-key :sku) s/Str
