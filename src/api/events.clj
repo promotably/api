@@ -76,9 +76,10 @@
 (def fix-cart-items
   (comp
    (fn [m]
-     (if (contains? m :cart-items)
-       m
-       (assoc m :cart-items [])))
+     (if (and (not (#{:trackproductview :trackproductadd} (:event-name m)))
+              (not (contains? m :cart-items)))
+       (assoc m :cart-items [])
+       m))
    (make-trans
     #{"cart-item[]"}
     (fn [k items]
