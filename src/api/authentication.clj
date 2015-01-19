@@ -51,24 +51,28 @@
     (provider request)))
 
 (defmethod authenticate :facebook
-  [request]
-  (let [fb-auth-uri (format "https://graph.facebook.com/debug_token?input_token=%s&access_token=%s" (:facebook-auth-token request) (:facebook-app-token request))
+  [{:keys [body-params]} :as request]
+  (let [{:keys [facebook-auth-token facebook-app-token facebook-user-id]} body-params
+        fb-auth-uri (format "https://graph.facebook.com/debug_token?input_token=%s&access_token=%s" facebook-auth-token facebook-app-token)
         resp @(http/get fb-auth-uri)
         body (json/read-str (:body resp) :key-fn keyword)
-        user-id (:facebook-user-id request)
-        fb-app-id (first (str/split (:facebook-app-token request) "|"))]
+        fb-app-id (first (str/split facebook-app-token "|"))]
     (if (and (= 200 (:status resp))
-             (= user-id (:user_id body))
+             (= facebook-user-id (:user_id body))
              (= fb-app-id (:app_id body)))
       (auth-response request)
       {:status 401})))
 
 (defmethod authenticate :gplus
-  [request]
-  (let [gplus-auth-uri (format "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s" (:google-code request))
-        resp @(http/get gplus-auth-uri)]
-    (if (= 200 (:status resp))
-      ;;todo: validate on server?
+  [{:keys [body-params]} :as request]
+  (let [{:keys [google-code google-access-token google-id-token]} body-params
+        gplus-auth-uri (format "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s" google-code)
+        resp @(http/get gplus-auth-uri)
+        body (json/read-str (:body resp) :key-fn keyword)
+        {:keys [access_token id_token]} body]
+    (if (and (= 200 (:status resp))
+             (= google-access-token access_token)
+             (= google-id-token id_token))
       (auth-response request)
       {:status 401})))
 

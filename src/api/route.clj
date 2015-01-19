@@ -23,6 +23,7 @@
             [ring.middleware.permacookie :refer [wrap-permacookie]]
             [ring.middleware.anti-forgery :as ring-anti-forgery
              :refer [wrap-anti-forgery]]
+            [api.authentication :as auth]
             [api.events :as events]
             [api.controllers.users :refer [create-new-user! get-user update-user!
                                            lookup-user]]
@@ -93,6 +94,10 @@
            (GET "/realtime-conversion-offers" [] get-available-offers)
            offer-routes
            promo-routes))
+
+(defroutes secure-routes
+  (context "" []
+           (POST "/login" )))
 
 (defn- fetch-index
   [config]
