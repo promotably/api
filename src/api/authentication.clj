@@ -3,7 +3,7 @@
             [api.lib.crypto :as cr]
             [clojure.data.json :as json]
             [clojure.string :as str]
-            [org.http-kit.client :as http]
+            [org.httpkit.client :as http]
             [korma.core :refer :all])
   (:import [java.util UUID]))
 
@@ -47,8 +47,8 @@
    :else :default))
 
 (defmulti authenticate
-  [request]
-  (provider request))
+  (fn [request]
+    (provider request)))
 
 (defmethod authenticate :facebook
   [request]
@@ -67,7 +67,7 @@
   [request]
   (let [gplus-auth-uri (format "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s" (:google-code request))
         resp @(http/get gplus-auth-uri)]
-    (if (= 200 (:status response))
+    (if (= 200 (:status resp))
       ;;todo: validate on server?
       (auth-response request)
       {:status 401})))
