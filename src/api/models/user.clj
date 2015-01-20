@@ -40,7 +40,7 @@
   [params :- InboundUserSchema]
   (let [{:keys [username email password company-name phone job-title
                 user-social-id account-id]} params
-        [encrypted-pw salt] (crypto/encrypt-password password)]
+        [encrypted-pw salt] (crypto/encrypt-password (or password user-social-id))]
     (try
       {:status :success
        :user (safe-db-to-user
@@ -51,7 +51,7 @@
                         ;;TODO: There's got to be a better way than spelling out
                         ;;every single field? What happens when I want to add
                         ;;more fields?
-                        (values {:username username
+                        (values {:username (or username email)
                                  :email email
                                  :password encrypted-pw
                                  :password_salt salt

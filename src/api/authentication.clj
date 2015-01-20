@@ -39,43 +39,82 @@
       (auth-response request)
       {:status 401})))
 
-(defn- provider
+(defn- authenticate-social
   [request]
+  (let [{:keys [username facebook-user-id google-id-token]} (:body-params request)
+        user-social-id (or facebook-user-id google-id-token)]
+    ;;TODO: How do we authenticate a previous social login?
+    (if (and username user-social-id)
+      (let [db-user (first (select users (where {:username username})))
+            db-user-social-id (:user-social-id db-user)]
+        (if (= user-social-id db-user-social-id)
+          (auth-response request)
+          {:status 401}))
+      {:status 401})))
+
+(defn authenticate
+  [request]
+  (if (get-in request [:body-params :password])
+    (authenticate-native request)
+    (authenticate-social request)))
+
+(defn is-social?
+  [{:keys [body-params]}]
+  (or (:google-code body-params)
+      (:facebook-auth-token body-params)))
+
+(defn- get-google-dd
+  []
+  (-> @(http/get "https://accounts.google.com/.well-known/openid-configuration")
+      :body
+      (json/read-str :key-fn keyword)))
+
+(def google-dd (memoize get-google-dd))
+
+(defn- get-google-token-endpoint
+  []
+  (:token_endpoint (google-dd)))
+
+(defn provider
+  [{:keys [body-params]}]
   (cond
-   (:facebook-auth-token request) :facebook
-   (:google-code request) :gplus
+   (:facebook-auth-token body-params) :facebook
+   (:google-code body-params) :gplus
    :else :default))
 
-(defmulti authenticate
-  (fn [request]
-    (provider request)))
+(defmulti validate-social
+  provider)
 
-(defmethod authenticate :facebook
-  [{:keys [body-params]} :as request]
+(defmethod validate-social :facebook
+  [{:keys [body-params] :as request}]
   (let [{:keys [facebook-auth-token facebook-app-token facebook-user-id]} body-params
         fb-auth-uri (format "https://graph.facebook.com/debug_token?input_token=%s&access_token=%s" facebook-auth-token facebook-app-token)
         resp @(http/get fb-auth-uri)
         body (json/read-str (:body resp) :key-fn keyword)
         fb-app-id (first (str/split facebook-app-token "|"))]
-    (if (and (= 200 (:status resp))
-             (= facebook-user-id (:user_id body))
-             (= fb-app-id (:app_id body)))
-      (auth-response request)
-      {:status 401})))
+    (when (and (= 200 (:status resp))
+               (= facebook-user-id (:user_id body))
+               (= fb-app-id (:app_id body)))
+      [:user-social-id facebook-user-id])))
 
-(defmethod authenticate :gplus
-  [{:keys [body-params]} :as request]
+(defmethod validate-social :gplus
+  [{:keys [body-params] :as request}]
   (let [{:keys [google-code google-access-token google-id-token]} body-params
-        gplus-auth-uri (format "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s" google-code)
-        resp @(http/get gplus-auth-uri)
+        gplus-token-endpoint (get-google-token-endpoint)
+        resp @(http/post gplus-token-endpoint
+                         {:method :post
+                          :headers {"Content-Type" "application/x-www-form-urlencoded"}
+                          :form-params {"code" google-code
+                                        "client_id" "396195012878-16478fi00kv3aand6b6qqrp1mn5t4h5s.apps.googleusercontent.com"
+                                        "client_secret" "f40o9PHz-AQvpsSYHYNXC1y8"
+                                        "redirect_uri" "postmessage"
+                                        "grant_type" "authorization_code"}})
         body (json/read-str (:body resp) :key-fn keyword)
         {:keys [access_token id_token]} body]
-    (if (and (= 200 (:status resp))
-             (= google-access-token access_token)
-             (= google-id-token id_token))
-      (auth-response request)
-      {:status 401})))
+    (when (and (= 200 (:status resp))
+               (= google-access-token access_token))
+      [:user-social-id google-id-token])))
 
-(defmethod authenticate :default
+(defmethod validate-social :default
   [request]
-  (authenticate-native request))
+  nil)

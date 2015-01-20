@@ -70,11 +70,6 @@
      :host db-host
      :port db-port
      :make-pool? true}))
-(defn- get-social-auth-config
-  "Returns the needed configuration values for social login authentication."
-  []
-  {:facebook {:app_secret ""
-              :app_id ""}})
 
 (defn- get-redis-config
   "Checks environment variables for redis config settings. These

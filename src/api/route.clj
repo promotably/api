@@ -92,12 +92,22 @@
            (POST "/users" [] create-new-user!)
            (PUT "/users/:user-id" [] update-user!)
            (GET "/realtime-conversion-offers" [] get-available-offers)
+           (POST "/login" req (fn [r] (auth/authenticate r)))
+           (POST "/register" req (fn [r]
+                                   ;; TODO: Move this mess out of here
+                                   (if (auth/is-social? r)
+                                     (let [provider (auth/provider r)]
+                                       (if (= :facebook provider)
+                                         (let [req-with-fb-token (assoc-in r [:body-params :facebook-app-token] "1523186741303436|14056f787e48ed9f20305c98239f6835")]
+                                           (when-let [user-social-info (auth/validate-social r)]
+                                             (create-new-user! (assoc-in r [:body-params (first user-social-info)] (last user-social-info)))))
+                                         (when-let [user-social-info (auth/validate-social r)]
+                                           (create-new-user! (assoc-in r [:body-params (first user-social-info)] (last user-social-info))))))
+                                     (create-new-user! r))))
            offer-routes
            promo-routes))
 
-(defroutes secure-routes
-  (context "" []
-           (POST "/login" )))
+;; TODO: secure-routes - wrapped in auth/wrap-authorized
 
 (defn- fetch-index
   [config]
@@ -170,21 +180,6 @@
           (assoc-in (assoc-in (:response exdata) [:body]
                               (pprint (:error exdata)))
                     [:headers "X-Error"] (.getMessage ex)))))))
-
-(defn wrap-stacktrace
-  "ring.middleware.stacktrace only catches exception, not Throwable, so we replace it here."
-  [handler]
-  (fn [request]
-    (try (handler request)
-         (catch Throwable t
-           (log/error t :request request)
-           {:status 500
-            :headers {"Content-Type" "text/plain; charset=UTF-8"}
-            :body (with-out-str
-                    (binding [*err* *out*]
-                      (pst t)
-                      (println "\n\nREQUEST:\n")
-                      (pprint request)))}))))
 
 (defn wrap-stacktrace
   "ring.middleware.stacktrace only catches exception, not Throwable, so we replace it here."
