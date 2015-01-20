@@ -79,6 +79,13 @@
         port (if-let [p (get-config-value "REDIS_PORT")] (read-string p))]
     {:host host :port port}))
 
+(defn- social-token-config
+  []
+  {:facebook {:app-id "1523186741303436"
+              :app-secret "14056f787e48ed9f20305c98239f6835"}
+   :google {:client-id "396195012878-16478fi00kv3aand6b6qqrp1mn5t4h5s.apps.googleusercontent.com"
+            :client-secret "f40o9PHz-AQvpsSYHYNXC1y8"}})
+
 (defn app-config
   []
   {:dev        {:database {:db "promotably_dev"
@@ -94,6 +101,7 @@
                 :dashboard (get-dashboard-config)
                 :logging base-log-config
                 :session-length-in-seconds (* 60 60 2)
+                :social-token-config (social-token-config)
                 :env :dev}
    :test       {:database {:db "promotably_test"
                            :user "p_user"
@@ -108,6 +116,7 @@
                 :dashboard (get-dashboard-config)
                 :logging base-log-config
                 :session-length-in-seconds (* 60 60 2)
+                :social-token-config (social-token-config)
                 :env :test}
    :staging    {:database (get-database-config)
                 :kinesis (get-kinesis-config)
@@ -115,6 +124,7 @@
                 :dashboard (get-dashboard-config)
                 :logging base-log-config
                 :session-length-in-seconds (* 60 60 2)
+                :social-token-config (social-token-config)
                 :env :staging}
    :integration {:database (get-database-config)
                  :test-topic (or (get-config-value "TEST_RESULTS_SNS_TOPIC_NAME")
@@ -124,6 +134,7 @@
                  :dashboard (get-dashboard-config)
                  :logging base-log-config
                  :session-length-in-seconds (* 60 60 2)
+                 :social-token-config (social-token-config)
                  :env :integration}
    :production {:database (get-database-config)
                 :redis (get-redis-config)
@@ -131,6 +142,7 @@
                 :dashboard (get-dashboard-config)
                 :logging base-log-config
                 :session-length-in-seconds (* 60 60 2)
+                :social-token-config (social-token-config)
                 :env :production}})
 
 (defn lookup

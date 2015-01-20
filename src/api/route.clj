@@ -94,16 +94,8 @@
            (GET "/realtime-conversion-offers" [] get-available-offers)
            (POST "/login" req (fn [r] (auth/authenticate r)))
            (POST "/register" req (fn [r]
-                                   ;; TODO: Move this mess out of here
-                                   (if (auth/is-social? r)
-                                     (let [provider (auth/provider r)]
-                                       (if (= :facebook provider)
-                                         (let [req-with-fb-token (assoc-in r [:body-params :facebook-app-token] "1523186741303436|14056f787e48ed9f20305c98239f6835")]
-                                           (when-let [user-social-info (auth/validate-social r)]
-                                             (create-new-user! (assoc-in r [:body-params (first user-social-info)] (last user-social-info)))))
-                                         (when-let [user-social-info (auth/validate-social r)]
-                                           (create-new-user! (assoc-in r [:body-params (first user-social-info)] (last user-social-info))))))
-                                     (create-new-user! r))))
+                                   (let [social-config (get-in current-system [:config :social-token-config])]
+                                     (auth/validate-and-create-user r social-config create-new-user!))))
            offer-routes
            promo-routes))
 
