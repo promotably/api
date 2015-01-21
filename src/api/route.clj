@@ -93,10 +93,12 @@
            (POST "/users" [] create-new-user!)
            (PUT "/users/:user-id" [] update-user!)
            (GET "/realtime-conversion-offers" [] get-available-offers)
-           (POST "/login" req (fn [r] (auth/authenticate r)))
+           (POST "/login" req (fn [r]
+                                (let [auth-config (get-in current-system [:config :auth-token-config])]
+                                  (auth/authenticate r auth-config))))
            (POST "/register" req (fn [r]
-                                   (let [social-config (get-in current-system [:config :social-token-config])]
-                                     (auth/validate-and-create-user r social-config create-new-user!))))
+                                   (let [auth-config (get-in current-system [:config :auth-token-config])]
+                                     (auth/validate-and-create-user r auth-config create-new-user!))))
            offer-routes
            promo-routes))
 

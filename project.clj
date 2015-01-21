@@ -63,7 +63,8 @@
                                com.fasterxml.jackson.core/jackson-core]]
                  [ring/ring-json "0.3.1"
                   :exclusions [joda-time com.fasterxml.jackson.core/jackson-core]]
-                 [org.apache.commons/commons-daemon "1.0.9"]]
+                 [org.apache.commons/commons-daemon "1.0.9"]
+                 [commons-codec "1.10"]]
   :resource-paths ["resources"]
   :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC" "-XX:MaxPermSize=256m"
              ;; "–XX:+UseG1GC"

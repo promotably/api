@@ -1,11 +1,42 @@
 (ns api.lib.crypto
   (:refer-clojure :exclude [compare])
   (:require [clojurewerkz.scrypt.core :as sc])
-  (:import java.security.MessageDigest
-           java.security.SecureRandom
-           javax.crypto.SecretKeyFactory
+  (:import [java.security MessageDigest SecureRandom]
+           [javax.crypto SecretKeyFactory Cipher KeyGenerator SecretKey]
            [javax.crypto.spec PBEKeySpec SecretKeySpec]
+           [org.apache.commons.codec.binary Base64]
            [java.util UUID]))
+
+(defn bytes [s]
+  (.getBytes s "UTF-8"))
+
+(defn base64 [b]
+  (Base64/encodeBase64String b))
+
+(defn debase64 [s]
+  (Base64/decodeBase64 (bytes s)))
+
+(defn get-raw-key [seed]
+  (let [keygen (KeyGenerator/getInstance "AES")
+        sr (SecureRandom/getInstance "SHA1PRNG")]
+    (.setSeed sr (bytes seed))
+    (.init keygen 128 sr)
+    (.. keygen generateKey getEncoded)))
+
+(defn get-cipher [mode seed]
+  (let [key-spec (SecretKeySpec. (get-raw-key seed) "AES")
+        cipher (Cipher/getInstance "AES")]
+    (.init cipher mode key-spec)
+    cipher))
+
+(defn aes-encrypt [text key]
+  (let [bytes (bytes text)
+        cipher (get-cipher Cipher/ENCRYPT_MODE key)]
+    (base64 (.doFinal cipher bytes))))
+
+(defn aes-decrypt [text key]
+  (let [cipher (get-cipher Cipher/DECRYPT_MODE key)]
+    (String. (.doFinal cipher (debase64 text)))))
 
 (defn
   ^{:private true}
@@ -44,7 +75,7 @@
         f (SecretKeyFactory/getInstance "PBKDF2WithHmacSHA1")]
     (->> (.generateSecret f k) (.getEncoded) (java.math.BigInteger.) (format "%x"))))
 
-(defn encrypt
+(defn s-encrypt
   "Encrypts a string value using scrypt.
    Arguments are:
    raw (string): a string to encrypt
@@ -80,7 +111,7 @@
   [password]
   (let [salt (str (UUID/randomUUID))
         salted-pw (str salt password salt)
-        scrypt-pw (encrypt salted-pw)]
+        scrypt-pw (s-encrypt salted-pw)]
     [scrypt-pw salt]))
 
 (defn verify-password

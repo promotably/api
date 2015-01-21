@@ -1,6 +1,8 @@
 (ns api.authentication
   (:require [api.entities :refer [users accounts]]
             [api.lib.crypto :as cr]
+            [clj-time.core :as t]
+            [clj-time.format :as tf]
             [clojure.data.json :as json]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
@@ -8,56 +10,47 @@
             [korma.core :refer :all])
   (:import [java.util UUID]))
 
-(defn authorized?
-  [handler request]
-  (when-let [cookie-auth-token (-> request :cookies "promotably-auth" :value)]
-    (when-let [session-auth-token (-> request :session :auth-token)]
-      (when (= cookie-auth-token session-auth-token)
-        (handler request)))))
+(defn- generate-user-auth-token
+  [user-id api-secret]
+  (let [token-data (json/write-str {:user-id user-id})]
+    (cr/aes-encrypt token-data api-secret)))
+
+(defn- get-user-id-from-auth-token
+  [auth-token api-secret]
+  (let [decrypted-json (cr/aes-decrypt auth-token api-secret)]
+    (:user-id (json/read-str decrypted-json :key-fn keyword))))
+
+(defn- authorized?
+  [request api-secret]
+  (let [cookie-auth-token (-> request :cookies "promotably-auth" :value)
+        user-data-cookie (-> request :cookies "promotably-user" :value (json/read-str :key-fn keyword))
+        current-user-id (:user-id user-data-cookie)
+        auth-cookie-user-id (get-user-id-from-auth-token api-secret)]
+    (= current-user-id auth-cookie-user-id)))
 
 (defn wrap-authorized
-  [handler]
+  [handler api-secret]
   ;; TODO: add role based authorization
   (fn [request]
-    (or (authorized? handler request)
-        {:status 301
-         :headers {"Location" "/login"}})))
+    (if (authorized? request api-secret)
+      (handler request)
+      {:status 301
+       :headers {"Location" "/login"}})))
 
 (defn- auth-response
-  [request]
-  (let [auth-token (str (UUID/randomUUID))]
+  [request api-secret user-id & {:keys [remember?]}]
+  (let [expiry (if remember?
+                 (tf/unparse (tf/formatters :basic-date-time)
+                             (t/plus (t/now) (t/years 10)))
+                 "Session")
+        auth-token (generate-user-auth-token user-id api-secret)]
     {:status 201
-     :cookies (merge (:cookies request) {"promotably-auth" {:value auth-token}})
+     :cookies (merge (:cookies request) {"promotably-auth" {:value auth-token
+                                                            :http-only true
+                                                            :expires expiry}
+                                         "promotably-user" {:value (json/write-str {:user-id user-id})
+                                                            :expires expiry}})
      :session (assoc (:session request) :auth-token auth-token)}))
-
-(defn- authenticate-native
-  [request]
-  (let [{:keys [email password]} (:body-params request)
-        db-user (first (select users (where {:email email})))
-        encrypted-pw (:password db-user)
-        pw-salt (:password_salt db-user)]
-    (if (cr/verify-password password pw-salt encrypted-pw)
-      (auth-response request)
-      {:status 401})))
-
-(defn- authenticate-social
-  [request]
-  (let [{:keys [email facebook-user-id google-id-token]} (:body-params request)
-        user-social-id (or facebook-user-id google-id-token)]
-    ;;TODO: How do we authenticate a previous social login?
-    (if (and email user-social-id)
-      (let [db-user (first (select users (where {:email email})))
-            db-user-social-id (:user-social-id db-user)]
-        (if (= user-social-id db-user-social-id)
-          (auth-response request)
-          {:status 401}))
-      {:status 401})))
-
-(defn authenticate
-  [{:keys [body-params] :as request}]
-  (if (:password body-params)
-    (authenticate-native request)
-    (authenticate-social request)))
 
 (defn is-social?
   [{:keys [body-params]}]
@@ -121,10 +114,10 @@
    :google validate-google})
 
 (defn- get-provider-validator
-  [request social-config]
+  [request auth-config]
   (let [login-provider (provider request)
         validator (login-provider provider-validators)
-        social-token-map (login-provider social-config)]
+        social-token-map (login-provider auth-config)]
     (fn [] (validator social-token-map))))
 
 (defn- remove-token-fields
@@ -132,18 +125,52 @@
   (dissoc body-params :google-code :google-access-token :google-id-token :facebook-app-token :facebook-auth-token :facebook-user-id))
 
 (defn- add-social-data
-  [request social-config]
-  (let [validator (get-provider-validator request social-config)
+  [request auth-config]
+  (let [validator (get-provider-validator request auth-config)
         body-params (:body-params request)]
     (when validator
       (remove-token-fields (merge body-params (validator))))))
 
 (defn validate-and-create-user
-  [request social-config create-user-fn]
+  [request auth-config create-user-fn]
   (if (is-social? request)
-    (if-let [body-params-with-social (add-social-data request)]
-      (let [create-resp (create-user-fn (assoc request :body-params body-params-with-social))]
-        (merge (auth-response create-resp) create-resp))
+    (if-let [body-params-with-social (add-social-data request auth-config)]
+      (let [create-resp (create-user-fn (assoc request :body-params body-params-with-social))
+            user-id (str (get-in create-resp [:body :user :user-id]))
+            api-secret (get-in auth-config [:api :api-secret])]
+        (merge (auth-response create-resp api-secret user-id) create-resp))
       {:status 401})
-    (let [create-resp (create-user-fn request)]
-      (merge (auth-response create-resp) create-resp))))
+    (let [create-resp (create-user-fn request)
+          user-id (str (get-in create-resp [:body :user :user-id]))
+          api-secret (get-in auth-config [:api :api-secret])]
+      (merge (auth-response create-resp api-secret user-id) create-resp))))
+
+(defn- authenticate-native
+  [request auth-config]
+  (let [{:keys [email password remember]} (:body-params request)
+        db-user (first (select users (where {:email email})))
+        db-user-id (str (:user_id db-user))
+        encrypted-pw (:password db-user)
+        pw-salt (:password_salt db-user)
+        api-secret (get-in auth-config [:api :api-secret])]
+    (when (cr/verify-password password pw-salt encrypted-pw)
+      (auth-response request api-secret db-user-id :remember? remember))))
+
+(defn- authenticate-social
+  [request auth-config]
+  (let [{:keys [email]} (:body-params request)
+        validator (get-provider-validator request auth-config)]
+    (when validator
+      (when-let [user-social-id (last (validator))]
+        (let [db-user (first (select users (where {:email email})))
+              db-user-social-id (:user_social_id db-user)
+              db-user-id (str (:user_id db-user))
+              api-secret (get-in auth-config [:api :api-secret])]
+          (when (= user-social-id db-user-social-id)
+            (auth-response request api-secret db-user-id)))))))
+
+(defn authenticate
+  [{:keys [body-params] :as request} auth-config]
+  (if (:password body-params)
+    (or (authenticate-native request auth-config) {:status 401})
+    (or (authenticate-social request auth-config) {:status 401})))
