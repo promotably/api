@@ -3,13 +3,14 @@
             [api.lib.crypto :as cr]
             [clojure.data.json :as json]
             [clojure.string :as str]
+            [clojure.tools.logging :as log]
             [org.httpkit.client :as http]
             [korma.core :refer :all])
   (:import [java.util UUID]))
 
 (defn authorized?
   [handler request]
-  (when-let [cookie-auth-token (-> request :cookies "__atoken" :value)]
+  (when-let [cookie-auth-token (-> request :cookies "promotably-auth" :value)]
     (when-let [session-auth-token (-> request :session :auth-token)]
       (when (= cookie-auth-token session-auth-token)
         (handler request)))))
@@ -25,14 +26,14 @@
 (defn- auth-response
   [request]
   (let [auth-token (str (UUID/randomUUID))]
-    {:status 200
-     :cookies (merge (:cookies request) {"__atoken" {:value auth-token}})
+    {:status 201
+     :cookies (merge (:cookies request) {"promotably-auth" {:value auth-token}})
      :session (assoc (:session request) :auth-token auth-token)}))
 
 (defn- authenticate-native
   [request]
-  (let [{:keys [username password]} (:body-params request)
-        db-user (first (select users (where {:username username})))
+  (let [{:keys [email password]} (:body-params request)
+        db-user (first (select users (where {:email email})))
         encrypted-pw (:password db-user)
         pw-salt (:password_salt db-user)]
     (if (cr/verify-password password pw-salt encrypted-pw)
@@ -41,11 +42,11 @@
 
 (defn- authenticate-social
   [request]
-  (let [{:keys [username facebook-user-id google-id-token]} (:body-params request)
+  (let [{:keys [email facebook-user-id google-id-token]} (:body-params request)
         user-social-id (or facebook-user-id google-id-token)]
     ;;TODO: How do we authenticate a previous social login?
-    (if (and username user-social-id)
-      (let [db-user (first (select users (where {:username username})))
+    (if (and email user-social-id)
+      (let [db-user (first (select users (where {:email email})))
             db-user-social-id (:user-social-id db-user)]
         (if (= user-social-id db-user-social-id)
           (auth-response request)
@@ -53,8 +54,8 @@
       {:status 401})))
 
 (defn authenticate
-  [request]
-  (if (get-in request [:body-params :password])
+  [{:keys [body-params] :as request}]
+  (if (:password body-params)
     (authenticate-native request)
     (authenticate-social request)))
 

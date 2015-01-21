@@ -39,7 +39,7 @@
   "Creates a new user in the database"
   [params :- InboundUserSchema]
   (let [{:keys [username email password company-name phone job-title
-                user-social-id account-id]} params
+                user-social-id account-id first-name last-name]} params
         [encrypted-pw salt] (crypto/encrypt-password (or password user-social-id))]
     (try
       {:status :success
@@ -57,6 +57,8 @@
                                  :password_salt salt
                                  :user_social_id user-social-id
                                  :phone phone
+                                 :first_name first-name
+                                 :last_name last-name
                                  :job_title job-title
                                  :created_at (sqlfn now)
                                  :account_id (:id a)}))))}

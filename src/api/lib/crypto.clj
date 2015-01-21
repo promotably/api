@@ -78,11 +78,12 @@
 
 (defn encrypt-password
   [password]
-  (let [scrypt-pw (encrypt password)
-        salt (str (UUID/randomUUID))]
-    [(sha2 scrypt-pw salt) salt]))
+  (let [salt (str (UUID/randomUUID))
+        salted-pw (str salt password salt)
+        scrypt-pw (encrypt salted-pw)]
+    [scrypt-pw salt]))
 
 (defn verify-password
   [password salt encrypted-pw]
-  (let [verify-pw (sha2 (encrypt password) salt)]
-    (= verify-pw encrypted-pw)))
+  (let [salted-pw (str salt password salt)]
+    (compare salted-pw encrypted-pw)))

@@ -1,5 +1,6 @@
 (ns api.route
-  (:import java.io.ByteArrayInputStream)
+  (:import [java.io ByteArrayInputStream]
+           [java.util UUID])
   (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
             [clojure.core.match :as match :refer (match)]
@@ -217,6 +218,19 @@
                     true (update-in [:session :shopper-id] (constantly (:shopper-id request))))]
       response)))
 
+(defn wrap-token
+  "Add a unique token identifier to each request for easy debugging."
+  [handler]
+  (fn [request]
+    (let [request-token (str (UUID/randomUUID))
+          tokenized-request (assoc request :token request-token)]
+      (log/debug (format "\n Start: %s \n Time: %s \n Request: \n %s"
+                         request-token (t/now) request))
+      (let [response (handler tokenized-request)]
+        (log/debug (format "\n End: %s \n Time: %s \n Response: \n %s"
+                           request-token (t/now) response))
+        response))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Main handler entry point
@@ -237,6 +251,7 @@
       wrap-multipart-params
       wrap-params
       wrap-nested-params
+      wrap-token
       wrap-save-the-raw-body
       ;; wrap-exceptions
       wrap-stacktrace

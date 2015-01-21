@@ -49,7 +49,8 @@
                400
                500))]
     {:status sc
-     :body (dissoc result :password :password-salt)}))
+     :body (-> result
+               (assoc-in [:user] (dissoc (:user result) :id :password :password-salt)))}))
 
 (defn shape-update-user
   [result]
