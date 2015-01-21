@@ -1,5 +1,5 @@
 (ns api.lib.crypto
-  (:refer-clojure :exclude [compare])
+  (:refer-clojure :exclude [compare bytes])
   (:require [clojurewerkz.scrypt.core :as sc])
   (:import [java.security MessageDigest SecureRandom]
            [javax.crypto SecretKeyFactory Cipher KeyGenerator SecretKey]

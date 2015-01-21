@@ -25,7 +25,7 @@
   (let [cookie-auth-token (-> request :cookies "promotably-auth" :value)
         user-data-cookie (-> request :cookies "promotably-user" :value (json/read-str :key-fn keyword))
         current-user-id (:user-id user-data-cookie)
-        auth-cookie-user-id (get-user-id-from-auth-token api-secret)]
+        auth-cookie-user-id (get-user-id-from-auth-token cookie-auth-token api-secret)]
     (= current-user-id auth-cookie-user-id)))
 
 (defn wrap-authorized
