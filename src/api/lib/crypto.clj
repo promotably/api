@@ -7,6 +7,12 @@
            [org.apache.commons.codec.binary Base64]
            [java.util UUID]))
 
+;;
+;; Ganked this stuff from some stackoverflow post.
+;; Nothing says cowboy brogrammer like copy and pasting
+;; random code from the internet, right?
+;;
+
 (defn bytes [s]
   (.getBytes s "UTF-8"))
 
@@ -37,6 +43,11 @@
 (defn aes-decrypt [text key]
   (let [cipher (get-cipher Cipher/DECRYPT_MODE key)]
     (String. (.doFinal cipher (debase64 text)))))
+
+;;
+;; Ripped out of lib-noir, we don't need all of this stuff.
+;; scrypt stuff should do, but leaving it here for now.
+;;
 
 (defn
   ^{:private true}
@@ -106,6 +117,10 @@
         secret (SecretKeySpec. (.getBytes sign-key), "HmacSHA1")]
     (.init mac secret)
     (apply str (map (partial format "%02x") (.doFinal mac (.getBytes v))))))
+
+;;
+;; Something we actually wrote in here!
+;;
 
 (defn encrypt-password
   [password]
