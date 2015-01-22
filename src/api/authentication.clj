@@ -11,16 +11,23 @@
   (:import [java.util UUID]))
 
 (defn- generate-user-auth-token
+  "Generates an AES encrypted json object containing the user-id using
+  the api-secret key."
   [user-id api-secret]
   (let [token-data (json/write-str {:user-id user-id})]
     (cr/aes-encrypt token-data api-secret)))
 
 (defn- get-user-id-from-auth-token
+  "Decrypts the auth-token using the api-secret key and returns the
+  user-id from the json object."
   [auth-token api-secret]
   (let [decrypted-json (cr/aes-decrypt auth-token api-secret)]
     (:user-id (json/read-str decrypted-json :key-fn keyword))))
 
 (defn- authorized?
+  "Given a request and the api-secret key, validates that the user-id in
+  the unencrypted promotably-user cookie matches the user-id in the
+  encrypted promotably-auth cookie using the api-secret key."
   [request api-secret]
   (let [cookie-auth-token (-> request :cookies "promotably-auth" :value)
         user-data-cookie (-> request :cookies "promotably-user" :value (json/read-str :key-fn keyword))
@@ -29,6 +36,8 @@
     (= current-user-id auth-cookie-user-id)))
 
 (defn wrap-authorized
+  "Middleware component for wrapping secure routes. Validates that this
+  request is authorized to access the resource."
   [handler api-secret]
   ;; TODO: add role based authorization
   (fn [request]
@@ -38,6 +47,13 @@
        :headers {"Location" "/login"}})))
 
 (defn- auth-response
+  "Given a request (or a response), the api-secret key, the user-id, and
+  (optional) :remember? kv pair, generates and adds an encrypted
+  authentication cookie signed by the api-secret key as well as an
+  unecrypted json cookie containing the user-id. Sets the expiry to
+  either Session or 10 years from now depending on the value of the
+  :remember? optional argument. Adds a status of 201, the cookies, and
+  the auth-token to the session component of the request (or response)."
   [request api-secret user-id & {:keys [remember?]}]
   (let [expiry (if remember?
                  (tf/unparse (tf/formatters :basic-date-time)
@@ -52,24 +68,33 @@
                                                             :expires expiry}})
      :session (assoc (:session request) :auth-token auth-token)}))
 
-(defn is-social?
+(defn- is-social?
+  "Determines in the given register or login request is for a 3rd party
+  provider."
   [{:keys [body-params]}]
   (or (:google-code body-params)
       (:facebook-auth-token body-params)))
 
 (defn- get-google-dd
+  "Gets the Google Discovery Document which describes the resource uri's
+  for various requests."
   []
   (-> @(http/get "https://accounts.google.com/.well-known/openid-configuration")
       :body
       (json/read-str :key-fn keyword)))
 
+;;Memoize get-google-dd since we only need to do it once.
 (def google-dd (memoize get-google-dd))
 
 (defn- get-google-token-endpoint
+  "Gets the endpoint from the Discovery Document needed to validate auth
+  tokens."
   []
   (:token_endpoint (google-dd)))
 
-(defn provider
+(defn- provider
+  "Determines the 3rd party provider for this authentication request (if
+  any) by inspecting specific keys sent from the client."
   [{:keys [body-params]}]
   (cond
    (:facebook-auth-token body-params) :facebook
@@ -77,6 +102,10 @@
    :else nil))
 
 (defn- validate-facebook
+  "Given the request and a map of api keys for authenticating facebook
+  logins, validates the access token from the client, and, if valid,
+  returns a vector of the form [:user-social-id 'facebook-user-id'] or
+  nil if validation failed."
   [{:keys [body-params] :as request} social-token-map]
   (let [{:keys [facebook-auth-token facebook-user-id]} body-params
         {:keys [app-id app-secret]} social-token-map
@@ -91,6 +120,13 @@
       [:user-social-id facebook-user-id])))
 
 (defn- validate-google
+  "Given the request and a map of api keys from authenticating google
+  logins, validates the one-time code. Validation returns an
+  access_token, which should match the google-access-token provided in
+  the request body, and an id_token which can be used to obtain identity
+  information about the user. If validation succeeds, returns a vector
+  of the form [:user-social-id 'google-id-token'] or nil if validation
+  failed."
   [{:keys [body-params] :as request} social-token-map]
   (let [{:keys [google-code google-access-token google-id-token]} body-params
         {:keys [client-id client-secret]} social-token-map
@@ -110,10 +146,15 @@
       [:user-social-id google-id-token])))
 
 (def provider-validators
+  "A map of privder keys to their respective validation functions."
   {:facebook validate-facebook
    :google validate-google})
 
 (defn- get-provider-validator
+  "Given the request and the application auth-config, determines the 3rd
+  party auth provider and returns a function that when invoked validates
+  the request with the provider and returns a vector of identification
+  information needed to create the user."
   [request auth-config]
   (let [login-provider (provider request)
         validator (login-provider provider-validators)
@@ -121,10 +162,15 @@
     (fn [] (validator social-token-map))))
 
 (defn- remove-token-fields
+  "Removes specific fields from the request so they are not passed along
+  as part of the request after in has been validated."
   [body-params]
   (dissoc body-params :google-code :google-access-token :google-id-token :facebook-app-token :facebook-auth-token :facebook-user-id))
 
 (defn- add-social-data
+  "Given the request and the auth-config map, adds the :user-social-id
+  key to the body-params of the request and removes any keys that were
+  used to validate the request."
   [request auth-config]
   (let [validator (get-provider-validator request auth-config)
         body-params (:body-params request)]
@@ -132,6 +178,10 @@
       (remove-token-fields (merge body-params (validator))))))
 
 (defn validate-and-create-user
+  "Given a registration request, the auth-config map, and a function
+  which takes the request and creates a new user, validates any 3rd
+  party access tokens and then invokes the create-user-fn. Returns an
+  auth-response whose body is the result of calling the create-user-fn."
   [request auth-config create-user-fn]
   (if (is-social? request)
     (if-let [body-params-with-social (add-social-data request auth-config)]
@@ -146,6 +196,8 @@
       (merge (auth-response create-resp api-secret user-id) create-resp))))
 
 (defn- authenticate-native
+  "Given a login request and the auth-config map, validates the supplied
+  credentials and returns an auth-response."
   [request auth-config]
   (let [{:keys [email password remember]} (:body-params request)
         db-user (first (select users (where {:email email})))
@@ -157,6 +209,9 @@
       (auth-response request api-secret db-user-id :remember? remember))))
 
 (defn- authenticate-social
+  "Given a login request for a user using a 3rd party provider and
+  auth-config map, validates the access tokens and returns an
+  auth-response."
   [request auth-config]
   (let [{:keys [email]} (:body-params request)
         validator (get-provider-validator request auth-config)]
@@ -170,6 +225,9 @@
             (auth-response request api-secret db-user-id)))))))
 
 (defn authenticate
+  "Determines if the login request is for native or 3rd party and
+  invokes the appropriate function. Returns and auth-response if
+  successfully authenticated or a response with status 401."
   [{:keys [body-params] :as request} auth-config]
   (if (:password body-params)
     (or (authenticate-native request auth-config) {:status 401})
