@@ -53,21 +53,15 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;
 
+(defn- get-api-secret
+  []
+  (get-in current-system [:config :auth-token-config :api :api-secret]))
+
 (def promo-code-regex #"[a-zA-Z0-9-]{1,}")
 (def offer-code-regex #"[a-zA-Z0-9-]{1,}")
 
 (defroutes promo-routes
   (context "/promos" []
-           (POST "/" [] (fn [r] (create-new-promo! (merge
-                                                    (:kinesis current-system)
-                                                    (-> current-system :config :kinesis))
-                                                   r)))
-           (GET "/" [] lookup-promos)
-           (DELETE ["/:promo-id", :promo-id promo-code-regex] [promo-id] delete-promo!)
-           (GET ["/:promo-id", :promo-id promo-code-regex] [promo-id] show-promo)
-           (PUT ["/:promo-id", :promo-id promo-code-regex] [promo-id] update-promo!)
-           (GET ["/query/:code", :code promo-code-regex]
-                [code] query-promo)
            (POST ["/validation/:code", :code promo-code-regex]
                  [code] validate-promo)
            (POST ["/calculation/:code", :code promo-code-regex]
@@ -85,13 +79,6 @@
   (context "/api/v1" []
            (GET "/track" req (fn [r] (events/record-event (:kinesis current-system) r)))
            (POST "/email-subscribers" [] create-email-subscriber!)
-           (GET "/accounts" [] lookup-account)
-           (POST "/accounts" [] create-new-account!)
-           (PUT "/accounts/:account-id" [] update-account!)
-           (GET "/users" [] lookup-user)
-           (GET "/users/:user-id" [] get-user)
-           (POST "/users" [] create-new-user!)
-           (PUT "/users/:user-id" [] update-user!)
            (GET "/realtime-conversion-offers" [] get-available-offers)
            (POST "/login" req (fn [r]
                                 (let [auth-config (get-in current-system [:config :auth-token-config])]
@@ -99,10 +86,30 @@
            (POST "/register" req (fn [r]
                                    (let [auth-config (get-in current-system [:config :auth-token-config])]
                                      (auth/validate-and-create-user r auth-config create-new-user!))))
-           offer-routes
            promo-routes))
 
 ;; TODO: secure-routes - wrapped in auth/wrap-authorized
+
+(defroutes api-secure-routes*
+  (context "/api/v1" []
+           (GET "/accounts" [] lookup-account)
+           (POST "/accounts" [] create-new-account!)
+           (PUT "/accounts/:account-id" [] update-account!)
+           (GET "/users" [] lookup-user)
+           (POST "/users" [] create-new-user!)
+           (PUT "/users/:user-id" [] update-user!)))
+
+(defroutes promo-secure-routes*
+  (context "/promos" []
+           (POST "/" [] (fn [r] (create-new-promo! (merge
+                                                   (:kinesis current-system)
+                                                   (-> current-system :config :kinesis))
+                                                  r)))
+           (GET "/" [] lookup-promos)
+           (DELETE ["/:promo-id", :promo-id promo-code-regex] [promo-id] delete-promo!)
+           (GET ["/:promo-id", :promo-id promo-code-regex] [promo-id] show-promo)
+           (PUT ["/:promo-id", :promo-id promo-code-regex] [promo-id] update-promo!)
+           (GET ["/query/:code", :code promo-code-regex] [code] query-promo)))
 
 (defn- fetch-index
   [config]
@@ -132,9 +139,12 @@
   [req]
   {:status 404 :body "<h1>Not Found</h1>"})
 
-(defroutes anonymous-routes
+(defroutes all-routes
   (GET "/health-check" [] "<h1>I'm here</h1>")
   api-routes
+  (auth/wrap-authorized api-secure-routes* get-api-secret)
+  (auth/wrap-authorized promo-secure-routes* get-api-secret)
+  (auth/wrap-authorized offer-routes get-api-secret)
   (GET "*" [] serve-cached-index)
   (not-found serve-404-page))
 
@@ -241,7 +251,7 @@
 
 (defn app
   [{:keys [config session-cache] :as options}]
-  (-> anonymous-routes
+  (-> all-routes
       wrap-ensure-session
       (wrap-permacookie {:name "promotably" :request-key :shopper-id})
       (wrap-restful-format :formats [:json-kw :edn])
@@ -289,7 +299,6 @@
     (-> (compojure/routes
          ;; These routes get NO csrf protection.
          app-routes
-
          ;; Serve static resources.
          ;; These routes get NO csrf protection.
          (compojure.route/resources "/")

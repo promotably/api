@@ -24,27 +24,26 @@
   (let [decrypted-json (cr/aes-decrypt auth-token api-secret)]
     (:user-id (json/read-str decrypted-json :key-fn keyword))))
 
-(defn- authorized?
+(defn authorized?
   "Given a request and the api-secret key, validates that the user-id in
   the unencrypted promotably-user cookie matches the user-id in the
   encrypted promotably-auth cookie using the api-secret key."
   [request api-secret]
-  (let [cookie-auth-token (-> request :cookies "promotably-auth" :value)
-        user-data-cookie (-> request :cookies "promotably-user" :value (json/read-str :key-fn keyword))
-        current-user-id (:user-id user-data-cookie)
-        auth-cookie-user-id (get-user-id-from-auth-token cookie-auth-token api-secret)]
-    (= current-user-id auth-cookie-user-id)))
+  (let [cookie-auth-token (-> request :cookies (get "__apiauth") :value)
+        user-data-cookie (-> request :cookies (get "promotably-user") :value)]
+    (when (and cookie-auth-token user-data-cookie)
+      (let [current-user-id (:user-id (json/read-str user-data-cookie :key-fn keyword))
+            auth-cookie-user-id (get-user-id-from-auth-token cookie-auth-token api-secret)]
+        (= current-user-id auth-cookie-user-id)))))
 
 (defn wrap-authorized
   "Middleware component for wrapping secure routes. Validates that this
   request is authorized to access the resource."
-  [handler api-secret]
+  [handler api-secret-fn]
   ;; TODO: add role based authorization
   (fn [request]
-    (if (authorized? request api-secret)
-      (handler request)
-      {:status 301
-       :headers {"Location" "/login"}})))
+    (when (authorized? request (api-secret-fn))
+      (handler request))))
 
 (defn- auth-response
   "Given a request (or a response), the api-secret key, the user-id, and
@@ -61,7 +60,7 @@
                  "Session")
         auth-token (generate-user-auth-token user-id api-secret)]
     {:status 201
-     :cookies (merge (:cookies request) {"promotably-auth" {:value auth-token
+     :cookies (merge (:cookies request) {"__apiauth" {:value auth-token
                                                             :http-only true
                                                             :expires expiry}
                                          "promotably-user" {:value (json/write-str {:user-id user-id})

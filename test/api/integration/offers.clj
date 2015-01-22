@@ -28,6 +28,7 @@
     [new-offer]
     (client/post "http://localhost:3000/api/v1/offers"
                  {:body (json/write-str new-offer)
+                  :headers {"Cookie" (build-auth-cookie-string)}
                   :content-type :json
                   :accept :json
                   :throw-exceptions false}))
@@ -35,6 +36,7 @@
     [offer-id offer]
     (client/put (str "http://localhost:3000/api/v1/offers/" offer-id)
                 {:body (json/write-str offer)
+                 :headers {"Cookie" (build-auth-cookie-string)}
                  :content-type :json
                  :accept :json
                  :throw-exceptions false}))
