@@ -27,7 +27,7 @@
             [api.authentication :as auth]
             [api.events :as events]
             [api.controllers.users :refer [create-new-user! get-user update-user!
-                                           lookup-user]]
+                                           lookup-social-user]]
             [api.controllers.promos :refer [create-new-promo! show-promo query-promo
                                             validate-promo calculate-promo
                                             update-promo! delete-promo!
@@ -82,7 +82,7 @@
            (GET "/realtime-conversion-offers" [] get-available-offers)
            (POST "/login" req (fn [r]
                                 (let [auth-config (get-in current-system [:config :auth-token-config])]
-                                  (auth/authenticate r auth-config))))
+                                  (auth/authenticate r auth-config get-user))))
            (POST "/register" req (fn [r]
                                    (let [auth-config (get-in current-system [:config :auth-token-config])]
                                      (auth/validate-and-create-user r auth-config create-new-user!))))
@@ -107,7 +107,7 @@
            (GET "/accounts" [] lookup-account)
            (POST "/accounts" [] create-new-account!)
            (PUT "/accounts/:account-id" [] update-account!)
-           (GET "/users" [] lookup-user)
+           (GET "/users/:user-id" [user-id] (get-user user-id))
            (POST "/users" [] create-new-user!)
            (PUT "/users/:user-id" [] update-user!)
            promo-secure-routes

@@ -46,26 +46,30 @@
       (handler request))))
 
 (defn- auth-response
-  "Given a request (or a response), the api-secret key, the user-id, and
-  (optional) :remember? kv pair, generates and adds an encrypted
-  authentication cookie signed by the api-secret key as well as an
-  unecrypted json cookie containing the user-id. Sets the expiry to
-  either Session or 10 years from now depending on the value of the
-  :remember? optional argument. Adds a status of 201, the cookies, and
-  the auth-token to the session component of the request (or response)."
-  [request api-secret user-id & {:keys [remember?]}]
+  "Given a response, the api-secret key, the user-id, and (optional)
+  :remember? kv pair, generates and adds an encrypted authentication
+  cookie signed by the api-secret key as well as an unecrypted json
+  cookie containing the user-id. Sets the expiry to either Session or 10
+  years from now depending on the value of the :remember? optional
+  argument. Adds a status of 200 if no other status in the response is
+  present, the cookies, and the auth-token to the session component of
+  the response."
+  [response api-secret user-id & {:keys [remember?]}]
   (let [expiry (if remember?
                  (tf/unparse (tf/formatters :basic-date-time)
                              (t/plus (t/now) (t/years 10)))
                  "Session")
         auth-token (generate-user-auth-token user-id api-secret)]
-    {:status 201
-     :cookies (merge (:cookies request) {"__apiauth" {:value auth-token
-                                                            :http-only true
-                                                            :expires expiry}
-                                         "promotably-user" {:value (json/write-str {:user-id user-id})
-                                                            :expires expiry}})
-     :session (assoc (:session request) :auth-token auth-token)}))
+    {:status (or (:status response) 200)
+     :cookies (merge (:cookies response) {"__apiauth" {:value auth-token
+                                                       :http-only true
+                                                       :expires expiry
+                                                       :path "/"}
+                                          "promotably-user" {:value (json/write-str {:user-id user-id})
+                                                             :expires expiry
+                                                             :path "/"}})
+     :session (assoc (:session response) :auth-token auth-token)
+     :body (:body response)}))
 
 (defn- is-social?
   "Determines in the given register or login request is for a 3rd party
@@ -187,17 +191,19 @@
       (let [create-resp (create-user-fn (assoc request :body-params body-params-with-social))
             user-id (str (get-in create-resp [:body :user :user-id]))
             api-secret (get-in auth-config [:api :api-secret])]
-        (merge (auth-response create-resp api-secret user-id) create-resp))
+        (auth-response create-resp api-secret user-id))
       {:status 401})
     (let [create-resp (create-user-fn request)
           user-id (str (get-in create-resp [:body :user :user-id]))
           api-secret (get-in auth-config [:api :api-secret])]
-      (merge (auth-response create-resp api-secret user-id) create-resp))))
+      (auth-response create-resp api-secret user-id))))
 
 (defn- authenticate-native
-  "Given a login request and the auth-config map, validates the supplied
-  credentials and returns an auth-response."
-  [request auth-config]
+  "Given a login request, the auth-config map, and a fn that takes a
+  user-id and returns a response map, validates the supplied
+  credentials, and, if valid, calls the get-user-fn with the user-id
+  from the db. Returns an auth-response."
+  [request auth-config get-user-fn]
   (let [{:keys [email password remember]} (:body-params request)
         db-user (first (select users (where {:email email})))
         db-user-id (str (:user_id db-user))
@@ -205,13 +211,15 @@
         pw-salt (:password_salt db-user)
         api-secret (get-in auth-config [:api :api-secret])]
     (when (cr/verify-password password pw-salt encrypted-pw)
-      (auth-response request api-secret db-user-id :remember? remember))))
+      (let [response (get-user-fn db-user-id)]
+        (auth-response response api-secret db-user-id :remember? remember)))))
 
 (defn- authenticate-social
-  "Given a login request for a user using a 3rd party provider and
-  auth-config map, validates the access tokens and returns an
-  auth-response."
-  [request auth-config]
+  "Given a login request for a user using a 3rd party provider, an
+  auth-config map, and a fn that takes the user-id and returns a
+  response map, validates the access tokens and, if valid, calls the
+  get-user-fn with the user-id from the db. Returns an auth-response."
+  [request auth-config get-user-fn]
   (let [{:keys [email]} (:body-params request)
         validator (get-provider-validator request auth-config)]
     (when validator
@@ -221,13 +229,15 @@
               db-user-id (str (:user_id db-user))
               api-secret (get-in auth-config [:api :api-secret])]
           (when (= user-social-id db-user-social-id)
-            (auth-response request api-secret db-user-id)))))))
+            (let [response (get-user-fn db-user-id)]
+              (auth-response response api-secret db-user-id))))))))
 
 (defn authenticate
   "Determines if the login request is for native or 3rd party and
-  invokes the appropriate function. Returns and auth-response if
-  successfully authenticated or a response with status 401."
-  [{:keys [body-params] :as request} auth-config]
+  invokes the appropriate function. Calls the get-user-fn if
+  authenticated and returns an auth-response or a response with status
+  401."
+  [{:keys [body-params] :as request} auth-config get-user-fn]
   (if (:password body-params)
-    (or (authenticate-native request auth-config) {:status 401})
-    (or (authenticate-social request auth-config) {:status 401})))
+    (or (authenticate-native request auth-config get-user-fn) {:status 401})
+    (or (authenticate-social request auth-config get-user-fn) {:status 401})))
