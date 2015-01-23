@@ -90,16 +90,7 @@
 
 ;; TODO: secure-routes - wrapped in auth/wrap-authorized
 
-(defroutes api-secure-routes*
-  (context "/api/v1" []
-           (GET "/accounts" [] lookup-account)
-           (POST "/accounts" [] create-new-account!)
-           (PUT "/accounts/:account-id" [] update-account!)
-           (GET "/users" [] lookup-user)
-           (POST "/users" [] create-new-user!)
-           (PUT "/users/:user-id" [] update-user!)))
-
-(defroutes promo-secure-routes*
+(defroutes promo-secure-routes
   (context "/promos" []
            (POST "/" [] (fn [r] (create-new-promo! (merge
                                                    (:kinesis current-system)
@@ -110,6 +101,17 @@
            (GET ["/:promo-id", :promo-id promo-code-regex] [promo-id] show-promo)
            (PUT ["/:promo-id", :promo-id promo-code-regex] [promo-id] update-promo!)
            (GET ["/query/:code", :code promo-code-regex] [code] query-promo)))
+
+(defroutes secure-routes
+  (context "/api/v1" []
+           (GET "/accounts" [] lookup-account)
+           (POST "/accounts" [] create-new-account!)
+           (PUT "/accounts/:account-id" [] update-account!)
+           (GET "/users" [] lookup-user)
+           (POST "/users" [] create-new-user!)
+           (PUT "/users/:user-id" [] update-user!)
+           promo-secure-routes
+           offer-routes))
 
 (defn- fetch-index
   [config]
@@ -142,9 +144,7 @@
 (defroutes all-routes
   (GET "/health-check" [] "<h1>I'm here</h1>")
   api-routes
-  (auth/wrap-authorized api-secure-routes* get-api-secret)
-  (auth/wrap-authorized promo-secure-routes* get-api-secret)
-  (auth/wrap-authorized offer-routes get-api-secret)
+  (auth/wrap-authorized secure-routes get-api-secret)
   (GET "*" [] serve-cached-index)
   (not-found serve-404-page))
 

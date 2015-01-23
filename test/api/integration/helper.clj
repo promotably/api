@@ -12,7 +12,6 @@
    [clj-time.coerce :refer (to-sql-time)]
    [clojure.java.jdbc :as jdbc]
    [clojure.walk :refer [postwalk]]
-   [clojure.string :refer [escape]]
    [clj-time.core :refer (now)]
    [drift.execute :as drift]
    [midje.sweet :refer :all]
@@ -80,10 +79,10 @@
                   (get-in system/current-system [:config :auth-token-config :api :api-secret])))
 
 (defn promotably-user-cookie []
-  (URLEncoder/encode (json/write-str {:user-id test-user-id}) "UTF-8"))
+  (URLEncoder/encode (json/write-str {:user-id test-user-id}) "utf8"))
 
 (defn build-auth-cookie-string []
-  (format "__apiauth=%s; promotably-user=%s" (auth-cookie-token) (promotably-user-cookie)))
+  (format "__apiauth=%s; promotably-user=%s;" (auth-cookie-token) (promotably-user-cookie)))
 
 (defn create-promo
   [new-promo]

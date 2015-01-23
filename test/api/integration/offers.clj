@@ -65,7 +65,7 @@
               (facts "List Offers"
                 (let [url (str "http://localhost:3000/api/v1/offers/?site-id="
                                (:site-id site))
-                      r (client/get url)
+                      r (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r) keyword)]
                   listed => (just [(contains
                                     {:display-text "display text"
@@ -102,7 +102,7 @@
               (facts "Offer Update"
                 (let [url (str "http://localhost:3000/api/v1/offers/?site-id="
                                (:site-id site))
-                      r (client/get url)
+                      r (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r) keyword)
                       updated-offer {:site-id (str site-id)
                                      :offer-id (-> listed first :offer-id)
@@ -118,7 +118,7 @@
                                      :conditions [{:type :product-views
                                                    :product-views 3}]}
                       r1 (update-offer (-> listed first :offer-id) updated-offer)
-                      r2 (client/get url)
+                      r2 (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r2) keyword)]
                   (:status r) => 200
                   listed => (just [(contains
