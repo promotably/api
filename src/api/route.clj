@@ -26,8 +26,7 @@
              :refer [wrap-anti-forgery]]
             [api.authentication :as auth]
             [api.events :as events]
-            [api.controllers.users :refer [create-new-user! get-user update-user!
-                                           lookup-social-user]]
+            [api.controllers.users :refer [create-new-user! get-user update-user!]]
             [api.controllers.promos :refer [create-new-promo! show-promo query-promo
                                             validate-promo calculate-promo
                                             update-promo! delete-promo!
@@ -35,7 +34,7 @@
             [api.controllers.offers :refer [create-new-offer! show-offer
                                             update-offer! delete-offer!
                                             lookup-offers get-available-offers]]
-            [api.controllers.accounts :refer [lookup-account create-new-account!
+            [api.controllers.accounts :refer [get-account create-new-account!
                                               update-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]
             [api.cloudwatch :as cw]
@@ -104,7 +103,7 @@
 
 (defroutes secure-routes
   (context "/api/v1" []
-           (GET "/accounts" [] lookup-account)
+           (GET "/accounts" [] get-account)
            (POST "/accounts" [] create-new-account!)
            (PUT "/accounts/:account-id" [] update-account!)
            (GET "/users/:user-id" [user-id] (get-user user-id))

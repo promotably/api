@@ -6,28 +6,7 @@
             [api.lib.crypto :as crypto]
             [api.lib.user :refer [parse-sql-exception]]
             [api.util :refer [hyphenify-key]]
-            [korma.core :refer :all]
-            [schema.core :as s]
-            [schema.macros :as sm]))
-
-(def BaseUserSchema {(s/required-key :email) s/Str
-                     (s/optional-key :username) (s/maybe s/Str)
-                     (s/optional-key :phone) (s/maybe s/Str)
-                     (s/optional-key :job-title) (s/maybe s/Str)
-                     (s/optional-key :first-name) (s/maybe s/Str)
-                     (s/optional-key :last-name) (s/maybe s/Str)})
-
-(def InboundUserSchema (merge BaseUserSchema
-                              {(s/optional-key :user-social-id) s/Str
-                               (s/optional-key :account-id) s/Uuid
-                               (s/optional-key :password) s/Str}))
-
-(def OutboundUserSchema (merge BaseUserSchema
-                               {(s/required-key :created-at) s/Inst
-                                (s/required-key :account-id) (s/maybe s/Int)
-                                (s/required-key :user-id) s/Uuid
-                                (s/required-key :user-social-id) s/Str
-                                (s/required-key :id) s/Int}))
+            [korma.core :refer :all]))
 
 (defn- safe-db-to-user
   "Translates a database result to a map that obeys UserSchema."
@@ -35,47 +14,6 @@
   (let [ks (keys r)]
     (rename-keys r (zipmap ks (map hyphenify-key ks)))))
 
-(sm/defn new-user!
-  "Creates a new user in the database"
-  [params :- InboundUserSchema]
-  (let [{:keys [username email password company-name phone job-title
-                user-social-id account-id first-name last-name]} params
-        [encrypted-pw salt] (crypto/encrypt-password (or password user-social-id))]
-    (try
-      {:status :success
-       :user (safe-db-to-user
-              (let [a (first (select accounts
-                                     (fields :id)
-                                     (where {:account_id account-id})))]
-                (insert users
-                        ;;TODO: There's got to be a better way than spelling out
-                        ;;every single field? What happens when I want to add
-                        ;;more fields?
-                        (values {:username (or username email)
-                                 :email email
-                                 :password encrypted-pw
-                                 :password_salt salt
-                                 :user_social_id user-social-id
-                                 :phone phone
-                                 :first_name first-name
-                                 :last_name last-name
-                                 :job_title job-title
-                                 :created_at (sqlfn now)
-                                 :account_id (:id a)}))))}
-      (catch org.postgresql.util.PSQLException ex
-        {:status :error
-         :error (or (parse-sql-exception ex) (.getMessage ex))}))))
-
-(let [allowed-keys #{:first-name :last-name
-                     :email :username :phone :job-title
-                     :user-social-id}]
-  (defn update-user!
-    [{:keys [user-id] :as params}]
-    (let [params-for-update (dash-to-underscore-keys
-                             (into {} (filter #(contains? allowed-keys (first %)) params)))]
-      (update users
-              (set-fields params-for-update)
-              (where {:user_id user-id})))))
 
 (defn- lookup-single-by
   "Lookup a single row by where map passed in"
@@ -84,26 +22,26 @@
                  (with accounts)
                  (where m))))
 
-(sm/defn find-by-user-id :- OutboundUserSchema
+(defn find-by-user-id
   "Lookup a user by user id"
   [user-id]
   (safe-db-to-user (lookup-single-by {:user_id (if (= (class user-id) java.util.UUID)
                                                  user-id
                                                  (java.util.UUID/fromString user-id))})))
 
-(sm/defn find-by-username :- OutboundUserSchema
+(defn find-by-username
   "Lookup a user by username"
-  [username :- s/Str]
+  [username]
   (safe-db-to-user (lookup-single-by {:username username})))
 
-(sm/defn find-by-email :- OutboundUserSchema
+(defn find-by-email
   "Lookup a user by email"
-  [email :- s/Str]
+  [email]
   (safe-db-to-user (lookup-single-by {:email email})))
 
-(sm/defn find-by-user-social-id :- OutboundUserSchema
+(defn find-by-user-social-id
   "Lookup a user by their user social id"
-  [uid :- s/Str]
+  [uid]
   (safe-db-to-user (first (select users
                                   (where {:user_social_id uid})))))
 
@@ -118,9 +56,39 @@
                                   (join accounts (= :accounts.id :account_id))
                                   (where {:accounts.account_id account-uuid})))))
 
-(defn assign-user-to-account!
-  "Assign a user to an account"
-  [user-id account-id]
-  (update users
-          (set-fields {:account_id account-id})
-          (where {:id user-id})))
+(defn new-user!
+  "Creates a new user in the database"
+  [params]
+  (let [{:keys [username email password company-name phone job-title
+                user-social-id account-id first-name last-name]} params
+                [encrypted-pw salt] (crypto/encrypt-password (or password user-social-id))]
+    (safe-db-to-user
+     (let [a (first (select accounts
+                            (fields :id)
+                            (where {:account_id account-id})))]
+       (insert users
+               ;;TODO: There's got to be a better way than spelling out
+               ;;every single field? What happens when I want to add
+               ;;more fields?
+               (values {:username (or username email)
+                        :email email
+                        :password encrypted-pw
+                        :password_salt salt
+                        :user_social_id user-social-id
+                        :phone phone
+                        :first_name first-name
+                        :last_name last-name
+                        :job_title job-title
+                        :created_at (sqlfn now)
+                        :account_id (:id a)}))))))
+
+(let [allowed-keys #{:first-name :last-name
+                     :email :username :phone :job-title
+                     :user-social-id :account-id}]
+  (defn update-user!
+    [{:keys [user-id] :as params}]
+    (let [params-for-update (dash-to-underscore-keys
+                             (into {} (filter #(contains? allowed-keys (first %)) params)))
+          result (update users
+                         (set-fields params-for-update)
+                         (where {:user_id user-id}))])))

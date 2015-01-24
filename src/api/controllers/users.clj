@@ -3,71 +3,39 @@
             [api.models.user :as user]
             [api.models.account :as account]
             [api.models.site :as site]
-            [api.views.accounts :refer [shape-get-user shape-create-user shape-update-user]]
-            [clojure.tools.logging :as log]
-            [schema.core :as s]
-            [schema.coerce :as c]))
+            [api.views.users :refer [shape-response-body]]
+            [clojure.tools.logging :as log]))
 
-(let [inbound-schema {(s/required-key :email) s/Str
-                      (s/optional-key :password) s/Str
-                      (s/optional-key :username) s/Str
-                      (s/optional-key :user-social-id) s/Str
-                      (s/optional-key :account-id) s/Uuid
-                      (s/optional-key :phone) s/Str
-                      (s/optional-key :job-title) s/Str
-                      (s/optional-key :first-name) s/Str
-                      (s/optional-key :last-name) s/Str}]
-  (defn create-new-user!
-    [{:keys [body-params] :as request}]
-    (let [body-params (dissoc body-params :google-code :google-access-token :google-id-token :facebook-auth-token :facebook-app-token :facebook-user-id)
-          coerced-params ((c/coercer
-                           inbound-schema
-                           (c/first-matcher [custom-matcher
-                                             c/string-coercion-matcher]))
-                          body-params)]
-      (if (or (:password coerced-params)
-              (:user-social-id coerced-params))
-        (let [result (user/new-user! coerced-params)]
-          (shape-create-user result))
-        (throw (ex-info "User creation requires a password or a social-id"
-                        {:reason :api.error/invalid-registration-data}))))))
-
-(let [inbound-schema {(s/required-key :user-id) s/Uuid
-                      (s/optional-key :email) s/Str
-                      (s/optional-key :username) s/Str
-                      (s/optional-key :phone) s/Str
-                      (s/optional-key :job-title) s/Str
-                      (s/optional-key :first-name) s/Str
-                      (s/optional-key :last-name) s/Str
-                      (s/optional-key :user-social-id) s/Str
-                      (s/optional-key :browser-id) s/Uuid}]
-  (defn update-user!
-    [{body-params :body-params {:keys [user-id]} :params :as request}]
-    (let [coerced-params ((c/coercer
-                           inbound-schema
-                           (c/first-matcher [custom-matcher
-                                             c/string-coercion-matcher]))
-                          (assoc body-params :user-id user-id))]
-      (shape-update-user (user/update-user! coerced-params)))))
+(defn- build-response
+  [status & {:keys [user cookies session]}]
+  (let [response-body (shape-response-body user)]
+    (cond-> {:status status
+             :body response-body}
+            cookies (assoc :cookies cookies)
+            session (assoc :session session))))
 
 (defn get-user
   [user-id]
-  (let [u (user/find-by-user-id user-id)
-        a (when (and u (:account-id u))
-            (account/find-by-id (:account-id u)))
-        s (when a (site/find-by-account-id (:account-id u)))]
-    (shape-get-user
-     {:user u
-      :account a
-      :sites s})))
+  (if-let [u (user/find-by-user-id user-id)]
+    (let [a (when (and u (:account-id u))
+              (account/find-by-id (:account-id u)))
+          s (when a (site/find-by-account-id (:account-id u)))
+          a-s (assoc a :sites s)
+          u-a-s (assoc u :account a-s)]
+      (build-response 200 :user u-a-s))
+    (build-response 404)))
 
-(defn lookup-social-user
-  [{{:keys [user-social-id]} :params}]
-  (let [u (user/find-by-user-social-id user-social-id)
-        a (when (and u (:account-id u))
-            (account/find-by-id (:account-id u)))
-        s (when a (site/find-by-account-id (:account-id u)))]
-    (shape-get-user
-     {:user u
-      :account a
-      :sites s})))
+(defn create-new-user!
+  [{:keys [body-params] :as request}]
+  (if (or (:password body-params)
+          (:user-social-id body-params))
+    (let [result (user/new-user! body-params)]
+      (build-response 201 :user result))
+    (build-response 400)))
+
+(defn update-user!
+  [{:keys [body-params] :as request}]
+  (let [update-result (user/update-user! body-params)]
+    (if update-result
+      (get-user (:user-id body-params))
+      (build-response 400))))
