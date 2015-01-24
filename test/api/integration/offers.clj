@@ -1,6 +1,6 @@
 (ns api.integration.offers
   (:require
-   [api.fixtures.basic :as base]
+   [api.fixtures.offers :as offers-fixture]
    [api.integration.helper :refer :all]
    [api.route :as route]
    [api.system :as system]
@@ -17,7 +17,7 @@
                                    (core/go {:port 3000 :repl-port 55555}))
                                  (migrate-down)
                                  (migrate-up)
-                                 (load-fixture-set base/fixture-set)))
+                                 (load-fixture-set offers-fixture/fixture-set)))
                      (after :contents
                             (comment migrate-down))]
 
@@ -38,6 +38,9 @@
                  :content-type :json
                  :accept :json
                  :throw-exceptions false}))
+  (defn- get-rcos
+    [site-id]
+    )
 
   (fact-group :integration
 
@@ -143,4 +146,7 @@
                                               :promo-id (-> promos first :uuid str)
                                               :expiry-in-minutes 20}
                                      :code "E1"
-                                     :conditions []})])))))
+                                     :conditions []})])))
+
+              (facts "Offer with dates condition"
+                )))
