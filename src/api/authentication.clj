@@ -162,7 +162,7 @@
   (let [login-provider (provider request)
         validator (login-provider provider-validators)
         social-token-map (login-provider auth-config)]
-    (fn [] (validator social-token-map))))
+    (fn [] (validator request social-token-map))))
 
 (defn- remove-token-fields
   "Removes specific fields from the request so they are not passed along

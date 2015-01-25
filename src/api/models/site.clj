@@ -2,63 +2,65 @@
   (:require [clojure.set :refer [rename-keys]]
             [korma.core :refer :all]
             [api.entities :refer :all]
-            [api.lib.coercion-helper :refer [underscore-to-dash-keys]]
-            [schema.core :as s]
-            [schema.macros :as sm]))
+            [api.lib.coercion-helper :refer [underscore-to-dash-keys
+                                             dash-to-underscore-keys]]))
 
-(def SiteSchema {(s/optional-key :id) s/Int
-                 (s/optional-key :account-id) s/Int
-                 (s/required-key :created-at) s/Inst
-                 (s/required-key :updated-at) s/Inst
-                 (s/optional-key :name) (s/maybe s/Str)
-                 (s/required-key :site-id) s/Uuid
-                 (s/optional-key :site-code) (s/maybe s/Str)
-                 (s/optional-key :site-url) (s/maybe s/Str)
-                 (s/optional-key :api-secret) (s/maybe s/Uuid)})
+(defn find-by-account-id
+  [account-id]
+  (mapv underscore-to-dash-keys
+        (select sites
+                (where {:account_id account-id}))))
 
-(defn- db-to-site
-  "Translates a database result to a map that obeys SiteSchema"
-  [r]
-  (let [hyphenated (underscore-to-dash-keys r)]
-    (if r
-      (dissoc (assoc hyphenated :site-id (:uuid hyphenated)) :uuid :id :account-id))))
-
-(sm/defn ^:always-validate find-by-account-id :- [SiteSchema]
-  [account-id :- s/Int]
-  (map db-to-site
-       (select sites
-               (where {:account_id account-id}))))
-
-(sm/defn ^:always-validate find-by-account-uuid :- [SiteSchema]
-  [account-uuid :- s/Uuid]
-  (map db-to-site
-       (select sites
-               (join accounts (= :accounts.id :account_id))
-               (where {:accounts.account_id account-uuid}))))
+(defn find-by-account-uuid
+  [account-uuid]
+  (mapv underscore-to-dash-keys
+        (select sites
+                (join accounts (= :accounts.id :account_id))
+                (where {:accounts.account_id account-uuid}))))
 
 (defn find-by-site-uuid
-  [site-uuid & [raw?]]
-  (let [u (condp = (class site-uuid)
-            java.lang.String (java.util.UUID/fromString site-uuid)
-            java.util.UUID site-uuid)
-        result (first (select sites (where {:uuid u})))]
-    (if raw? result
-        (db-to-site result))))
+  [site-id]
+  (let [result (first (select sites (where {:uuid site-id})))]
+    (underscore-to-dash-keys result)))
 
 (defn find-by-site-id
-  [site-id]
-  (db-to-site (first (select sites (where {:id site-id})))))
+  [id]
+  (underscore-to-dash-keys (first (select sites (where {:id id})))))
 
 (defn get-id-by-site-uuid
-  [site-uuid]
-  (let [u (condp = (class site-uuid)
-            java.lang.String (java.util.UUID/fromString site-uuid)
-            java.util.UUID site-uuid)]
-    (:id (first (select sites
-                        (fields [:id])
-                        (where {:uuid u}))))))
+  [site-id]
+  (:id (first (select sites
+                      (fields [:id])
+                      (where {:uuid site-id})))))
 
 (defn find-by-name
   [name]
-  (db-to-site (first (select sites
-                             (where {:name name})))))
+  (underscore-to-dash-keys (first (select sites
+                                          (where {:name name})))))
+
+(defn create-site-for-account!
+  [site]
+  (let [{:keys [name site-url api-secret country
+                timezone currency language account-id]} site
+        new-site (insert sites
+                         (values {:account_id account-id
+                                  :name name
+                                  :site_url site-url
+                                  :api_secret api-secret
+                                  :country country
+                                  :timezone timezone
+                                  :currency currency
+                                  :language language}))]
+    (when new-site
+      (underscore-to-dash-keys new-site))))
+
+(let [allowed-keys [:site-code :name :country :timezone
+                    :currency :language :site-url]]
+  (defn update-site-for-account!
+    [site]
+    (let [params-for-update (dash-to-underscore-keys
+                             (select-keys site allowed-keys))]
+      (update sites
+              (set-fields params-for-update)
+              (where {:uuid (:site-id site)
+                      :account_id (:account-id site)})))))

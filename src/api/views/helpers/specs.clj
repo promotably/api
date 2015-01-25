@@ -20,7 +20,7 @@
 
 (def site-spec
   {:site-id (fn [site] ; uuid coerced to string
-              (str (:site-id site)))
+              (str (:uuid site)))
    :site-code :site-code
    :name :name
    :site-url :site-url

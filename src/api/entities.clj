@@ -48,5 +48,3 @@
 (defentity offer-conditions
   (table "offer_conditions")
   (belongs-to offers {:fk :offer_id}))
-
-
