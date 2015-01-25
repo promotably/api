@@ -40,7 +40,9 @@
                  :throw-exceptions false}))
   (defn- get-rcos
     [site-id]
-    )
+    (client/get "http://localhost:3000/api/v1/realtime-conversion-offers"
+                {:throw-exceptions false
+                 :query-params {"site-id" (str site-id)}}))
 
   (fact-group :integration
 
@@ -149,4 +151,13 @@
                                      :conditions []})])))
 
               (facts "Offer with dates condition"
-                )))
+
+                ;; Tests that only the offer with valid dates is
+                ;; returned from the RCO call. There's also an offer
+                ;; in the db for the same site that has invalid dates,
+                ;; so it should not get returned here.
+
+                (let [r (get-rcos offers-fixture/site-2-id)
+                      pr (json/read-str (:body r) :key-fn keyword)]
+                  (:status r) => 200
+                  pr => (just [(contains {:code "OFFER-VALID-DATES"})])))))
