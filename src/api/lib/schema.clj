@@ -80,6 +80,11 @@
                    (if (string? account-id)
                      (UUID/fromString account-id)
                      account-id)))
+   :user-id (fn [site]
+              (when-let [user-id (:user-id site)]
+                (if (string? user-id)
+                  (UUID/fromString user-id)
+                  user-id)))
    :site-code :site-code
    :name :name
    :site-url :site-url

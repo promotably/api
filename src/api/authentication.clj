@@ -37,6 +37,19 @@
             auth-cookie-user-id (get-user-id-from-auth-token cookie-auth-token api-secret)]
         (= current-user-id auth-cookie-user-id)))))
 
+(defn- add-user-id-to-params
+  [request]
+  (let [user-id (-> request
+                    :cookies
+                    (get "promotably-user")
+                    :value
+                    (json/read-str :key-fn keyword)
+                    :user-id
+                    UUID/fromString)
+        params (assoc (:params request) :user-id user-id)
+        body-params (assoc (:body-params request) :user-id user-id)]
+    (assoc request :params params :body-params body-params)))
+
 (defn wrap-authorized
   "Middleware component for wrapping secure routes. Validates that this
   request is authorized to access the resource."
@@ -44,7 +57,7 @@
   ;; TODO: add role based authorization
   (fn [request]
     (if (authorized? request (api-secret-fn))
-      (handler request)
+      (handler (add-user-id-to-params request))
       {:status 401})))
 
 (defn- auth-response

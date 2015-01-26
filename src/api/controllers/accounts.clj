@@ -20,14 +20,8 @@
             session (assoc :session session))))
 
 (defn user-access-to-account?
-  [{:keys [cookies]} account-id]
-  (let [user-id (-> cookies
-                    :promotably-user
-                    :value
-                    (json/read-str :key-fn keyword)
-                    :user-id
-                    UUID/fromString)
-        user-account-ids (->> (user/find-by-user-id user-id)
+  [user-id account-id]
+  (let [user-account-ids (->> (user/find-by-user-id user-id)
                               :accounts
                               (map :account-id))]
     (and (not (empty? user-account-ids))
@@ -36,8 +30,8 @@
 (defn get-account
   "Returns an account."
   [{:keys [params] :as request}]
-  (let [{:keys [account-id]} (shape-to-spec params inbound-account-spec)]
-    (if (user-access-to-account? request account-id)
+  (let [{:keys [account-id user-id]} (shape-to-spec params inbound-account-spec)]
+    (if (user-access-to-account? user-id account-id)
       (if-let [result (account/find-by-account-id account-id)]
         (build-response 200 :account result)
         (build-response 404))
@@ -49,13 +43,13 @@
   (let [account (shape-to-spec body-params inbound-account-spec)
         results (account/new-account! account)]
     (if results
-      (build-response 200 :account results)
+      (build-response 201 :account results)
       (build-response 400))))
 
 (defn update-account!
   [{:keys [body-params] :as request}]
   (let [account (shape-to-spec body-params inbound-account-spec)]
-    (if (user-access-to-account? request (:account-id account))
+    (if (user-access-to-account? (:user-id account) (:account-id account))
       (let [result (account/update! account)]
         (if result
           (build-response 200 :account result)
@@ -65,7 +59,7 @@
   [{:keys [body-params] :as request}]
   (let [site (shape-to-spec body-params inbound-site-spec)
         id (:id (account/find-by-account-id (:account-id site)))]
-    (if (user-access-to-account? request (:account-id site))
+    (if (user-access-to-account? (:user-id site) (:account-id site))
       (if-let [result (site/create-site-for-account! id site)]
         (let [account-with-sites (account/find-by-account-id (:account-id site))]
           (build-response 201 :account account-with-sites))
@@ -76,9 +70,9 @@
   [{:keys [body-params] :as request}]
   (let [site (shape-to-spec body-params inbound-site-spec)
         id (:id (account/find-by-account-id (:account-id site)))]
-    (if (user-access-to-account? request (:account-id site))
+    (if (user-access-to-account? (:user-id site) (:account-id site))
       (if-let [result (site/update-site-for-account! id site)]
         (let [account-with-sites (account/find-by-account-id (:account-id site))]
-          (build-response 201 :account account-with-sites))
+          (build-response 200 :account account-with-sites))
         (build-response 400))
       (build-response 403))))
