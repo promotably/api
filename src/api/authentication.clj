@@ -189,12 +189,12 @@
   (if (is-social? request)
     (if-let [body-params-with-social (add-social-data request auth-config)]
       (let [create-resp (create-user-fn (assoc request :body-params body-params-with-social))
-            user-id (str (get-in create-resp [:body :user :user-id]))
+            user-id (str (get-in create-resp [:body :user-id]))
             api-secret (get-in auth-config [:api :api-secret])]
         (auth-response create-resp api-secret user-id))
       {:status 401})
     (let [create-resp (create-user-fn request)
-          user-id (str (get-in create-resp [:body :user :user-id]))
+          user-id (str (get-in create-resp [:body :user-id]))
           api-secret (get-in auth-config [:api :api-secret])]
       (auth-response create-resp api-secret user-id))))
 

@@ -81,7 +81,7 @@
 (defn show-promo
   [{:keys [params body] :as request}]
   (let [site-uuid (java.util.UUID/fromString (:site-id params))
-        site (site/find-by-site-uuid site-uuid true)
+        site (site/find-by-site-uuid site-uuid)
         promo-uuid (java.util.UUID/fromString (:promo-id params))
         promo (promo/find-by-site-and-uuid (:id site) promo-uuid)]
     (shape-promo {:promo promo})))

@@ -84,7 +84,7 @@
                (facts "Validate Exceeded Usage Count"
                  (let [code "P5"
                        api-secret (str (:api-secret site))
-                       rq-body (json/write-str (basic-request-data site-id code))
+                       rq-body (json/write-str (basic-request-data (str site-id) code))
                        path (url-encode (str "/api/v1/promos/validation/" code))
                        sig-hash (compute-sig-hash "localhost"
                                                   "POST"
@@ -102,7 +102,7 @@
                (facts "Validate Non-Exceeded Usage Count"
                    (let [code "P6"
                          api-secret (str (:api-secret site))
-                         rq-body (json/write-str (basic-request-data site-id code))
+                         rq-body (json/write-str (basic-request-data (str site-id) code))
                          path (url-encode (str "/api/v1/promos/validation/" code))
                          sig-hash (compute-sig-hash "localhost"
                                                     "POST"
@@ -120,7 +120,7 @@
                (facts "Validate Non-Exceeded Total Discounts"
                    (let [code "P7"
                          api-secret (str (:api-secret site))
-                         rq-body (json/write-str (basic-request-data site-id code))
+                         rq-body (json/write-str (basic-request-data (str site-id) code))
                          path (url-encode (str "/api/v1/promos/validation/" code))
                          sig-hash (compute-sig-hash "localhost"
                                                     "POST"
@@ -138,7 +138,7 @@
                (facts "Validate Exceeded Total Discounts"
                  (let [code "P8"
                        api-secret (str (:api-secret site))
-                       rq-body (json/write-str (basic-request-data site-id code))
+                       rq-body (json/write-str (basic-request-data (str site-id) code))
                        path (url-encode (str "/api/v1/promos/validation/" code))
                        sig-hash (compute-sig-hash "localhost"
                                                   "POST"
@@ -156,7 +156,7 @@
                (facts "Validate Exceeded Daily Usage Count"
                    (let [code "P9"
                          api-secret (str (:api-secret site))
-                         rq-body (json/write-str (basic-request-data site-id code))
+                         rq-body (json/write-str (basic-request-data (str site-id) code))
                          path (url-encode (str "/api/v1/promos/validation/" code))
                          sig-hash (compute-sig-hash "localhost"
                                                     "POST"
@@ -174,7 +174,7 @@
                 (facts "Validate Exceeded Daily Total Discounts"
                    (let [code "P10"
                          api-secret (str (:api-secret site))
-                         rq-body (json/write-str (basic-request-data site-id code))
+                         rq-body (json/write-str (basic-request-data (str site-id) code))
                          path (url-encode (str "/api/v1/promos/validation/" code))
                          sig-hash (compute-sig-hash "localhost"
                                                     "POST"
@@ -192,7 +192,7 @@
                (facts "Validate Non-Exceeded Daily Discounts"
                  (let [code "P11"
                        api-secret (str (:api-secret site))
-                       rq-body (json/write-str (basic-request-data site-id code))
+                       rq-body (json/write-str (basic-request-data (str site-id) code))
                        path (url-encode (str "/api/v1/promos/validation/" code))
                        sig-hash (compute-sig-hash "localhost"
                                                   "POST"
