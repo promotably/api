@@ -63,7 +63,9 @@
                      (if-not (empty? (first account))
                        (mapv #(shape-to-spec % account-spec) account)
                        [])
-                     [(shape-to-spec account account-spec)])
+                     (if-not (nil? (:account-id account))
+                       [(shape-to-spec account account-spec)]
+                       []))
                    [])
                  []))})
 
