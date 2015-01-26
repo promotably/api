@@ -143,9 +143,9 @@
 (defroutes all-routes
   (GET "/health-check" [] "<h1>I'm here</h1>")
   api-routes
+  (GET "/" [] serve-cached-index)
   (auth/wrap-authorized secure-routes get-api-secret)
-  (GET "*" [] serve-cached-index)
-  (not-found serve-404-page))
+  (GET "*" [] (not-found serve-404-page)))
 
 ;;;;;;;;;;;;;;;;;;
 ;;
