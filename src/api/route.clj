@@ -35,7 +35,8 @@
                                             update-offer! delete-offer!
                                             lookup-offers get-available-offers]]
             [api.controllers.accounts :refer [get-account create-new-account!
-                                              update-account!]]
+                                              update-account! create-site-for-account!
+                                              update-site-for-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]
             [api.cloudwatch :as cw]
             [api.system :refer [current-system]]
@@ -109,6 +110,8 @@
            (GET "/users/:user-id" [user-id] (get-user user-id))
            (POST "/users" [] create-new-user!)
            (PUT "/users/:user-id" [] update-user!)
+           (POST "/sites" [] create-site-for-account!)
+           (PUT "/sites" [] update-site-for-account!)
            promo-secure-routes
            offer-routes))
 

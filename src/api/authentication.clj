@@ -8,7 +8,8 @@
             [clojure.tools.logging :as log]
             [org.httpkit.client :as http]
             [korma.core :refer :all])
-  (:import [java.util UUID]))
+  (:import [java.util UUID]
+           [java.net URLEncoder]))
 
 (defn- generate-user-auth-token
   "Generates an AES encrypted json object containing the user-id using
@@ -113,11 +114,11 @@
   [{:keys [body-params] :as request} social-token-map]
   (let [{:keys [facebook-auth-token facebook-user-id]} body-params
         {:keys [app-id app-secret]} social-token-map
-        facebook-app-token (format "%s|%s" app-id app-secret)
+        facebook-app-token (URLEncoder/encode (format "%s|%s" app-id app-secret) "utf8")
         fb-auth-uri (format "https://graph.facebook.com/debug_token?input_token=%s&access_token=%s" facebook-auth-token facebook-app-token)
         resp @(http/get fb-auth-uri)
         body (json/read-str (:body resp) :key-fn keyword)
-        {:keys [user_id app_id]} body]
+        {:keys [user_id app_id]} (:data body)]
     (when (and (= 200 (:status resp))
                (= facebook-user-id user_id)
                (= app-id app_id))
