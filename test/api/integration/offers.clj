@@ -160,4 +160,4 @@
                 (let [r (get-rcos offers-fixture/site-2-id)
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just [(contains {:code "OFFER-VALID-DATES"})])))))
+                  pr => (just {:offers (just [(contains {:code "OFFER-VALID-DATES"})])})))))

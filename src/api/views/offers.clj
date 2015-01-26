@@ -30,7 +30,7 @@
 
 (defn shape-rcos
   [offers]
-  (println offers)
   {:headers {"Content-Type" "text/javascript"}
    :body (write-str
-          {:offers offers})})
+          {:offers offers}
+          :value-fn (fn [k v] (view-value-helper v)))})
