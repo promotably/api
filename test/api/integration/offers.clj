@@ -22,7 +22,7 @@
                             (comment migrate-down))]
 
   (def site (api.models.site/find-by-name "site-1"))
-  (def site-id (:site-id site))
+  (def site-id (:uuid site))
   (def promos (api.models.promo/find-by-site-uuid site-id false))
   (defn- create-offer
     [new-offer]
@@ -69,7 +69,7 @@
 
               (facts "List Offers"
                 (let [url (str "http://localhost:3000/api/v1/offers/?site-id="
-                               (:site-id site))
+                               (:uuid site))
                       r (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r) keyword)]
                   listed => (just [(contains
@@ -106,7 +106,7 @@
 
               (facts "Offer Update"
                 (let [url (str "http://localhost:3000/api/v1/offers/?site-id="
-                               (:site-id site))
+                               (str site-id))
                       r (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r) keyword)
                       updated-offer {:site-id (str site-id)

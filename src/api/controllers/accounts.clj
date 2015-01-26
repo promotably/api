@@ -26,11 +26,11 @@
                     (json/read-str :key-fn keyword)
                     :user-id
                     UUID/fromString)
-        user-account-ids (set (->> (user/find-by-user-id user-id)
-                                   :accounts
-                                   (map :account_id)))]
-    (contains? user-account-ids account-id)))
-
+        user-account-ids (->> (user/find-by-user-id user-id)
+                              :accounts
+                              (map :account_id))]
+    (and (not (empty? user-account-ids))
+         (contains? user-account-ids account-id))))
 
 (defn get-account
   "Returns an account."
@@ -62,9 +62,10 @@
 
 (defn create-site-for-account!
   [{:keys [body-params] :as request}]
-  (let [site (shape-inbound body-params inbound-site-spec)]
+  (let [site (shape-inbound body-params inbound-site-spec)
+        id (:id (account/find-by-account-id (:account-id site)))]
     (if (user-access-to-account? request (:account-id site))
-      (if-let [result (site/create-site-for-account! site)]
+      (if-let [result (site/create-site-for-account! id site)]
         (let [account-with-sites (account/find-by-account-id (:account-id site))]
           (build-response 201 :account account-with-sites))
         (build-response 400))
@@ -72,9 +73,10 @@
 
 (defn update-site-for-account!
   [{:keys [body-params] :as request}]
-  (let [site (shape-inbound body-params inbound-site-spec)]
+  (let [site (shape-inbound body-params inbound-site-spec)
+        id (:id (account/find-by-account-id (:account-id site)))]
     (if (user-access-to-account? request (:account-id site))
-      (if-let [result (site/update-site-for-account! site)]
+      (if-let [result (site/update-site-for-account! id site)]
         (let [account-with-sites (account/find-by-account-id (:account-id site))]
           (build-response 201 :account account-with-sites))
         (build-response 400))

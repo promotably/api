@@ -39,9 +39,9 @@
                                           (where {:name name})))))
 
 (defn create-site-for-account!
-  [site]
+  [account-id site]
   (let [{:keys [name site-url api-secret country
-                timezone currency language account-id]} site
+                timezone currency language]} site
         new-site (insert sites
                          (values {:account_id account-id
                                   :name name
@@ -57,10 +57,10 @@
 (let [allowed-keys [:site-code :name :country :timezone
                     :currency :language :site-url]]
   (defn update-site-for-account!
-    [site]
+    [account-id site]
     (let [params-for-update (dash-to-underscore-keys
                              (select-keys site allowed-keys))]
       (update sites
               (set-fields params-for-update)
               (where {:uuid (:site-id site)
-                      :account_id (:account-id site)})))))
+                      :account_id account-id})))))

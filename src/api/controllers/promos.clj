@@ -101,7 +101,7 @@
   (make-trans #{:site-id}
               #(vector :site (if (string? %2)
                                (-> %2 java.util.UUID/fromString site/find-by-site-uuid)
-                               nil))))
+                               (site/find-by-site-uuid %2)))))
 
 (defn prep-incoming
   [params]
@@ -123,7 +123,7 @@
                                  (get headers "promotably-auth")))
                            prep-incoming
                            coercer)
-        site-id (-> coerced-params :site :site-id)
+        site-id (-> coerced-params :site :uuid)
         code (-> coerced-params :code clojure.string/upper-case)
         the-promo (promo/find-by-site-uuid-and-code site-id code)]
 
