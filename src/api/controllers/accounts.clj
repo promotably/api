@@ -1,9 +1,9 @@
 (ns api.controllers.accounts
   (:require [clojure.data.json :as json]
             [api.lib.coercion-helper :refer [custom-matcher]]
-            [api.controllers.helper :refer [shape-inbound
-                                            inbound-account-spec
-                                            inbound-site-spec]]
+            [api.lib.schema :refer [shape-to-spec
+                                    inbound-account-spec
+                                    inbound-site-spec]]
             [api.models.user :as user]
             [api.models.account :as account]
             [api.models.site :as site]
@@ -35,7 +35,7 @@
 (defn get-account
   "Returns an account."
   [{:keys [params] :as request}]
-  (let [{:keys [account-id]} (shape-inbound params inbound-account-spec)]
+  (let [{:keys [account-id]} (shape-to-spec params inbound-account-spec)]
     (if (user-access-to-account? request account-id)
       (if-let [result (account/find-by-account-id account-id)]
         (build-response 200 :account result)
@@ -45,7 +45,7 @@
 (defn create-new-account!
   "Creates a new account in the database."
   [{:keys [body-params] :as request}]
-  (let [account (shape-inbound body-params inbound-account-spec)
+  (let [account (shape-to-spec body-params inbound-account-spec)
         results (account/new-account! account)]
     (if results
       (build-response 200 :account results)
@@ -53,7 +53,7 @@
 
 (defn update-account!
   [{:keys [body-params] :as request}]
-  (let [account (shape-inbound body-params inbound-account-spec)]
+  (let [account (shape-to-spec body-params inbound-account-spec)]
     (if (user-access-to-account? request (:account-id account))
       (let [result (account/update! account)]
         (if result
@@ -62,7 +62,7 @@
 
 (defn create-site-for-account!
   [{:keys [body-params] :as request}]
-  (let [site (shape-inbound body-params inbound-site-spec)
+  (let [site (shape-to-spec body-params inbound-site-spec)
         id (:id (account/find-by-account-id (:account-id site)))]
     (if (user-access-to-account? request (:account-id site))
       (if-let [result (site/create-site-for-account! id site)]
@@ -73,7 +73,7 @@
 
 (defn update-site-for-account!
   [{:keys [body-params] :as request}]
-  (let [site (shape-inbound body-params inbound-site-spec)
+  (let [site (shape-to-spec body-params inbound-site-spec)
         id (:id (account/find-by-account-id (:account-id site)))]
     (if (user-access-to-account? request (:account-id site))
       (if-let [result (site/update-site-for-account! id site)]

@@ -1,5 +1,5 @@
 (ns api.views.users
-  (:require [api.views.helpers.specs :refer [shape-to-spec user-spec]]))
+  (:require [api.lib.schema :refer [shape-to-spec user-spec]]))
 
 (defn shape-response-body
   [user-model]

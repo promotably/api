@@ -1,6 +1,6 @@
 (ns api.controllers.users
-  (:require [api.controllers.helper :refer [shape-inbound
-                                            inbound-user-spec]]
+  (:require [api.lib.schema :refer [shape-to-spec
+                                    inbound-user-spec]]
             [api.models.user :as user]
             [api.models.account :as account]
             [api.models.site :as site]
@@ -17,7 +17,7 @@
 
 (defn get-user
   [str-user-id]
-  (let [{:keys [user-id]} (shape-inbound {:user-id str-user-id} inbound-user-spec)]
+  (let [{:keys [user-id]} (shape-to-spec {:user-id str-user-id} inbound-user-spec)]
     (if-let [u (user/find-by-user-id user-id)]
       (let [a (when (and u (:account-id u))
                 (account/find-by-id (:account-id u)))
@@ -29,7 +29,7 @@
 
 (defn create-new-user!
   [{:keys [body-params] :as request}]
-  (let [user (shape-inbound body-params inbound-user-spec)]
+  (let [user (shape-to-spec body-params inbound-user-spec)]
     (if (or (:password user)
             (:user-social-id user))
       (let [result (user/new-user! user)]
@@ -38,7 +38,7 @@
 
 (defn update-user!
   [{:keys [body-params] :as request}]
-  (let [user (shape-inbound body-params inbound-user-spec)
+  (let [user (shape-to-spec body-params inbound-user-spec)
         update-result (user/update-user! user)]
     (if update-result
       (get-user (str (:user-id user)))
