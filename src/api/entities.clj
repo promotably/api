@@ -9,7 +9,7 @@
 (defentity accounts
   (table "accounts")
   (has-many users)
-  (has-many sites))
+  (has-many sites {:fk :account_id}))
 
 (defentity users
   (table "users")

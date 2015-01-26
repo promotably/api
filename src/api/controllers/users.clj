@@ -9,7 +9,8 @@
 
 (defn- build-response
   [status & {:keys [user cookies session]}]
-  (let [response-body (shape-response-body user)]
+  (let [response-body (when user
+                        (shape-response-body user))]
     (cond-> {:status status
              :body response-body}
             cookies (assoc :cookies cookies)

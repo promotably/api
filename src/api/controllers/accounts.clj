@@ -12,7 +12,8 @@
 
 (defn- build-response
   [status & {:keys [account cookies session]}]
-  (let [response-body (shape-response-body account)]
+  (let [response-body (when account
+                        (shape-response-body account))]
     (cond-> {:status status
              :body response-body}
             cookies (assoc :cookies cookies)
