@@ -28,7 +28,7 @@
                     UUID/fromString)
         user-account-ids (->> (user/find-by-user-id user-id)
                               :accounts
-                              (map :account_id))]
+                              (map :account-id))]
     (and (not (empty? user-account-ids))
          (contains? user-account-ids account-id))))
 
