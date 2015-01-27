@@ -1,56 +1,84 @@
 (ns api.controllers.accounts
-  (:require [api.lib.coercion-helper :refer [custom-matcher
-                                             underscore-to-dash-keys]]
+  (:require [clojure.data.json :as json]
+            [api.lib.coercion-helper :refer [custom-matcher]]
+            [api.lib.schema :refer [shape-to-spec
+                                    inbound-account-spec
+                                    inbound-site-spec]]
+            [api.models.user :as user]
             [api.models.account :as account]
             [api.models.site :as site]
-            [api.models.user :as user]
-            [api.views.accounts :refer [shape-create shape-update
-                                        shape-lookup-account]]
-            [schema.core :as s]
-            [schema.coerce :as c]))
+            [api.views.accounts :refer [shape-response-body]])
+  (:import [java.util UUID]))
 
-(defn- parse-and-coerce
-    [body request-schema]
-    ((c/coercer request-schema
-                (c/first-matcher [custom-matcher
-                                  c/string-coercion-matcher]))
-     (clojure.edn/read-string (slurp body))))
+(defn- build-response
+  [status & {:keys [account cookies session]}]
+  (let [response-body (when account
+                        (shape-response-body account))]
+    (cond-> {:status status
+             :body response-body}
+            cookies (assoc :cookies cookies)
+            session (assoc :session session))))
 
-(let [inbound-schema {(s/required-key :email) s/Str
-                      (s/optional-key :browser-id) s/Uuid
-                      (s/required-key :first-name) s/Str
-                      (s/required-key :last-name) s/Str
-                      (s/required-key :user-social-id) s/Str
-                      (s/optional-key :site-code) s/Str
-                      (s/optional-key :api-secret) s/Uuid
-                      (s/optional-key :site-url) s/Str
-                      (s/optional-key :company-name) s/Str
-                      (s/optional-key :account-id) s/Uuid}]
+(defn user-access-to-account?
+  [user-id account-id]
+  (let [user-account-ids (->> (user/find-by-user-id user-id)
+                              :accounts
+                              (map :account-id))]
+    (and (not (empty? user-account-ids))
+         (contains? user-account-ids account-id))))
 
-  (defn lookup-account
-    [{{:keys [user-social-id]} :params}]
-    (let [u (user/find-by-user-social-id user-social-id)
-          a (when u (account/find-by-id (:account-id u)))
-          s (when a (first (site/find-by-account-id (:account-id u))))]
-      (shape-lookup-account {:user u :account a :site s})))
+(defn get-account
+  "Returns an account."
+  [{:keys [params user-id] :as request}]
+  (let [{:keys [account-id user-id]} (shape-to-spec (assoc params :user-id user-id)
+                                                    inbound-account-spec)]
+    (if (user-access-to-account? user-id account-id)
+      (if-let [result (account/find-by-account-id account-id)]
+        (build-response 200 :account result)
+        (build-response 404))
+      (build-response 403))))
 
-  (defn create-new-account!
-    "Creates a new account in the database. Also creates a user and a site"
-    [{:keys [params body-params] :as request}]
-    (let [coerced-params ((c/coercer
-                           inbound-schema
-                           (c/first-matcher [custom-matcher
-                                             c/string-coercion-matcher]))
-                          body-params)
-          results (account/new-account! coerced-params)]
-      (shape-create (underscore-to-dash-keys results))))
+(defn create-new-account!
+  "Creates a new account in the database."
+  [{:keys [body-params user-id] :as request}]
+  (let [account (shape-to-spec (assoc body-params :user-id user-id)
+                               inbound-account-spec)
+        user-int-id (:id (user/find-by-user-id user-id))
+        results (account/new-account! user-int-id account)]
+    (if results
+      (build-response 201 :account results)
+      (build-response 400))))
 
-  (defn update-account!
-    [{body-params :body-params {:keys [account-id]} :params}]
-    (let [coerced-params ((c/coercer
-                           inbound-schema
-                           (c/first-matcher [custom-matcher
-                                             c/string-coercion-matcher]))
-                          (merge body-params {:account-id account-id}))
-          result (account/update! coerced-params)]
-      (shape-update (underscore-to-dash-keys result)))))
+(defn update-account!
+  [{:keys [body-params user-id] :as request}]
+  (let [account (shape-to-spec (assoc body-params :user-id user-id)
+                               inbound-account-spec)]
+    (if (user-access-to-account? (:user-id account) (:account-id account))
+      (let [result (account/update! account)]
+        (if result
+          (build-response 200 :account result)
+          (build-response 400))))))
+
+(defn create-site-for-account!
+  [{:keys [body-params user-id] :as request}]
+  (let [site (shape-to-spec (assoc body-params :user-id user-id)
+                            inbound-site-spec)
+        id (:id (account/find-by-account-id (:account-id site)))]
+    (if (user-access-to-account? (:user-id site) (:account-id site))
+      (if-let [result (site/create-site-for-account! id site)]
+        (let [account-with-sites (account/find-by-account-id (:account-id site))]
+          (build-response 201 :account account-with-sites))
+        (build-response 400))
+      (build-response 403))))
+
+(defn update-site-for-account!
+  [{:keys [body-params user-id] :as request}]
+  (let [site (shape-to-spec (assoc body-params :user-id user-id)
+                            inbound-site-spec)
+        id (:id (account/find-by-account-id (:account-id site)))]
+    (if (user-access-to-account? (:user-id site) (:account-id site))
+      (if-let [result (site/update-site-for-account! id site)]
+        (let [account-with-sites (account/find-by-account-id (:account-id site))]
+          (build-response 200 :account account-with-sites))
+        (build-response 400))
+      (build-response 403))))

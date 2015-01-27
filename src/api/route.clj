@@ -26,8 +26,7 @@
              :refer [wrap-anti-forgery]]
             [api.authentication :as auth]
             [api.events :as events]
-            [api.controllers.users :refer [create-new-user! get-user update-user!
-                                           lookup-user]]
+            [api.controllers.users :refer [create-new-user! get-user update-user!]]
             [api.controllers.promos :refer [create-new-promo! show-promo query-promo
                                             validate-promo calculate-promo
                                             update-promo! delete-promo!
@@ -35,15 +34,17 @@
             [api.controllers.offers :refer [create-new-offer! show-offer
                                             update-offer! delete-offer!
                                             lookup-offers get-available-offers]]
-            [api.controllers.accounts :refer [lookup-account create-new-account!
-                                              update-account!]]
+            [api.controllers.accounts :refer [get-account create-new-account!
+                                              update-account! create-site-for-account!
+                                              update-site-for-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]
             [api.cloudwatch :as cw]
             [api.system :refer [current-system]]
             [clj-time.core :refer [before? after? now] :as t]
             [clj-time.coerce :as t-coerce]
             [amazonica.aws.s3]
-            [amazonica.aws.s3transfer]))
+            [amazonica.aws.s3transfer]
+            [slingshot.slingshot :refer [try+]]))
 
 (defonce cached-index (atom {:cached-at nil :index nil}))
 
@@ -53,21 +54,15 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;
 
+(defn- get-api-secret
+  []
+  (get-in current-system [:config :auth-token-config :api :api-secret]))
+
 (def promo-code-regex #"[a-zA-Z0-9-]{1,}")
 (def offer-code-regex #"[a-zA-Z0-9-]{1,}")
 
 (defroutes promo-routes
   (context "/promos" []
-           (POST "/" [] (fn [r] (create-new-promo! (merge
-                                                    (:kinesis current-system)
-                                                    (-> current-system :config :kinesis))
-                                                   r)))
-           (GET "/" [] lookup-promos)
-           (DELETE ["/:promo-id", :promo-id promo-code-regex] [promo-id] delete-promo!)
-           (GET ["/:promo-id", :promo-id promo-code-regex] [promo-id] show-promo)
-           (PUT ["/:promo-id", :promo-id promo-code-regex] [promo-id] update-promo!)
-           (GET ["/query/:code", :code promo-code-regex]
-                [code] query-promo)
            (POST ["/validation/:code", :code promo-code-regex]
                  [code] validate-promo)
            (POST ["/calculation/:code", :code promo-code-regex]
@@ -85,24 +80,41 @@
   (context "/api/v1" []
            (GET "/track" req (fn [r] (events/record-event (:kinesis current-system) r)))
            (POST "/email-subscribers" [] create-email-subscriber!)
-           (GET "/accounts" [] lookup-account)
-           (POST "/accounts" [] create-new-account!)
-           (PUT "/accounts/:account-id" [] update-account!)
-           (GET "/users" [] lookup-user)
-           (GET "/users/:user-id" [] get-user)
-           (POST "/users" [] create-new-user!)
-           (PUT "/users/:user-id" [] update-user!)
            (GET "/realtime-conversion-offers" [] get-available-offers)
            (POST "/login" req (fn [r]
                                 (let [auth-config (get-in current-system [:config :auth-token-config])]
-                                  (auth/authenticate r auth-config))))
+                                  (auth/authenticate r auth-config get-user))))
            (POST "/register" req (fn [r]
                                    (let [auth-config (get-in current-system [:config :auth-token-config])]
                                      (auth/validate-and-create-user r auth-config create-new-user!))))
-           offer-routes
            promo-routes))
 
 ;; TODO: secure-routes - wrapped in auth/wrap-authorized
+
+(defroutes promo-secure-routes
+  (context "/promos" []
+           (POST "/" [] (fn [r] (create-new-promo! (merge
+                                                   (:kinesis current-system)
+                                                   (-> current-system :config :kinesis))
+                                                  r)))
+           (GET "/" [] lookup-promos)
+           (DELETE ["/:promo-id", :promo-id promo-code-regex] [promo-id] delete-promo!)
+           (GET ["/:promo-id", :promo-id promo-code-regex] [promo-id] show-promo)
+           (PUT ["/:promo-id", :promo-id promo-code-regex] [promo-id] update-promo!)
+           (GET ["/query/:code", :code promo-code-regex] [code] query-promo)))
+
+(defroutes secure-routes
+  (context "/api/v1" []
+           (GET "/accounts" [] get-account)
+           (POST "/accounts" [] create-new-account!)
+           (PUT "/accounts/:account-id" [] update-account!)
+           (GET "/users/:user-id" [user-id] (get-user user-id))
+           (POST "/users" [] create-new-user!)
+           (PUT "/users/:user-id" [] update-user!)
+           (POST "/sites" [] create-site-for-account!)
+           (PUT "/sites" [] update-site-for-account!)
+           promo-secure-routes
+           offer-routes))
 
 (defn- fetch-index
   [config]
@@ -132,11 +144,12 @@
   [req]
   {:status 404 :body "<h1>Not Found</h1>"})
 
-(defroutes anonymous-routes
+(defroutes all-routes
   (GET "/health-check" [] "<h1>I'm here</h1>")
   api-routes
-  (GET "*" [] serve-cached-index)
-  (not-found serve-404-page))
+  (GET "/" [] serve-cached-index)
+  (auth/wrap-authorized secure-routes get-api-secret)
+  (GET "*" [] (not-found serve-404-page)))
 
 ;;;;;;;;;;;;;;;;;;
 ;;
@@ -175,6 +188,16 @@
           (assoc-in (assoc-in (:response exdata) [:body]
                               (pprint (:error exdata)))
                     [:headers "X-Error"] (.getMessage ex)))))))
+
+(defn wrap-argument-exception [handler]
+  "Catch exceptions Schema throws when failing to validate passed parameters"
+  (fn [req]
+    (try+
+      (handler req)
+      (catch [:type :argument-error]
+             {:keys [body-params error]}
+        {:status 400
+         :body error}))))
 
 (defn wrap-stacktrace
   "ring.middleware.stacktrace only catches exception, not Throwable, so we replace it here."
@@ -241,7 +264,7 @@
 
 (defn app
   [{:keys [config session-cache] :as options}]
-  (-> anonymous-routes
+  (-> all-routes
       wrap-ensure-session
       (wrap-permacookie {:name "promotably" :request-key :shopper-id})
       (wrap-restful-format :formats [:json-kw :edn])
@@ -256,6 +279,7 @@
       wrap-token
       wrap-save-the-raw-body
       ;; wrap-exceptions
+      wrap-argument-exception
       wrap-stacktrace
       (wrap-if #((:env config) #{:dev :test :integration})
                wrap-request-logging)
@@ -289,7 +313,6 @@
     (-> (compojure/routes
          ;; These routes get NO csrf protection.
          app-routes
-
          ;; Serve static resources.
          ;; These routes get NO csrf protection.
          (compojure.route/resources "/")

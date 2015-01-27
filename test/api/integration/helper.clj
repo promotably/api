@@ -1,9 +1,11 @@
 (ns api.integration.helper
-  (:import org.postgresql.util.PGobject)
+  (:import org.postgresql.util.PGobject
+           [java.net URLEncoder])
   (:require
    [api.fixtures.basic :as base]
    [api.route :as route]
    [api.system :as system]
+   [api.lib.crypto :as cr]
    [korma.db :as kdb]
    [api.q-fix :as qfix]
    [api.db :as db]
@@ -68,12 +70,25 @@
                                                            "product_ids" x})]
         (-> result first :id))))
 
-)
+  )
+
+(def test-user-id "872d9a85-4c68-4cc0-ae5c-a24ed5ed8899")
+
+(defn auth-cookie-token []
+  (cr/aes-encrypt (json/write-str {:user-id test-user-id})
+                  (get-in system/current-system [:config :auth-token-config :api :api-secret])))
+
+(defn promotably-user-cookie []
+  (URLEncoder/encode (json/write-str {:user-id test-user-id}) "utf8"))
+
+(defn build-auth-cookie-string []
+  (format "__apiauth=%s; promotably-user=%s;" (auth-cookie-token) (promotably-user-cookie)))
 
 (defn create-promo
   [new-promo]
   (client/post "http://localhost:3000/api/v1/promos"
-               {:body (json/write-str new-promo)
+               {:headers {"cookie" (build-auth-cookie-string)}
+                :body (json/write-str new-promo)
                 :content-type :json
                 :accept :json
                 :throw-exceptions false}))
@@ -81,7 +96,8 @@
 (defn lookup-promos
   [sid]
   (client/get "http://localhost:3000/api/v1/promos"
-              {:query-params {:site-id sid}
+              {:headers {"cookie" (build-auth-cookie-string)}
+               :query-params {:site-id sid}
                :content-type :json
                :accept :json
                :throw-exceptions false}))
@@ -89,7 +105,8 @@
 (defn update-promo
   [promo-id value]
   (client/put (str "http://localhost:3000/api/v1/promos/" promo-id)
-              {:body (json/write-str value)
+              {:headers {"cookie" (build-auth-cookie-string)}
+               :body (json/write-str value)
                :content-type :json
                :accept :json
                :throw-exceptions false}))
@@ -97,14 +114,16 @@
 (defn show-promo
   [sid promo-id]
   (client/get (str "http://localhost:3000/api/v1/promos/" promo-id)
-              {:query-params {:site-id sid}
+              {:headers {"cookie" (build-auth-cookie-string)}
+               :query-params {:site-id sid}
                :accept :json
                :throw-exceptions false}))
 
 (defn lookup-promo-by-code
   [code sid]
   (client/get (str "http://localhost:3000/api/v1/promos/query/" code)
-              {:query-params {:site-id sid}
+              {:headers {"cookie" (build-auth-cookie-string)}
+               :query-params {:site-id sid}
                :content-type :json
                :accept :json
                :throw-exceptions false}))

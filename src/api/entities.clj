@@ -9,7 +9,7 @@
 (defentity accounts
   (table "accounts")
   (has-many users)
-  (has-many sites))
+  (has-many sites {:fk :account_id}))
 
 (defentity users
   (table "users")
@@ -48,5 +48,3 @@
 (defentity offer-conditions
   (table "offer_conditions")
   (belongs-to offers {:fk :offer_id}))
-
-

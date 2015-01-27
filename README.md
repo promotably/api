@@ -49,6 +49,17 @@ lein create-migration <the name of the migration>
 
 This places a migration file in the src/migrations directory
 
+### AWS Credentials
+
+Before you can run the server or the integration tests you need AWS credentials.
+Once you have an id and key you can save the credentials to `~/.aws/credentials`:
+
+```
+[promotably]
+aws_access_key_id = <ID>
+aws_secret_access_key = <KEY>
+```
+
 ### Running the Server
 ```
 lein run
@@ -59,13 +70,13 @@ lein run
 Unit testing:  
 
 ```
-ENV=test lein midje api.unit.*
+ENV=test lein midje "api.unit.*"
 ```
 
 Integration testing:  
 
 ```
-KINESIS_A=dev-PromoStream KINESIS_B=dev-PromotablyAPIEvents RDS_HOST=localhost RDS_PORT=5432 RDS_USER=p_user RDS_DB_NAME=promotably_dev RDS_PW=pr0m0 ENV=integration lein midje api.integration.*
+KINESIS_A=dev-PromoStream KINESIS_B=dev-PromotablyAPIEvents RDS_HOST=localhost RDS_PORT=5432 RDS_USER=p_user RDS_DB_NAME=promotably_dev RDS_PW=pr0m0 ENV=integration lein midje "api.integration.*"
 ```
 
 Integration testing depends on AWS credentials as per [doc](https://github.com/mcohen01/amazonica).

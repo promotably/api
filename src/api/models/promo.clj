@@ -283,7 +283,7 @@
   conditions that need it"
   [{:keys [conditions] :as promo} context]
   (if (seq (filterv #(= (:type %) :usage-count) conditions))
-    (let [cut (total-usage (get-in context [:site :site-id]) (:uuid promo))]
+    (let [cut (total-usage (get-in context [:site :uuid]) (:uuid promo))]
       (assoc context :current-usage-count cut))
     context))
 
@@ -293,7 +293,7 @@
   [{:keys [conditions] :as promo} context]
   (if (seq (filterv #(= (:type %) :daily-usage-count) conditions))
     (assoc context :current-daily-usage-count
-           (total-usage (get-in context [:site :site-id])
+           (total-usage (get-in context [:site :uuid])
                         (:uuid promo)
                         :start (today-at 00 00)))
     context))
@@ -303,7 +303,7 @@
   conditions that need it"
   [{:keys [conditions] :as promo} context]
   (if (seq (filterv #(= (:type %) :total-discounts) conditions))
-    (assoc context :current-total-discounts (total-discounts (get-in context [:site :site-id])
+    (assoc context :current-total-discounts (total-discounts (get-in context [:site :uuid])
                                                              (:uuid promo)))
     context))
 
@@ -312,7 +312,7 @@
   conditions that need it"
   [{:keys [conditions] :as promo} context]
   (if (seq (filterv #(= (:type %) :daily-total-discounts) conditions))
-    (assoc context :current-daily-total-discounts (total-discounts (get-in context [:site :site-id])
+    (assoc context :current-daily-total-discounts (total-discounts (get-in context [:site :uuid])
                                                                    (:uuid promo)
                                                                    :start (today-at 00 00)))
     context))

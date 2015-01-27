@@ -22,12 +22,30 @@
                             (comment migrate-down))]
 
   (def site (api.models.site/find-by-name "site-1"))
-  (def site-id (:site-id site))
+  (def site-id (:uuid site))
   (def promos (api.models.promo/find-by-site-uuid site-id false))
+  (defn- default-offer []
+    {:site-id (str site-id)
+     :name "New Visitor Offer"
+     :code "NEW-VISITOR"
+     :display-text "display text"
+     :reward {:promo-id (-> promos first :uuid str)
+              :type :dynamic-promo
+              :expiry-in-minutes 10}
+     :presentation {:type :lightbox
+                    :page :any
+                    :display-text "presentation text"}
+     :conditions [{:type "dates"
+                   :start-date "2014-11-27T05:00:00Z"
+                   :end-date "2014-11-29T04:59:59Z"}
+                  {:type :minutes-since-last-offer
+                   :minutes-since-last-offer 10}]})
+
   (defn- create-offer
     [new-offer]
     (client/post "http://localhost:3000/api/v1/offers"
                  {:body (json/write-str new-offer)
+                  :headers {"Cookie" (build-auth-cookie-string)}
                   :content-type :json
                   :accept :json
                   :throw-exceptions false}))
@@ -35,6 +53,7 @@
     [offer-id offer]
     (client/put (str "http://localhost:3000/api/v1/offers/" offer-id)
                 {:body (json/write-str offer)
+                 :headers {"Cookie" (build-auth-cookie-string)}
                  :content-type :json
                  :accept :json
                  :throw-exceptions false}))
@@ -47,28 +66,18 @@
   (fact-group :integration
 
               (facts "Offer Create"
-                (let [new-offer {:site-id (str site-id)
-                                 :name "New Visitor Offer"
-                                 :code "NEW-VISITOR"
-                                 :display-text "display text"
-                                 :reward {:promo-id (-> promos first :uuid str)
-                                          :type :dynamic-promo
-                                          :expiry-in-minutes 10}
-                                 :presentation {:type :lightbox
-                                                :page :any
-                                                :display-text "presentation text"}
-                                 :conditions [{:type "dates"
-                                               :start-date "2014-11-27T05:00:00Z"
-                                               :end-date "2014-11-29T04:59:59Z"}
-                                              {:type :minutes-since-last-offer
-                                               :minutes-since-last-offer 10}]}
-                      r (create-offer new-offer)]
-                  (:status r) => 201))
+                     (:status (create-offer (default-offer))) => 201)
+
+              (facts "Offer Create Fails with Bad Param"
+                     (let [r (create-offer (assoc-in (default-offer) [:reward :promo-id] "invalid-id"))]
+                       (:status r) => 400
+                       (.contains (:body r) ":error") => true
+                       (.contains (:body r) ":promo-id") => true))
 
               (facts "List Offers"
                 (let [url (str "http://localhost:3000/api/v1/offers/?site-id="
-                               (:site-id site))
-                      r (client/get url)
+                               (:uuid site))
+                      r (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r) keyword)]
                   listed => (just [(contains
                                     {:display-text "display text"
@@ -104,8 +113,8 @@
 
               (facts "Offer Update"
                 (let [url (str "http://localhost:3000/api/v1/offers/?site-id="
-                               (:site-id site))
-                      r (client/get url)
+                               (str site-id))
+                      r (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r) keyword)
                       updated-offer {:site-id (str site-id)
                                      :offer-id (-> listed first :offer-id)
@@ -121,7 +130,7 @@
                                      :conditions [{:type :product-views
                                                    :product-views 3}]}
                       r1 (update-offer (-> listed first :offer-id) updated-offer)
-                      r2 (client/get url)
+                      r2 (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r2) keyword)]
                   (:status r) => 200
                   listed => (just [(contains
