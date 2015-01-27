@@ -24,6 +24,23 @@
   (def site (api.models.site/find-by-name "site-1"))
   (def site-id (:site-id site))
   (def promos (api.models.promo/find-by-site-uuid site-id false))
+  (defn- default-offer []
+    {:site-id (str site-id)
+     :name "New Visitor Offer"
+     :code "NEW-VISITOR"
+     :display-text "display text"
+     :reward {:promo-id (-> promos first :uuid str)
+              :type :dynamic-promo
+              :expiry-in-minutes 10}
+     :presentation {:type :lightbox
+                    :page :any
+                    :display-text "presentation text"}
+     :conditions [{:type "dates"
+                   :start-date "2014-11-27T05:00:00Z"
+                   :end-date "2014-11-29T04:59:59Z"}
+                  {:type :minutes-since-last-offer
+                   :minutes-since-last-offer 10}]})
+
   (defn- create-offer
     [new-offer]
     (client/post "http://localhost:3000/api/v1/offers"
@@ -49,23 +66,13 @@
   (fact-group :integration
 
               (facts "Offer Create"
-                (let [new-offer {:site-id (str site-id)
-                                 :name "New Visitor Offer"
-                                 :code "NEW-VISITOR"
-                                 :display-text "display text"
-                                 :reward {:promo-id (-> promos first :uuid str)
-                                          :type :dynamic-promo
-                                          :expiry-in-minutes 10}
-                                 :presentation {:type :lightbox
-                                                :page :any
-                                                :display-text "presentation text"}
-                                 :conditions [{:type "dates"
-                                               :start-date "2014-11-27T05:00:00Z"
-                                               :end-date "2014-11-29T04:59:59Z"}
-                                              {:type :minutes-since-last-offer
-                                               :minutes-since-last-offer 10}]}
-                      r (create-offer new-offer)]
-                  (:status r) => 201))
+                     (:status (create-offer (default-offer))) => 201)
+
+              (facts "Offer Create Fails with Bad Param"
+                     (let [r (create-offer (assoc-in (default-offer) [:reward :promo-id] "invalid-id"))]
+                       (:status r) => 400
+                       (.contains (:body r) ":error") => true
+                       (.contains (:body r) ":promo-id") => true))
 
               (facts "List Offers"
                 (let [url (str "http://localhost:3000/api/v1/offers/?site-id="

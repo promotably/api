@@ -43,7 +43,8 @@
             [clj-time.core :refer [before? after? now] :as t]
             [clj-time.coerce :as t-coerce]
             [amazonica.aws.s3]
-            [amazonica.aws.s3transfer]))
+            [amazonica.aws.s3transfer]
+            [slingshot.slingshot :refer [try+]]))
 
 (defonce cached-index (atom {:cached-at nil :index nil}))
 
@@ -186,6 +187,16 @@
                               (pprint (:error exdata)))
                     [:headers "X-Error"] (.getMessage ex)))))))
 
+(defn wrap-argument-exception [handler]
+  "Catch exceptions Schema throws when failing to validate passed parameters"
+  (fn [req]
+    (try+
+      (handler req)
+      (catch [:type :argument-error]
+             {:keys [body-params error]}
+        {:status 400
+         :body error}))))
+
 (defn wrap-stacktrace
   "ring.middleware.stacktrace only catches exception, not Throwable, so we replace it here."
   [handler]
@@ -266,6 +277,7 @@
       wrap-token
       wrap-save-the-raw-body
       ;; wrap-exceptions
+      wrap-argument-exception
       wrap-stacktrace
       (wrap-if #((:env config) #{:dev :test :integration})
                wrap-request-logging)
