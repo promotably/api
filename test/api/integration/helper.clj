@@ -72,7 +72,7 @@
 
   )
 
-(def test-user-id "tester")
+(def test-user-id "872d9a85-4c68-4cc0-ae5c-a24ed5ed8899")
 
 (defn auth-cookie-token []
   (cr/aes-encrypt (json/write-str {:user-id test-user-id})

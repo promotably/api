@@ -708,7 +708,7 @@
                   (:status r) => 201))
 
               (facts "Validate Promo 403 if auth not properly formed"
-                (let [b (json/read-str (:body (lookup-promos site-id)) :key-fn keyword)
+                     (let [b (json/read-str (:body (lookup-promos (str site-id))) :key-fn keyword)
                       code (:code (first b))
                       api-secret (str (:api-secret site))
                       rq-body (json/write-str {:site-id (str site-id)

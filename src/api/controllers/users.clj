@@ -38,8 +38,9 @@
       (build-response 400))))
 
 (defn update-user!
-  [{:keys [body-params] :as request}]
-  (let [user (shape-to-spec body-params inbound-user-spec)
+  [{:keys [body-params user-id] :as request}]
+  (let [user (shape-to-spec (assoc body-params :user-id user-id)
+                            inbound-user-spec)
         update-result (user/update-user! user)]
     (if update-result
       (get-user (str (:user-id user)))

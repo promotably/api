@@ -45,10 +45,8 @@
                     :value
                     (json/read-str :key-fn keyword)
                     :user-id
-                    UUID/fromString)
-        params (assoc (:params request) :user-id user-id)
-        body-params (assoc (:body-params request) :user-id user-id)]
-    (assoc request :params params :body-params body-params)))
+                    UUID/fromString)]
+    (assoc request :user-id user-id)))
 
 (defn wrap-authorized
   "Middleware component for wrapping secure routes. Validates that this
