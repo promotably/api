@@ -169,4 +169,18 @@
                 (let [r (get-rcos offers-fixture/site-2-id)
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just {:offers (just [(contains {:code "OFFER-VALID-DATES"})])})))))
+                  pr => (just {:offers (just [(contains {:code "OFFER-VALID-DATES"})])})
+                  pr => (just {:offers (just [(just {:code "OFFER-VALID-DATES"
+                                                     :active true
+                                                     :conditions (just [(just {:start-date string? :end-date string? :type "dates"})])
+                                                     :created-at string?
+                                                     :display-text "Book it, dano"
+                                                     :id integer?
+                                                     :name "NAME HERE"
+                                                     :presentation (just {:display-text nil
+                                                                          :page "product-detail"
+                                                                          :type "lightbox"})
+                                                     :reward (just {:promo-id string? :type "promo"})
+                                                     :site-id integer?
+                                                     :updated-at string?
+                                                     :uuid string?})])})))))
