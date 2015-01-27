@@ -49,6 +49,17 @@ lein create-migration <the name of the migration>
 
 This places a migration file in the src/migrations directory
 
+### AWS Credentials
+
+Before you can run the server or the integration tests you need AWS credentials.
+Once you have an id and key you can save the credentials to `~/.aws/credentials`:
+
+```
+[promotably]
+aws_access_key_id = <ID>
+aws_secret_access_key = <KEY>
+```
+
 ### Running the Server
 ```
 lein run
