@@ -28,7 +28,6 @@
   (jdbc/with-db-connection [db-con @$db-config]
     (jdbc/db-do-commands
      db-con
-     (jdbc/drop-table-ddl :accounts)
-     "DROP INDEX users_account_id_idx"
+     "DROP TABLE accounts CASCADE"
      "ALTER TABLE users DROP COLUMN account_id"
      "ALTER TABLE promos RENAME COLUMN account_id TO user_id")))

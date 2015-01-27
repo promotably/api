@@ -23,9 +23,11 @@
 (defn user-access-to-account?
   [user-id account-id]
   (let [user (user/find-by-user-id user-id)
-        user-account-id (or (:account-id-2 user)
-                            (:account-id user))]
-    (= account-id user-account-id)))
+        user-account-ids (->> user
+                              :accounts
+                              (map :account-id)
+                              set)]
+    (contains? user-account-ids account-id)))
 
 (defn get-account
   "Returns an account."

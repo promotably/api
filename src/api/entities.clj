@@ -1,19 +1,22 @@
 (ns api.entities
   (:require [korma.core :refer :all]))
 
-(declare accounts users sites offers promos redemptions promo-conditions offer-conditions linked-products)
+(declare accounts users users-accounts sites offers promos redemptions promo-conditions offer-conditions linked-products)
 
 (defentity email-subscribers
   (table "email_subscribers"))
 
 (defentity accounts
   (table "accounts")
-  (has-many users)
+  (many-to-many users :users_accounts)
   (has-many sites {:fk :account_id}))
 
 (defentity users
   (table "users")
-  (belongs-to accounts {:fk :account_id}))
+  (many-to-many accounts :users_accounts))
+
+(defentity users-accounts
+  (table "users_accounts"))
 
 (defentity sites
   (table "sites")

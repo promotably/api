@@ -20,12 +20,7 @@
   [str-user-id]
   (let [{:keys [user-id]} (shape-to-spec {:user-id str-user-id} inbound-user-spec)]
     (if-let [u (user/find-by-user-id user-id)]
-      (let [a (when (and u (:account-id u))
-                (account/find-by-id (:account-id u)))
-            s (when a (site/find-by-account-id (:account-id u)))
-            a-s (assoc a :sites s)
-            u-a-s (assoc u :account a-s)]
-        (build-response 200 :user u-a-s))
+      (build-response 200 :user u)
       (build-response 404))))
 
 (defn create-new-user!

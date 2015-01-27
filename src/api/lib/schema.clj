@@ -38,12 +38,12 @@
                  (str (:account-id account)))
    :company-name :company-name
    :sites (fn [account] ; hard-coding a vector response here
-            (if-let [sites (:sites account)]
-              (if (and (not (map? sites))
-                       (coll? sites))
-                (mapv #(shape-to-spec % site-spec) sites)
-                [(shape-to-spec sites site-spec)])
-              []))})
+            (let [sites (:sites account)]
+              (cond
+               (empty? sites) []
+               (empty? (first sites)) []
+               (nil? (:uuid (first sites))) []
+               :else (mapv #(shape-to-spec % site-spec) sites))))})
 
 (def user-spec
   {:user-id (fn [user] ; uuid coerced to string
@@ -56,18 +56,12 @@
    :phone :phone
    :job-title :job-title
    :accounts (fn [user] ; hard-cording a vector response here
-               (if-let [account (:account user)]
-                 (if-not (empty? account)
-                   (if (and (not (map? account))
-                            (coll? account))
-                     (if-not (empty? (first account))
-                       (mapv #(shape-to-spec % account-spec) account)
-                       [])
-                     (if-not (nil? (:account-id account))
-                       [(shape-to-spec account account-spec)]
-                       []))
-                   [])
-                 []))})
+               (let [accounts (:accounts user)]
+                 (cond
+                  (empty? accounts) []
+                  (empty? (first accounts)) []
+                  (nil? (:account-id (first accounts))) []
+                  :else (mapv #(shape-to-spec % account-spec) accounts))))})
 
 (def inbound-site-spec
   {:site-id (fn [site]
