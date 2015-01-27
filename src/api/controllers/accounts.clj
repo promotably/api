@@ -43,8 +43,7 @@
   [{:keys [body-params user-id] :as request}]
   (let [account (shape-to-spec (assoc body-params :user-id user-id)
                                inbound-account-spec)
-        user-int-id (:id (user/find-by-user-id user-id))
-        results (account/new-account! user-int-id account)]
+        results (account/new-account! account)]
     (if results
       (build-response 201 :account results)
       (build-response 400))))
