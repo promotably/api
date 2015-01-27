@@ -21,7 +21,7 @@
 
 (defn new-account!
   "Creates a new account in the database."
-  [{:keys [user-id company-name] :as account}]
+  [user-id {:keys [company-name] :as account}]
   (let [a (insert accounts
                   (values {:company_name company-name
                            :created_at (sqlfn now)

@@ -33,7 +33,7 @@
   (let [{:keys [account-id user-id]} (shape-to-spec (assoc params :user-id user-id)
                                                     inbound-account-spec)]
     (if (user-access-to-account? user-id account-id)
-      (if-let [result (account/find-by-account-id account-id)]
+      (if-let [result (account/find-by-account-uuid account-id)]
         (build-response 200 :account result)
         (build-response 404))
       (build-response 403))))
@@ -43,7 +43,8 @@
   [{:keys [body-params user-id] :as request}]
   (let [account (shape-to-spec (assoc body-params :user-id user-id)
                                inbound-account-spec)
-        results (account/new-account! account)]
+        user-int-id (:id (user/find-by-user-id user-id))
+        results (account/new-account! user-int-id account)]
     (if results
       (build-response 201 :account results)
       (build-response 400))))
