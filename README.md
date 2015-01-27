@@ -51,14 +51,8 @@ This places a migration file in the src/migrations directory
 
 ### AWS Credentials
 
-Before you can run the server or the integration tests you need AWS credentials. Once you have an id and key you can set the following env variables:
-
-```
-$ export AWS_ACCESS_KEY_ID=<ID>
-$ export AWS_SECRET_ACCESS_KEY=<KEY>
-```
-
-or you can save the credentials to `~/.aws/credentials`:
+Before you can run the server or the integration tests you need AWS credentials.
+Once you have an id and key you can save the credentials to `~/.aws/credentials`:
 
 ```
 [promotably]
