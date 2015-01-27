@@ -24,7 +24,7 @@
   {:site-id (fn [site] ; uuid coerced to string
               (str (:uuid site)))
    :site-code :site-code
-   :name :name
+   :site-name :name
    :site-url :site-url
    :api-secret (fn [site] ; uuid coerced to string
                  (str (:api-secret site)))
@@ -86,7 +86,7 @@
                   (UUID/fromString user-id)
                   user-id)))
    :site-code :site-code
-   :name :name
+   :name :site-name
    :site-url :site-url
    :api-secret :api-secret
    :country :country

@@ -47,6 +47,8 @@
                                   :name name
                                   :site_url site-url
                                   :api_secret api-secret
+                                  :created_at (sqlfn now)
+                                  :updated_at (sqlfn now)
                                   :country country
                                   :timezone timezone
                                   :currency currency
@@ -58,8 +60,9 @@
                     :currency :language :site-url]]
   (defn update-site-for-account!
     [account-id site]
-    (let [params-for-update (dash-to-underscore-keys
-                             (select-keys site allowed-keys))]
+    (let [params-for-update (assoc (dash-to-underscore-keys
+                                    (select-keys site allowed-keys))
+                              :updated_at (sqlfn now))]
       (update sites
               (set-fields params-for-update)
               (where {:uuid (:site-id site)

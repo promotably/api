@@ -1,5 +1,6 @@
 (ns api.controllers.accounts
   (:require [clojure.data.json :as json]
+            [clojure.tools.logging :as log]
             [api.lib.coercion-helper :refer [custom-matcher]]
             [api.lib.schema :refer [shape-to-spec
                                     inbound-account-spec
@@ -21,11 +22,10 @@
 
 (defn user-access-to-account?
   [user-id account-id]
-  (let [user-account-ids (->> (user/find-by-user-id user-id)
-                              :accounts
-                              (map :account-id))]
-    (and (not (empty? user-account-ids))
-         (contains? user-account-ids account-id))))
+  (let [user (user/find-by-user-id user-id)
+        user-account-id (or (:account-id-2 user)
+                            (:account-id user))]
+    (= account-id user-account-id)))
 
 (defn get-account
   "Returns an account."
