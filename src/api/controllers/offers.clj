@@ -83,7 +83,7 @@
                                                      c/string-coercion-matcher]))
                         body-params)]
     (when (= schema.utils.ErrorContainer (type coerced-params))
-      (throw+ {:type ::argument-error :body-params params :error coerced-params}))
+      (throw+ {:type :argument-error :body-params params :error coerced-params}))
     (let [result (offer/new-offer! (assoc coerced-params :site-id id))]
       (shape-new-offer result))))
 

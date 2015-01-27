@@ -187,12 +187,12 @@
                               (pprint (:error exdata)))
                     [:headers "X-Error"] (.getMessage ex)))))))
 
-(defn wrap-schema-check [handler]
+(defn wrap-argument-exception [handler]
   "Catch exceptions Schema throws when failing to validate passed parameters"
   (fn [req]
     (try+
       (handler req)
-      (catch [:type :api.controllers.offers/argument-error]
+      (catch [:type :argument-error]
              {:keys [body-params error]}
         {:status 400
          :body error}))))
@@ -277,7 +277,7 @@
       wrap-token
       wrap-save-the-raw-body
       ;; wrap-exceptions
-      wrap-schema-check
+      wrap-argument-exception
       wrap-stacktrace
       (wrap-if #((:env config) #{:dev :test :integration})
                wrap-request-logging)
