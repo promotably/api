@@ -49,4 +49,7 @@
   (table "offer_conditions")
   (belongs-to offers {:fk :offer_id}))
 
-
+(defentity events
+  (table "events")
+  (belongs-to sites {:fk :site_id})
+  (belongs-to promos {:fk :promo_id}))
