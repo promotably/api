@@ -3,7 +3,8 @@
             [korma.core :refer :all]
             [api.entities :refer :all]
             [api.lib.coercion-helper :refer [underscore-to-dash-keys
-                                             dash-to-underscore-keys]]))
+                                             dash-to-underscore-keys]])
+  (:import [java.util UUID]))
 
 (defn find-by-account-id
   [account-id]
@@ -40,14 +41,15 @@
 
 (defn create-site-for-account!
   [account-id site]
-  (let [{:keys [name site-url api-secret country
+  (let [{:keys [name site-url country
                 timezone currency language]} site
         new-site (insert sites
                          (values {:account_id account-id
                                   :name name
                                   :site_url site-url
-                                  :api_secret api-secret
+                                  :api_secret (UUID/randomUUID)
                                   :created_at (sqlfn now)
+                                  :site_code (last (re-find #".*(?://|www\.)(?:www.)?([^\/]+)" site-url))
                                   :updated_at (sqlfn now)
                                   :country country
                                   :timezone timezone
