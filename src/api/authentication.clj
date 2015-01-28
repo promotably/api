@@ -11,6 +11,18 @@
   (:import [java.util UUID]
            [java.net URLEncoder]))
 
+(defn invalidate-auth-cookies
+  [request]
+  (let [expiry (tf/unparse (tf/formatters :basic-date-time)
+                           (t/minus (t/now) (t/minutes 10)))]
+    {:status 200
+     :cookies {"__apiauth" {:value ""
+                            :expires expiry
+                            :path "/"}
+               "promotably-user" {:value ""
+                                  :expires expiry
+                                  :path "/"}}}))
+
 (defn- generate-user-auth-token
   "Generates an AES encrypted json object containing the user-id using
   the api-secret key."

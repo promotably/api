@@ -84,6 +84,7 @@
            (POST "/login" req (fn [r]
                                 (let [auth-config (get-in current-system [:config :auth-token-config])]
                                   (auth/authenticate r auth-config get-user))))
+           (POST "/logout" [] auth/invalidate-auth-cookies)
            (POST "/register" req (fn [r]
                                    (let [auth-config (get-in current-system [:config :auth-token-config])]
                                      (auth/validate-and-create-user r auth-config create-new-user!))))
