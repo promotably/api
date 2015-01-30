@@ -13,8 +13,7 @@
 
 (defn invalidate-auth-cookies
   [request]
-  (let [expiry (tf/unparse (tf/formatters :basic-date-time)
-                           (t/minus (t/now) (t/minutes 10)))]
+  (let [expiry (t/minus (t/now) (t/minutes 10))]
     {:status 200
      :cookies {"__apiauth" {:value ""
                             :expires expiry
@@ -81,8 +80,7 @@
   the response."
   [response api-secret user-id & {:keys [remember?]}]
   (let [expiry (if remember?
-                 (tf/unparse (tf/formatters :basic-date-time)
-                             (t/plus (t/now) (t/years 10)))
+                 (t/plus (t/now) (t/years 10))
                  "Session")
         auth-token (generate-user-auth-token user-id api-secret)]
     {:status (or (:status response) 200)
