@@ -76,10 +76,11 @@
   [{:keys [body-params user-id] :as request}]
   (let [site (shape-to-spec (assoc body-params :user-id user-id)
                             inbound-site-spec)
-        id (:id (account/find-by-account-id (:account-id site)))]
-    (if (user-access-to-account? (:user-id site) (:account-id site))
+        id (:account-id (site/find-by-site-uuid (:site-id site)))
+        account-id (:account-id (account/find-by-id id))]
+    (if (user-access-to-account? (:user-id site) account-id)
       (if-let [result (site/update-site-for-account! id site)]
-        (let [account-with-sites (account/find-by-account-id (:account-id site))]
+        (let [account-with-sites (account/find-by-account-id account-id)]
           (build-response 200 :account account-with-sites))
         (build-response 400))
       (build-response 403))))
