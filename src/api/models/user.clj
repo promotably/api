@@ -65,7 +65,8 @@
   [params]
   (let [{:keys [username email password company-name phone job-title
                 user-social-id account-id first-name last-name]} params
-        [encrypted-pw salt] (crypto/encrypt-password (or password user-social-id))
+        password-and-salt (when password
+                            (crypto/encrypt-password password))
         a (first (select accounts
                          (fields :id)
                          (where {:account_id account-id})))
@@ -75,8 +76,10 @@
                      ;;more fields?
                      (values {:username (or username email)
                               :email email
-                              :password encrypted-pw
-                              :password_salt salt
+                              :password (when password-and-salt
+                                          (first password-and-salt))
+                              :password_salt (when password-and-salt
+                                               (last password-and-salt))
                               :user_social_id user-social-id
                               :phone phone
                               :first_name first-name
@@ -89,11 +92,15 @@
 
 (let [allowed-keys [:first-name :last-name
                     :email :username :phone :job-title
-                    :user-social-id]]
+                    :user-social-id :password]]
   (defn update-user!
     [{:keys [user-id] :as params}]
-    (let [params-for-update (dash-to-underscore-keys
-                             (select-keys params allowed-keys))]
+    (let [update-params (dash-to-underscore-keys
+                         (select-keys params allowed-keys))
+          params-for-update (if (:password update-params)
+                              (let [[encrypted-pw salt] (crypto/encrypt-password (:password update-params))]
+                                (assoc update-params :password encrypted-pw :password_salt salt))
+                              update-params)]
       (update users
               (set-fields params-for-update)
               (where {:user_id user-id})))))

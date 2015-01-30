@@ -12,9 +12,10 @@
   (:import [java.util UUID]))
 
 (defn- build-response
-  [status & {:keys [account cookies session]}]
-  (let [response-body (when account
-                        (shape-response-body account))]
+  [status & {:keys [account error cookies session]}]
+  (let [response-body (if account
+                        (shape-response-body account)
+                        {:error-message (or error "")})]
     (cond-> {:status status
              :body response-body}
             cookies (assoc :cookies cookies)
@@ -37,8 +38,8 @@
     (if (user-access-to-account? user-id account-id)
       (if-let [result (account/find-by-account-id account-id)]
         (build-response 200 :account result)
-        (build-response 404))
-      (build-response 403))))
+        (build-response 404 :error "Account does not exist."))
+      (build-response 403 :error "User does not have access to this account."))))
 
 (defn create-new-account!
   "Creates a new account in the database."
@@ -48,7 +49,7 @@
         results (account/new-account! account)]
     (if results
       (build-response 201 :account results)
-      (build-response 400))))
+      (build-response 400 :error "Unable to create account, invalid or missing parameters."))))
 
 (defn update-account!
   [{:keys [body-params user-id] :as request}]
@@ -58,7 +59,7 @@
       (let [result (account/update! account)]
         (if result
           (build-response 200 :account result)
-          (build-response 400))))))
+          (build-response 400 :error "Unable to update account, invalid or missing parameters."))))))
 
 (defn create-site-for-account!
   [{:keys [body-params user-id] :as request}]
@@ -69,8 +70,8 @@
       (if-let [result (site/create-site-for-account! id site)]
         (let [account-with-sites (account/find-by-account-id (:account-id site))]
           (build-response 201 :account account-with-sites))
-        (build-response 400))
-      (build-response 403))))
+        (build-response 400 :error "Unable to create site, invalid or missing parameters."))
+      (build-response 403 :error "User does not have access to this account."))))
 
 (defn update-site-for-account!
   [{:keys [body-params user-id] :as request}]
@@ -79,8 +80,10 @@
         id (:account-id (site/find-by-site-uuid (:site-id site)))
         account-id (:account-id (account/find-by-id id))]
     (if (user-access-to-account? (:user-id site) account-id)
-      (if-let [result (site/update-site-for-account! id site)]
-        (let [account-with-sites (account/find-by-account-id account-id)]
-          (build-response 200 :account account-with-sites))
-        (build-response 400))
-      (build-response 403))))
+      (let [result (site/update-site-for-account! id site)]
+        (if-not (or (empty? result)
+                    (nil? result))
+          (let [account-with-sites (account/find-by-account-id account-id)]
+            (build-response 200 :account account-with-sites))
+          (build-response 400 :error "Unable to update site, invalid or missing parameters.")))
+      (build-response 403 :error "User does not have access to this account."))))
