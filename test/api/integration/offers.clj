@@ -44,7 +44,8 @@
     [site-id]
     (client/get "http://localhost:3000/api/v1/realtime-conversion-offers"
                 {:throw-exceptions false
-                 :query-params {"site-id" (str site-id)}}))
+                 :query-params {"site-id" (str site-id)
+                                "shopper-id" (str offers-fixture/shopper-id)}}))
 
   (fact-group :integration
 
@@ -162,4 +163,11 @@
                 (let [r (get-rcos offers-fixture/site-2-id)
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just [(contains {:code "OFFER-VALID-DATES"})])))))
+                  pr => (just [(contains {:code "OFFER-VALID-DATES"})])))
+
+              (facts "Offer with number of cart adds condition"
+
+                (let [r (get-rcos offers-fixture/site-3-id)
+                      pr (json/read-str (:body r) :key-fn keyword)]
+                  (:status r) => 200
+                  pr => (just [(contains {:code "OFFER-CART-ADD"})])))))

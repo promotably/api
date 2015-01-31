@@ -288,6 +288,7 @@
    :referer-domain
    :shopper-device-type
    :num-orders-in-period
+   :num-cart-adds-in-period
    :num-lifetime-orders
    :last-order-total
    :last-order-item-count
@@ -371,6 +372,10 @@
                  (merge BaseOfferCondition {:num-orders s/Int
                                                    :period-in-days s/Int})
 
+                 #(= (:type %) :num-cart-adds-in-period)
+                 (merge BaseOfferCondition {:num-cart-adds s/Int
+                                            :period-in-days s/Int})
+
                  #(= (:type %) :num-lifetime-orders)
                  (merge BaseOfferCondition {:num-lifetime-orders s/Int})
 
@@ -426,7 +431,8 @@
    (s/optional-key :num-lifetime-orders) (s/maybe s/Int)
    (s/optional-key :last-order-total) (s/maybe s/Num)
    (s/optional-key :last-order-item-count) (s/maybe s/Int)
-   (s/optional-key :last-order-includes-item-id) [s/Str]})
+   (s/optional-key :last-order-includes-item-id) [s/Str]
+   (s/optional-key :num-cart-adds) (s/maybe s/Int)})
 
 (def BaseOffer
   {(s/required-key :site-id) s/Uuid
