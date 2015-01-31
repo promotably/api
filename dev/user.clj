@@ -6,7 +6,7 @@
   [site-id shopper-id product-id]
   (record-event!
    (:kinesis api.system/current-system)
-   :trackproductview
+   :productview
    {:shopper-id shopper-id
     :product-id product-id
     :site-id site-id}))

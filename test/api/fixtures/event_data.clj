@@ -28,7 +28,7 @@
                    :type "cartview"
                    :data {:billing-state "",
                           :shipping-country "US",
-                          :event-name :trackcartview,
+                          :event-name :cartview,
                           :shopper-id (str shopper-id),
                           :site-id site-id,
                           :shipping-city "",
@@ -65,7 +65,7 @@
                           :modified-at "2014-11-29T15:10:57.000-00:00"
                           :user-id "1",
                           :short-description "",
-                          :event-name :trackproductview})
+                          :event-name :productview})
           (fixture :event-3
                    :site_id site-uuid
                    :event_id (java.util.UUID/randomUUID)
@@ -78,7 +78,7 @@
                           :shopper-id (str shopper-id),
                           :sku "T100",
                           :variation "",
-                          :event-name :trackproductadd,
+                          :event-name :productadd,
                           :session-id (str session-id)})
           (fixture :event-4
                    :site_id site-uuid
@@ -92,7 +92,7 @@
                           :shopper-id (str shopper-id),
                           :site-id site-id,
                           :shipping-country "US",
-                          :event-name :trackcheckout,
+                          :event-name :checkout,
                           :shipping-city "Dallas",
                           :billing-postcode "75219",
                           :shipping-state "VA",
@@ -120,7 +120,7 @@
                    :session_id session-id
                    :type "thankyou"
                    :data {:session-id (str session-id),
-                          :event-name :trackthankyou,
+                          :event-name :thankyou,
                           :order-date "2014-12-14 09:04:27",
                           :applied-coupons [{:discount "28", :code "p4"}],
                           :shipping-methods [{:cost "0", :method "free_shipping"}],

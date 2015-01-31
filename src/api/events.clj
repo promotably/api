@@ -38,6 +38,7 @@
                  (vector %1 (-> %2
                                 (subs 1)
                                 clojure.string/lower-case
+                                (clojure.string/replace "track" "")
                                 keyword)))))
 
 (def fix-applied-coupons
@@ -76,7 +77,7 @@
 (def fix-cart-items
   (comp
    (fn [m]
-     (if (and (not (#{:trackproductview :trackproductadd} (:event-name m)))
+     (if (and (not (#{:productview :productadd} (:event-name m)))
               (not (contains? m :cart-items)))
        (assoc m :cart-items [])
        m))
