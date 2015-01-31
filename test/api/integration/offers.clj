@@ -58,10 +58,11 @@
                  :accept :json
                  :throw-exceptions false}))
   (defn- get-rcos
-    [site-id]
+    [site-id shopper-id]
     (client/get "http://localhost:3000/api/v1/realtime-conversion-offers"
                 {:throw-exceptions false
-                 :query-params {"site-id" (str site-id)}}))
+                 :query-params {"site-id" (str site-id)
+                                "shopper-id" (str shopper-id)}}))
 
   (fact-group :integration
 
@@ -166,7 +167,8 @@
                 ;; in the db for the same site that has invalid dates,
                 ;; so it should not get returned here.
 
-                (let [r (get-rcos offers-fixture/site-2-id)
+                (let [r (get-rcos offers-fixture/site-2-id
+                                  (str (java.util.UUID/randomUUID)))
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
                   pr => (just {:offers (just [(contains {:code "OFFER-VALID-DATES"})])})
@@ -183,4 +185,11 @@
                                                      :reward (just {:promo-id string? :type "promo"})
                                                      :site-id integer?
                                                      :updated-at string?
-                                                     :uuid string?})])})))))
+                                                     :uuid string?})])})))
+              
+              (facts "Offer with number of cart adds condition"
+                (let [r (get-rcos offers-fixture/site-3-id
+                                  offers-fixture/shopper-id)
+                      pr (json/read-str (:body r) :key-fn keyword)]
+                  (:status r) => 200
+                  pr => (just {:offers (just [(contains {:code "OFFER-CART-ADD"})])})))))

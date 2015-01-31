@@ -4,8 +4,8 @@
   (:require
    [clojure.data.json :as json]
    [clj-time.format :as f]
-   [clj-time.core :as t]
-   [clj-time.coerce :as c]
+   [clj-time.core :refer [now minus days]]
+   [clj-time.coerce :refer [to-sql-date]]
    [api.fixtures.common :refer [site-uuid default-account default-site]]
    [api.q-fix :refer :all]))
 
@@ -25,6 +25,7 @@
                    :shopper_id shopper-id
                    :site_shopper_id site-shopper-id
                    :session_id session-id
+                   :created_at (to-sql-date (minus (now) (days 1)))
                    :type "cartview"
                    :data {:billing-state "",
                           :shipping-country "US",
@@ -57,6 +58,7 @@
                    :site_shopper_id site-shopper-id
                    :session_id session-id
                    :type "productview"
+                   :created_at (to-sql-date (minus (now) (days 1)))
                    :data {:sku "W100",
                           :title "Widget",
                           :site-id site-id,
@@ -73,6 +75,7 @@
                    :site_shopper_id site-shopper-id
                    :session_id session-id
                    :type "productadd"
+                   :created_at (to-sql-date (minus (now) (days 1)))
                    :data {:quantity 1,
                           :site-id site-id,
                           :shopper-id (str shopper-id),
@@ -80,6 +83,7 @@
                           :variation "",
                           :event-name :productadd,
                           :session-id (str session-id)})
+
           (fixture :event-4
                    :site_id site-uuid
                    :event_id (java.util.UUID/randomUUID)
@@ -87,6 +91,7 @@
                    :site_shopper_id site-shopper-id
                    :session_id session-id
                    :type "checkout"
+                   :created_at (to-sql-date (minus (now) (days 1)))
                    :data {:billing-state "VA",
                           :session-id (str session-id),
                           :shopper-id (str shopper-id),
@@ -119,6 +124,7 @@
                    :site_shopper_id site-shopper-id
                    :session_id session-id
                    :type "thankyou"
+                   :created_at (to-sql-date (minus (now) (days 1)))
                    :data {:session-id (str session-id),
                           :event-name :thankyou,
                           :order-date "2014-12-14 09:04:27",
@@ -149,5 +155,50 @@
                           :shopper-id (str shopper-id),
                           :site-id site-id,
                           :shipping "0",
-                          :discount "28"}))))
+                          :discount "28"})
+          (fixture :event-pa-1
+                   :site_id site-uuid
+                   :event_id (java.util.UUID/randomUUID)
+                   :shopper_id shopper-id
+                   :site_shopper_id site-shopper-id
+                   :session_id session-id
+                   :type "productadd"
+                   :created_at (to-sql-date (minus (now) (days 1)))
+                   :data {:quantity 1,
+                          :site-id site-id,
+                          :shopper-id (str shopper-id),
+                          :sku "T100",
+                          :variation "",
+                          :event-name :trackproductadd,
+                          :session-id (str session-id)})
+          (fixture :event-pa-2
+                   :site_id site-uuid
+                   :event_id (java.util.UUID/randomUUID)
+                   :shopper_id shopper-id
+                   :site_shopper_id site-shopper-id
+                   :session_id session-id
+                   :type "productadd"
+                   :created_at (to-sql-date (minus (now) (days 2)))
+                   :data {:quantity 1,
+                          :site-id site-id,
+                          :shopper-id (str shopper-id),
+                          :sku "T100",
+                          :variation "",
+                          :event-name :trackproductadd,
+                          :session-id (str session-id)})
+          (fixture :event-pa-3
+                   :site_id site-uuid
+                   :event_id (java.util.UUID/randomUUID)
+                   :shopper_id shopper-id
+                   :site_shopper_id site-shopper-id
+                   :session_id session-id
+                   :type "productadd"
+                   :created_at (to-sql-date (minus (now) (days 3)))
+                   :data {:quantity 1,
+                          :site-id site-id,
+                          :shopper-id (str shopper-id),
+                          :sku "T100",
+                          :variation "",
+                          :event-name :trackproductadd,
+                          :session-id (str session-id)}))))
 

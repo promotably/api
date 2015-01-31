@@ -3,6 +3,7 @@
             [api.lib.coercion-helper :refer [custom-matcher dash-to-underscore-keys]]
             [api.lib.redis :refer [get-integer]]
             [api.lib.schema :refer :all]
+            [api.models.event :as event]
             [api.models.redemption :as redemption]
             [api.util :refer [hyphenify-key]]
             [clj-time.core :refer [before? after? now]]
@@ -96,3 +97,8 @@
   (let [k (str site-id "/" shopper-id "/lifetime-orders")
         lifetime-orders (get-integer k)]
     (>= lifetime-orders num-lifetime-orders)))
+
+(defmethod validate :num-cart-adds-in-period
+  [{:keys [site-id shopper-id] :as context}
+   {:keys [num-cart-adds period-in-days] :as condition}]
+  (>= (event/count-shopper-events-by-days shopper-id "productadd" period-in-days) num-cart-adds))
