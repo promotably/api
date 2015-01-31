@@ -81,7 +81,7 @@
 (defn show-promo
   [{:keys [params body] :as request}]
   (let [site-uuid (java.util.UUID/fromString (:site-id params))
-        site (site/find-by-site-uuid site-uuid true)
+        site (site/find-by-site-uuid site-uuid)
         promo-uuid (java.util.UUID/fromString (:promo-id params))
         promo (promo/find-by-site-and-uuid (:id site) promo-uuid)]
     (shape-promo {:promo promo})))
@@ -101,7 +101,7 @@
   (make-trans #{:site-id}
               #(vector :site (if (string? %2)
                                (-> %2 java.util.UUID/fromString site/find-by-site-uuid)
-                               nil))))
+                               (site/find-by-site-uuid %2)))))
 
 (defn prep-incoming
   [params]
@@ -123,7 +123,7 @@
                                  (get headers "promotably-auth")))
                            prep-incoming
                            coercer)
-        site-id (-> coerced-params :site :site-id)
+        site-id (-> coerced-params :site :uuid)
         code (-> coerced-params :code clojure.string/upper-case)
         the-promo (promo/find-by-site-uuid-and-code site-id code)]
 

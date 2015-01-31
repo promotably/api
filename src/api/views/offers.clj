@@ -27,3 +27,10 @@
    (true? success) {:status 201}
    (and (false? success) (= error :already-exists)) {:status 409 :body message}
    :else {:status 500}))
+
+(defn shape-rcos
+  [offers]
+  {:headers {"Content-Type" "text/javascript"}
+   :body (write-str
+          {:offers offers}
+          :value-fn (fn [k v] (view-value-helper v)))})

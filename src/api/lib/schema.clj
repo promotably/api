@@ -1,13 +1,133 @@
 (ns api.lib.schema
-  (:require [schema.core :as s]))
+  (:require [schema.core :as s])
+  (:import [java.util UUID]))
+
+(defn shape-to-spec
+  "Given a model (a map) and a spec map, returns a map that consists of
+  the keys from the spec map and the values produced by calling the
+  associated functions of the spec with the model as their only
+  argument."
+  [model spec]
+  (reduce-kv (fn [a k v]
+               (assoc a k (v model))) {} spec))
+
+;;;;;;;;;
+;;
+;; Here be "specs." Specs are maps of {:response-key model-value-fn}
+;; They are passed to the shape-to-spec function along with the model (a map).
+;; THe model-value-fn takes the model as it's argument and produces
+;; the value for the corresponding response key.
+;;
+;;;;;;;;
+
+(def site-spec
+  {:site-id (fn [site] ; uuid coerced to string
+              (str (:uuid site)))
+   :site-code :site-code
+   :site-name :name
+   :site-url :site-url
+   :api-secret (fn [site] ; uuid coerced to string
+                 (str (:api-secret site)))
+   :country :country
+   :timezone :timezone
+   :currency :currency
+   :language :language})
+
+(def account-spec
+  {:account-id (fn [account] ; uuid coerced to string
+                 (str (:account-id account)))
+   :company-name :company-name
+   :sites (fn [account] ; hard-coding a vector response here
+            (let [sites (:sites account)]
+              (cond
+               (empty? sites) []
+               (empty? (first sites)) []
+               (nil? (:uuid (first sites))) []
+               :else (mapv #(shape-to-spec % site-spec) sites))))})
+
+(def user-spec
+  {:user-id (fn [user] ; uuid coerced to string
+              (str (:user-id user)))
+   :first-name :first-name
+   :last-name :last-name
+   :email :email
+   :has-password (fn [user] ; boolean
+                   (not (nil? (:password user))))
+   :phone :phone
+   :job-title :job-title
+   :accounts (fn [user] ; hard-cording a vector response here
+               (let [accounts (:accounts user)]
+                 (cond
+                  (empty? accounts) []
+                  (empty? (first accounts)) []
+                  (nil? (:account-id (first accounts))) []
+                  :else (mapv #(shape-to-spec % account-spec) accounts))))})
+
+(def inbound-site-spec
+  {:site-id (fn [site]
+              (when-let [site-id (:site-id site)]
+                (if (string? site-id)
+                  (UUID/fromString site-id)
+                  site-id)))
+   :account-id (fn [site]
+                 (when-let [account-id (:account-id site)]
+                   (if (string? account-id)
+                     (UUID/fromString account-id)
+                     account-id)))
+   :user-id (fn [site]
+              (when-let [user-id (:user-id site)]
+                (if (string? user-id)
+                  (UUID/fromString user-id)
+                  user-id)))
+   :site-code :site-code
+   :name :site-name
+   :site-url :site-url
+   :api-secret :api-secret
+   :country :country
+   :timezone :timezone
+   :currency :currency
+   :language :language})
+
+(def inbound-account-spec
+  {:account-id (fn [account]
+                 (when-let [account-id (:account-id account)]
+                   (if (string? account-id)
+                     (UUID/fromString account-id)
+                     account-id)))
+   :company-name :company-name
+   :user-id (fn [account]
+              (when-let [user-id (:user-id account)]
+                (if (string? user-id)
+                  (UUID/fromString user-id)
+                  user-id)))})
+
+(def inbound-user-spec
+  {:username :username
+   :user-id (fn [user]
+              (when-let [user-id (:user-id user)]
+                (if (string? user-id)
+                  (UUID/fromString user-id)
+                  user-id)))
+   :email :email
+   :password :password
+   :user-social-id :user-social-id
+   :phone :phone
+   :first-name :first-name
+   :last-name :last-name
+   :job-title :job-title
+   :account-id (fn [user]
+                 (when-let [account-id (:account-id user)]
+                   (if (string? account-id)
+                     (UUID/fromString account-id)
+                     account-id)))})
 
 ;; Events ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def EventType (s/enum :trackproductview
-                       :trackproductadd
-                       :trackcartview
-                       :trackcheckout
-                       :trackthankyou))
+(def EventType (s/enum :productview
+                       :productadd
+                       :cartview
+                       :checkout
+                       :thankyou))
 
 ;; TODO: WIP
 (def Auth
@@ -53,7 +173,7 @@
 (defmacro def-event
   [the-event base-event & body]
   `(def ~the-event
-     (s/conditional #(= (:event-name %) :trackproductview)
+     (s/conditional #(= (:event-name %) :productview)
                     (merge ~base-event
                            {(s/required-key :sku) s/Str
                             (s/optional-key :title) (s/maybe s/Str)
@@ -61,15 +181,15 @@
                             (s/optional-key :short-description) (s/maybe s/Str)
                             (s/optional-key :modified-at) (s/maybe s/Inst)
                             (s/optional-key :variation) (s/maybe s/Str)
-                            (s/required-key :cart-items) [CartItem]})
-                    #(= (:event-name %) :trackproductadd)
+                            (s/optional-key :cart-items) [CartItem]})
+                    #(= (:event-name %) :productadd)
                     (merge ~base-event
                            {(s/required-key :sku) s/Str
                             (s/optional-key :category-id) (s/maybe s/Str)
                             (s/optional-key :quantity) s/Int
                             (s/optional-key :variation) (s/maybe s/Str)
-                            (s/required-key :cart-items) [CartItem]})
-                    #(= (:event-name %) :trackcartview)
+                            (s/optional-key :cart-items) [CartItem]})
+                    #(= (:event-name %) :cartview)
                     (merge ~base-event
                            {(s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
                             (s/optional-key :shipping-methods) (s/maybe [ShippingMethod])
@@ -86,7 +206,7 @@
                             (s/optional-key :shipping-postcode) (s/maybe s/Str)
                             (s/optional-key :shipping-email) (s/maybe s/Str)
                             (s/required-key :cart-items) [CartItem]})
-                    #(= (:event-name %) :trackcheckout)
+                    #(= (:event-name %) :checkout)
                     (merge ~base-event
                            {(s/optional-key :billing-address-1) (s/maybe s/Str)
                             (s/optional-key :billing-city) (s/maybe s/Str)
@@ -103,7 +223,7 @@
                             (s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
                             (s/optional-key :shipping-methods) (s/maybe [ShippingMethod])
                             (s/required-key :cart-items) [CartItem]})
-                    #(= (:event-name %) :trackthankyou)
+                    #(= (:event-name %) :thankyou)
                     (merge ~base-event
                            {(s/required-key :order-id) (s/maybe s/Str)
                             (s/required-key :order-date) (s/maybe s/Str)
@@ -501,4 +621,3 @@
                                      (s/optional-key :line-subtotal-tax) s/Num}]
    (s/optional-key :product-ids-on-sale) [s/Str]
    (s/optional-key :selected-product-sku) s/Str})
-

@@ -1,126 +1,106 @@
 (ns api.models.user
   (:require [clojure.set :refer [rename-keys]]
             [clojure.tools.logging :as log]
-            [api.entities :refer [users accounts]]
-            [api.lib.coercion-helper :refer [dash-to-underscore-keys]]
+            [api.entities :refer [users accounts users-accounts sites]]
+            [api.lib.coercion-helper :refer [dash-to-underscore-keys
+                                             underscore-to-dash-keys]]
             [api.lib.crypto :as crypto]
             [api.lib.user :refer [parse-sql-exception]]
             [api.util :refer [hyphenify-key]]
-            [korma.core :refer :all]
-            [schema.core :as s]
-            [schema.macros :as sm]))
-
-(def BaseUserSchema {(s/required-key :email) s/Str
-                     (s/optional-key :username) (s/maybe s/Str)
-                     (s/optional-key :phone) (s/maybe s/Str)
-                     (s/optional-key :job-title) (s/maybe s/Str)
-                     (s/optional-key :first-name) (s/maybe s/Str)
-                     (s/optional-key :last-name) (s/maybe s/Str)})
-
-(def InboundUserSchema (merge BaseUserSchema
-                              {(s/optional-key :user-social-id) s/Str
-                               (s/optional-key :account-id) s/Uuid
-                               (s/optional-key :password) s/Str}))
-
-(def OutboundUserSchema (merge BaseUserSchema
-                               {(s/required-key :created-at) s/Inst
-                                (s/required-key :account-id) (s/maybe s/Int)
-                                (s/required-key :user-id) s/Uuid
-                                (s/required-key :user-social-id) s/Str
-                                (s/required-key :id) s/Int}))
-
-(defn- safe-db-to-user
-  "Translates a database result to a map that obeys UserSchema."
-  [r]
-  (let [ks (keys r)]
-    (rename-keys r (zipmap ks (map hyphenify-key ks)))))
-
-(sm/defn new-user!
-  "Creates a new user in the database"
-  [params :- InboundUserSchema]
-  (let [{:keys [username email password company-name phone job-title
-                user-social-id account-id first-name last-name]} params
-        [encrypted-pw salt] (crypto/encrypt-password (or password user-social-id))]
-    (try
-      {:status :success
-       :user (safe-db-to-user
-              (let [a (first (select accounts
-                                     (fields :id)
-                                     (where {:account_id account-id})))]
-                (insert users
-                        ;;TODO: There's got to be a better way than spelling out
-                        ;;every single field? What happens when I want to add
-                        ;;more fields?
-                        (values {:username (or username email)
-                                 :email email
-                                 :password encrypted-pw
-                                 :password_salt salt
-                                 :user_social_id user-social-id
-                                 :phone phone
-                                 :first_name first-name
-                                 :last_name last-name
-                                 :job_title job-title
-                                 :created_at (sqlfn now)
-                                 :account_id (:id a)}))))}
-      (catch org.postgresql.util.PSQLException ex
-        {:status :error
-         :error (or (parse-sql-exception ex) (.getMessage ex))}))))
-
-(let [allowed-keys #{:first-name :last-name
-                     :email :username :phone :job-title
-                     :user-social-id}]
-  (defn update-user!
-    [{:keys [user-id] :as params}]
-    (let [params-for-update (dash-to-underscore-keys
-                             (into {} (filter #(contains? allowed-keys (first %)) params)))]
-      (update users
-              (set-fields params-for-update)
-              (where {:user_id user-id})))))
+            [korma.core :refer :all]))
 
 (defn- lookup-single-by
   "Lookup a single row by where map passed in"
   [m]
-  (first (select users
-                 (with accounts)
-                 (where m))))
+  (underscore-to-dash-keys (first (select users
+                                          (with accounts
+                                                (with sites))
+                                          (where m)))))
 
-(sm/defn find-by-user-id :- OutboundUserSchema
+(defn- lookup-many-by
+  [m]
+  (mapv underscore-to-dash-keys (select users
+                                        (where m))))
+
+(defn find-by-user-id
   "Lookup a user by user id"
   [user-id]
-  (safe-db-to-user (lookup-single-by {:user_id (if (= (class user-id) java.util.UUID)
-                                                 user-id
-                                                 (java.util.UUID/fromString user-id))})))
+  (lookup-single-by {:user_id user-id}))
 
-(sm/defn find-by-username :- OutboundUserSchema
+(defn find-by-username
   "Lookup a user by username"
-  [username :- s/Str]
-  (safe-db-to-user (lookup-single-by {:username username})))
+  [username]
+  (lookup-single-by {:username username}))
 
-(sm/defn find-by-email :- OutboundUserSchema
+(defn find-by-email
   "Lookup a user by email"
-  [email :- s/Str]
-  (safe-db-to-user (lookup-single-by {:email email})))
+  [email]
+  (lookup-single-by {:email email}))
 
-(sm/defn find-by-user-social-id :- OutboundUserSchema
+(defn find-by-user-social-id
   "Lookup a user by their user social id"
-  [uid :- s/Str]
-  (safe-db-to-user (first (select users
-                                  (where {:user_social_id uid})))))
+  [social-id]
+  (lookup-single-by {:user_social_id social-id}))
 
 (defn find-by-account-id
   [account-id]
-  (safe-db-to-user (select users
-                           (where {:account_id account-id}))))
+  (mapv underscore-to-dash-keys (select users
+                                        (with accounts
+                                              (where {:id account-id})))))
 
 (defn find-by-account-uuid
   [account-uuid]
-  (safe-db-to-user (first (select users
-                                  (join accounts (= :accounts.id :account_id))
-                                  (where {:accounts.account_id account-uuid})))))
+  (mapv underscore-to-dash-keys (select users
+                                        (with accounts
+                                              (where {:account_id account-uuid})))))
 
-(defn assign-user-to-account!
-  "Assign a user to an account"
-  [user-id account-id]
-  (update users
-          (set-fields {:account_id account-id})
-          (where {:id user-id})))
+(defn add-user-to-account!
+  [account-id user-id]
+  (insert users-accounts
+          (values {:users_id user-id
+                   :accounts_id account-id})))
+
+(defn new-user!
+  "Creates a new user in the database"
+  [params]
+  (let [{:keys [username email password company-name phone job-title
+                user-social-id account-id first-name last-name]} params
+        password-and-salt (when password
+                            (crypto/encrypt-password password))
+        a (first (select accounts
+                         (fields :id)
+                         (where {:account_id account-id})))
+        user (insert users
+                     ;;TODO: There's got to be a better way than spelling out
+                     ;;every single field? What happens when I want to add
+                     ;;more fields?
+                     (values {:username (or username email)
+                              :email email
+                              :password (when password-and-salt
+                                          (first password-and-salt))
+                              :password_salt (when password-and-salt
+                                               (last password-and-salt))
+                              :user_social_id user-social-id
+                              :phone phone
+                              :first_name first-name
+                              :last_name last-name
+                              :job_title job-title
+                              :created_at (sqlfn now)}))]
+    (when (:id a)
+      (add-user-to-account! (:id a) (:id user)))
+    (find-by-user-id (:user_id user))))
+
+(let [allowed-keys [:first-name :last-name
+                    :email :username :phone :job-title
+                    :user-social-id :password]]
+  (defn update-user!
+    [{:keys [user-id] :as params}]
+    (let [update-params (dash-to-underscore-keys
+                         (select-keys params allowed-keys))
+          params-for-update (if (:password update-params)
+                              (let [[encrypted-pw salt] (crypto/encrypt-password (:password update-params))]
+                                (assoc update-params :password encrypted-pw :password_salt salt))
+                              update-params)]
+      (update users
+              (set-fields params-for-update)
+              (where {:user_id user-id})))))

@@ -22,8 +22,25 @@
                             (comment migrate-down))]
 
   (def site (api.models.site/find-by-name "site-1"))
-  (def site-id (:site-id site))
+  (def site-id (:uuid site))
   (def promos (api.models.promo/find-by-site-uuid site-id false))
+  (defn- default-offer []
+    {:site-id (str site-id)
+     :name "New Visitor Offer"
+     :code "NEW-VISITOR"
+     :display-text "display text"
+     :reward {:promo-id (-> promos first :uuid str)
+              :type :dynamic-promo
+              :expiry-in-minutes 10}
+     :presentation {:type :lightbox
+                    :page :any
+                    :display-text "presentation text"}
+     :conditions [{:type "dates"
+                   :start-date "2014-11-27T05:00:00Z"
+                   :end-date "2014-11-29T04:59:59Z"}
+                  {:type :minutes-since-last-offer
+                   :minutes-since-last-offer 10}]})
+
   (defn- create-offer
     [new-offer]
     (client/post "http://localhost:3000/api/v1/offers"
@@ -45,32 +62,22 @@
     (client/get "http://localhost:3000/api/v1/realtime-conversion-offers"
                 {:throw-exceptions false
                  :query-params {"site-id" (str site-id)
-                                "shopper-id" (str shopper-id)}))
+                                "shopper-id" (str shopper-id)}}))
 
   (fact-group :integration
 
               (facts "Offer Create"
-                (let [new-offer {:site-id (str site-id)
-                                 :name "New Visitor Offer"
-                                 :code "NEW-VISITOR"
-                                 :display-text "display text"
-                                 :reward {:promo-id (-> promos first :uuid str)
-                                          :type :dynamic-promo
-                                          :expiry-in-minutes 10}
-                                 :presentation {:type :lightbox
-                                                :page :any
-                                                :display-text "presentation text"}
-                                 :conditions [{:type "dates"
-                                               :start-date "2014-11-27T05:00:00Z"
-                                               :end-date "2014-11-29T04:59:59Z"}
-                                              {:type :minutes-since-last-offer
-                                               :minutes-since-last-offer 10}]}
-                      r (create-offer new-offer)]
-                  (:status r) => 201))
+                     (:status (create-offer (default-offer))) => 201)
+
+              (facts "Offer Create Fails with Bad Param"
+                     (let [r (create-offer (assoc-in (default-offer) [:reward :promo-id] "invalid-id"))]
+                       (:status r) => 400
+                       (.contains (:body r) ":error") => true
+                       (.contains (:body r) ":promo-id") => true))
 
               (facts "List Offers"
                 (let [url (str "http://localhost:3000/api/v1/offers/?site-id="
-                               (:site-id site))
+                               (:uuid site))
                       r (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r) keyword)]
                   listed => (just [(contains
@@ -107,7 +114,7 @@
 
               (facts "Offer Update"
                 (let [url (str "http://localhost:3000/api/v1/offers/?site-id="
-                               (:site-id site))
+                               (str site-id))
                       r (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r) keyword)
                       updated-offer {:site-id (str site-id)
@@ -160,14 +167,29 @@
                 ;; in the db for the same site that has invalid dates,
                 ;; so it should not get returned here.
 
-                (let [r (get-rcos offers-fixture/site-2-id)
+                (let [r (get-rcos offers-fixture/site-2-id
+                                  (str (java.util.UUID/randomUUID)))
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just [(contains {:code "OFFER-VALID-DATES"})])))
-
+                  pr => (just {:offers (just [(contains {:code "OFFER-VALID-DATES"})])})
+                  pr => (just {:offers (just [(just {:code "OFFER-VALID-DATES"
+                                                     :active true
+                                                     :conditions (just [(just {:start-date string? :end-date string? :type "dates"})])
+                                                     :created-at string?
+                                                     :display-text "Book it, dano"
+                                                     :id integer?
+                                                     :name "NAME HERE"
+                                                     :presentation (just {:display-text nil
+                                                                          :page "product-detail"
+                                                                          :type "lightbox"})
+                                                     :reward (just {:promo-id string? :type "promo"})
+                                                     :site-id integer?
+                                                     :updated-at string?
+                                                     :uuid string?})])})))
+              
               (facts "Offer with number of cart adds condition"
-
-                (let [r (get-rcos offers-fixture/site-3-id offers-fixture/shopper-id
+                (let [r (get-rcos offers-fixture/site-3-id
+                                  offers-fixture/shopper-id)
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just [(contains {:code "OFFER-CART-ADD"})])))))
+                  pr => (just {:offers (just [(contains {:code "OFFER-CART-ADD"})])})))))

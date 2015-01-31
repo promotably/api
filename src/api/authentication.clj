@@ -8,7 +8,19 @@
             [clojure.tools.logging :as log]
             [org.httpkit.client :as http]
             [korma.core :refer :all])
-  (:import [java.util UUID]))
+  (:import [java.util UUID]
+           [java.net URLEncoder]))
+
+(defn invalidate-auth-cookies
+  [request]
+  (let [expiry (t/minus (t/now) (t/minutes 10))]
+    {:status 200
+     :cookies {"__apiauth" {:value ""
+                            :expires expiry
+                            :path "/"}
+               "promotably-user" {:value ""
+                                  :expires expiry
+                                  :path "/"}}}))
 
 (defn- generate-user-auth-token
   "Generates an AES encrypted json object containing the user-id using
@@ -36,14 +48,26 @@
             auth-cookie-user-id (get-user-id-from-auth-token cookie-auth-token api-secret)]
         (= current-user-id auth-cookie-user-id)))))
 
+(defn- add-user-id-to-params
+  [request]
+  (let [user-id (-> request
+                    :cookies
+                    (get "promotably-user")
+                    :value
+                    (json/read-str :key-fn keyword)
+                    :user-id
+                    UUID/fromString)]
+    (assoc request :user-id user-id)))
+
 (defn wrap-authorized
   "Middleware component for wrapping secure routes. Validates that this
   request is authorized to access the resource."
   [handler api-secret-fn]
   ;; TODO: add role based authorization
   (fn [request]
-    (when (authorized? request (api-secret-fn))
-      (handler request))))
+    (if (authorized? request (api-secret-fn))
+      (handler (add-user-id-to-params request))
+      {:status 401})))
 
 (defn- auth-response
   "Given a response, the api-secret key, the user-id, and (optional)
@@ -56,8 +80,7 @@
   the response."
   [response api-secret user-id & {:keys [remember?]}]
   (let [expiry (if remember?
-                 (tf/unparse (tf/formatters :basic-date-time)
-                             (t/plus (t/now) (t/years 10)))
+                 (t/plus (t/now) (t/years 10))
                  "Session")
         auth-token (generate-user-auth-token user-id api-secret)]
     {:status (or (:status response) 200)
@@ -112,11 +135,11 @@
   [{:keys [body-params] :as request} social-token-map]
   (let [{:keys [facebook-auth-token facebook-user-id]} body-params
         {:keys [app-id app-secret]} social-token-map
-        facebook-app-token (format "%s|%s" app-id app-secret)
+        facebook-app-token (URLEncoder/encode (format "%s|%s" app-id app-secret) "utf8")
         fb-auth-uri (format "https://graph.facebook.com/debug_token?input_token=%s&access_token=%s" facebook-auth-token facebook-app-token)
         resp @(http/get fb-auth-uri)
         body (json/read-str (:body resp) :key-fn keyword)
-        {:keys [user_id app_id]} body]
+        {:keys [user_id app_id]} (:data body)]
     (when (and (= 200 (:status resp))
                (= facebook-user-id user_id)
                (= app-id app_id))
@@ -162,7 +185,7 @@
   (let [login-provider (provider request)
         validator (login-provider provider-validators)
         social-token-map (login-provider auth-config)]
-    (fn [] (validator social-token-map))))
+    (fn [] (validator request social-token-map))))
 
 (defn- remove-token-fields
   "Removes specific fields from the request so they are not passed along
@@ -189,12 +212,12 @@
   (if (is-social? request)
     (if-let [body-params-with-social (add-social-data request auth-config)]
       (let [create-resp (create-user-fn (assoc request :body-params body-params-with-social))
-            user-id (str (get-in create-resp [:body :user :user-id]))
+            user-id (str (get-in create-resp [:body :user-id]))
             api-secret (get-in auth-config [:api :api-secret])]
         (auth-response create-resp api-secret user-id))
       {:status 401})
     (let [create-resp (create-user-fn request)
-          user-id (str (get-in create-resp [:body :user :user-id]))
+          user-id (str (get-in create-resp [:body :user-id]))
           api-secret (get-in auth-config [:api :api-secret])]
       (auth-response create-resp api-secret user-id))))
 

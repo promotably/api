@@ -5,7 +5,8 @@
             [api.models.site :as site]
             [api.views.offers :refer [shape-offer
                                       shape-lookup
-                                      shape-new-offer]]
+                                      shape-new-offer
+                                      shape-rcos]]
             [clj-time.core :as t]
             [clj-time.format :as tf]
             [clojure.data.json :refer [read-str write-str]]
@@ -83,7 +84,7 @@
                                                      c/string-coercion-matcher]))
                         body-params)]
     (when (= schema.utils.ErrorContainer (type coerced-params))
-      (throw+ {:type ::argument-error :body-params params :error coerced-params}))
+      (throw+ {:type :argument-error :body-params params :error coerced-params}))
     (let [result (offer/new-offer! (assoc coerced-params :site-id id))]
       (shape-new-offer result))))
 
@@ -122,18 +123,11 @@
       (do
         {:body (shape-offer the-offer)}))))
 
-(defn- real-life-offers-response
-  [site-id shopper-id]
-  (let [available-offers (offer/get-offers-for-site site-id)
-        valid-offers (shape-lookup (filter #(offer/valid? {:shopper-id shopper-id} %) available-offers))]
-    valid-offers))
-
 (defn get-available-offers
   [{:keys [params session] :as request}]
   (let [site-id (java.util.UUID/fromString (or (:site-id params) (:site_id params)))
         shopper-id (java.util.UUID/fromString (or (:shopper-id params)
                                                   (:shopper-id request)))
-        r (merge {:session session
-                  :headers {"Content-Type" "text/javascript"}}
-                 (real-life-offers-response site-id shopper-id))]
-    r))
+        available-offers (offer/get-offers-for-site site-id)
+        valid-offers (filter #(offer/valid? {:shopper-id shopper-id} %) available-offers)]
+    (shape-rcos valid-offers)))

@@ -26,8 +26,7 @@
              :refer [wrap-anti-forgery]]
             [api.authentication :as auth]
             [api.events :as events]
-            [api.controllers.users :refer [create-new-user! get-user update-user!
-                                           lookup-social-user]]
+            [api.controllers.users :refer [create-new-user! get-user update-user!]]
             [api.controllers.promos :refer [create-new-promo! show-promo query-promo
                                             validate-promo calculate-promo
                                             update-promo! delete-promo!
@@ -35,15 +34,17 @@
             [api.controllers.offers :refer [create-new-offer! show-offer
                                             update-offer! delete-offer!
                                             lookup-offers get-available-offers]]
-            [api.controllers.accounts :refer [lookup-account create-new-account!
-                                              update-account!]]
+            [api.controllers.accounts :refer [get-account create-new-account!
+                                              update-account! create-site-for-account!
+                                              update-site-for-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]
             [api.cloudwatch :as cw]
             [api.system :refer [current-system]]
             [clj-time.core :refer [before? after? now] :as t]
             [clj-time.coerce :as t-coerce]
             [amazonica.aws.s3]
-            [amazonica.aws.s3transfer]))
+            [amazonica.aws.s3transfer]
+            [slingshot.slingshot :refer [try+]]))
 
 (defonce cached-index (atom {:cached-at nil :index nil}))
 
@@ -83,6 +84,7 @@
            (POST "/login" req (fn [r]
                                 (let [auth-config (get-in current-system [:config :auth-token-config])]
                                   (auth/authenticate r auth-config get-user))))
+           (POST "/logout" [] auth/invalidate-auth-cookies)
            (POST "/register" req (fn [r]
                                    (let [auth-config (get-in current-system [:config :auth-token-config])]
                                      (auth/validate-and-create-user r auth-config create-new-user!))))
@@ -104,12 +106,14 @@
 
 (defroutes secure-routes
   (context "/api/v1" []
-           (GET "/accounts" [] lookup-account)
+           (GET "/accounts" [] get-account)
            (POST "/accounts" [] create-new-account!)
            (PUT "/accounts/:account-id" [] update-account!)
            (GET "/users/:user-id" [user-id] (get-user user-id))
            (POST "/users" [] create-new-user!)
            (PUT "/users/:user-id" [] update-user!)
+           (POST "/sites" [] create-site-for-account!)
+           (PUT "/sites" [] update-site-for-account!)
            promo-secure-routes
            offer-routes))
 
@@ -144,9 +148,9 @@
 (defroutes all-routes
   (GET "/health-check" [] "<h1>I'm here</h1>")
   api-routes
+  (GET "/" [] serve-cached-index)
   (auth/wrap-authorized secure-routes get-api-secret)
-  (GET "*" [] serve-cached-index)
-  (not-found serve-404-page))
+  (GET "*" [] (not-found serve-404-page)))
 
 ;;;;;;;;;;;;;;;;;;
 ;;
@@ -185,6 +189,16 @@
           (assoc-in (assoc-in (:response exdata) [:body]
                               (pprint (:error exdata)))
                     [:headers "X-Error"] (.getMessage ex)))))))
+
+(defn wrap-argument-exception [handler]
+  "Catch exceptions Schema throws when failing to validate passed parameters"
+  (fn [req]
+    (try+
+      (handler req)
+      (catch [:type :argument-error]
+             {:keys [body-params error]}
+        {:status 400
+         :body error}))))
 
 (defn wrap-stacktrace
   "ring.middleware.stacktrace only catches exception, not Throwable, so we replace it here."
@@ -266,6 +280,7 @@
       wrap-token
       wrap-save-the-raw-body
       ;; wrap-exceptions
+      wrap-argument-exception
       wrap-stacktrace
       (wrap-if #((:env config) #{:dev :test :integration})
                wrap-request-logging)
