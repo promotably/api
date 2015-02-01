@@ -58,11 +58,11 @@
                  :accept :json
                  :throw-exceptions false}))
   (defn- get-rcos
-    [site-id shopper-id]
+    [site-id site-shopper-id]
     (client/get "http://localhost:3000/api/v1/realtime-conversion-offers"
                 {:throw-exceptions false
                  :query-params {"site-id" (str site-id)
-                                "shopper-id" (str shopper-id)}}))
+                                "site-shopper-id" (str site-shopper-id)}}))
 
   (fact-group :integration
 
@@ -189,7 +189,7 @@
               
               (facts "Offer with number of cart adds condition"
                 (let [r (get-rcos offers-fixture/site-3-id
-                                  offers-fixture/shopper-id)
+                                  offers-fixture/site-shopper-id)
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
                   pr => (just {:offers (just [(contains {:code "OFFER-CART-ADD"})])})))))

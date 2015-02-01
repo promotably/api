@@ -21,10 +21,10 @@
 
   (fact-group :integration
     (fact "Can count shopper events by days"
-          (count-shopper-events-by-days fix/shopper-id "productadd" 1) => 2
-          (count-shopper-events-by-days fix/shopper-id "productadd" 2) => 3
-          (count-shopper-events-by-days fix/shopper-id "productadd" 3) => 4
-          (count-shopper-events-by-days fix/shopper-id "thankyou" 30) => 1))
+          (count-shopper-events-by-days fix/site-shopper-id "productadd" 1) => 2
+          (count-shopper-events-by-days fix/site-shopper-id "productadd" 2) => 3
+          (count-shopper-events-by-days fix/site-shopper-id "productadd" 3) => 4
+          (count-shopper-events-by-days fix/site-shopper-id "thankyou" 30) => 1))
 
   (future-facts "Something"
     (let [resp (client/get "http://localhost:3000/health-check")]

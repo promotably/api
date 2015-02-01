@@ -123,11 +123,16 @@
       (do
         {:body (shape-offer the-offer)}))))
 
+(defn uuid-from-request-or-new
+  [key params request]
+  (java.util.UUID/fromString (or (get params key) (get request key))))
+
 (defn get-available-offers
   [{:keys [params session] :as request}]
-  (let [site-id (java.util.UUID/fromString (or (:site-id params) (:site_id params)))
-        shopper-id (java.util.UUID/fromString (or (:shopper-id params)
-                                                  (:shopper-id request)))
+  (let [site-id (uuid-from-request-or-new :site-id params request)
+        shopper-id (uuid-from-request-or-new :shopper-id params request)
+        site-shopper-id (uuid-from-request-or-new :site-shopper-id params request)
         available-offers (offer/get-offers-for-site site-id)
-        valid-offers (filter #(offer/valid? {:shopper-id shopper-id} %) available-offers)]
+        valid-offers (filter #(offer/valid? {:shopper-id shopper-id
+                                             :site-shopper-id site-shopper-id} %) available-offers)]
     (shape-rcos valid-offers)))
