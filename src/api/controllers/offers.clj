@@ -46,7 +46,7 @@
          params)
         found (offer/find-by-site-uuid (:site-id coerced-params))]
     (when (= schema.utils.ErrorContainer (type coerced-params))
-      (throw+ {:type ::argument-error :body-params params :error coerced-params}))
+      (throw+ {:type :argument-error :body-params params :error coerced-params}))
     (shape-lookup found)))
 
 (defn show-offer
@@ -105,7 +105,7 @@
         ;; TODO: Handle the site not being found
         id (site/get-id-by-site-uuid site-uuid)]
     (when (= schema.utils.ErrorContainer (type coerced-params))
-      (throw+ {:type ::argument-error :body-params params :error coerced-params}))
+      (throw+ {:type :argument-error :body-params params :error coerced-params}))
     (shape-new-offer
      (offer/update-offer! offer-id (assoc coerced-params :site-id id)))))
 
