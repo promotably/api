@@ -76,7 +76,7 @@ ENV=test lein midje "api.unit.*"
 Integration testing:  
 
 ```
-KINESIS_A=dev-PromoStream KINESIS_B=dev-PromotablyAPIEvents RDS_HOST=localhost RDS_PORT=5432 RDS_USER=p_user RDS_DB_NAME=promotably_dev RDS_PW=pr0m0 ENV=integration lein midje "api.integration.*"
+KINESIS_A=dev-PromoStream KINESIS_B=dev-PromotablyAPIEvents RDS_HOST=localhost RDS_PORT=5432 RDS_USER=p_user RDS_DB_NAME=promotably_dev RDS_PW=pr0m0 REDIS_HOST=localhost REDIS_PORT=6379 ENV=integration lein midje "api.integration.*"
 ```
 
 Integration testing depends on AWS credentials as per [doc](https://github.com/mcohen01/amazonica).
