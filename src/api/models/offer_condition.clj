@@ -76,10 +76,11 @@
 
 (defmethod validate :product-views
   [{:keys [site-id site-shopper-id] :as context}
-   {:keys [product-views] :as condition}]
-  (let [k (str site-id "/" site-shopper-id "/product-any")
-        product-any-views (get-integer k)]
-    (>= product-any-views product-views)))
+   {:keys [product-views period-in-days] :as condition}]
+  (let [pv-count (event/count-shopper-events-by-days site-shopper-id
+                                                     "productview"
+                                                     period-in-days)]
+    (>= pv-count product-views)))
 
 ;;TODO: will we know the product-id from either the context or
 ;; defined in the condition - or not at all? Right now this

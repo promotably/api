@@ -25,7 +25,7 @@
          context {:site-id site-id
                   :shopper-id shopper-id}]
      (validate context oc) => ?result
-     (provided (api.lib.redis/get-integer anything)
+     (provided (api.models.event/count-shopper-events-by-days anything anything anything)
                => ?actual-product-views)))
  ?oc-product-views  ?result  ?actual-product-views
  100                false    10

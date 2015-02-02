@@ -11,9 +11,15 @@
 
 (def site-2-id #uuid "2072f5d5-1d9a-49f3-8f06-8311088e8623")
 (def site-3-id #uuid "2072f5d4-1d9a-49f3-8f06-8311088e8623")
+(def site-4-id #uuid "22a37e2d-7f1c-4bce-9666-70b0c26de872")
+
 (def shopper-id #uuid "7f2fe574-974e-4f48-87fd-5ada3a4cb2bb")
 (def site-shopper-id #uuid "001fd699-9d50-4b7c-af3b-3e022d379647")
 (def session-id #uuid "95f1b8b2-a77b-4fec-a2fe-334f1afa2858")
+
+(def shopper-2-id #uuid "3327a72b-d2e0-4fba-b872-d857c5453609")
+(def site-shopper-2-id #uuid "5c171a4e-2528-4714-88d8-f7f3f9cab8df")
+(def session-2-id #uuid "8fe0b04c-d4ee-4eda-a2fa-08ca8283f98d")
 
 
 (def fixture-set
@@ -37,7 +43,16 @@
                    :uuid site-3-id
                    :site_code "site3"
                    :api_secret (java.util.UUID/randomUUID)
-                   :site_url "http://bpromo.com"))
+                   :site_url "http://bpromo.com")
+          (fixture :site-4
+                   :account_id :account-1
+                   :name "Site 4"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))
+                   :uuid site-4-id
+                   :site_code "site4"
+                   :api_secret (java.util.UUID/randomUUID)
+                   :site_url "http://zombo.com"))
    (table :promos
           (fixture :site-2-promo-1
                    :uuid (java.util.UUID/randomUUID)
@@ -56,6 +71,19 @@
                    :uuid (java.util.UUID/randomUUID)
                    :site_id :site-3
                    :code "SITE 3 PROMO"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Easter Coupon"
+                   :seo_text "Best effing coupon evar"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now)))
+          (fixture :site-4-promo-1
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-4
+                   :code "EASTER PROMO FOR SITE 4"
                    :active true
                    :reward_amount 20
                    :reward_type "percent"
@@ -101,6 +129,30 @@
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
                    :created_at (c/to-sql-date (t/now))
+                   :updated_at (c/to-sql-date (t/now)))
+          (fixture :offer-1-with-product-views-condition
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-4
+                   :promo_id :site-4-promo-1
+                   :code "OFFER-PRODUCT-VIEWS-VALID"
+                   :name "NAME HERE"
+                   :active true
+                   :display_text "Book it, dano"
+                   :presentation_type "lightbox"
+                   :presentation_page "product-detail"
+                   :created_at (c/to-sql-date (t/now))
+                   :updated_at (c/to-sql-date (t/now)))
+          (fixture :offer-product-views-not-valid
+                    :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-4
+                   :promo_id :site-4-promo-1
+                   :code "OFFER-PRODUCT-VIEWS-INVALID"
+                   :name "NAME HERE"
+                   :active true
+                   :display_text "Book it, dano"
+                   :presentation_type "lightbox"
+                   :presentation_page "product-detail"
+                   :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now))))
    (table :offer_conditions
           (fixture :offer-1-date-condition
@@ -122,7 +174,13 @@
                    :num_cart_adds 2
                    :period_in_days 5
                    :start_date (c/to-sql-time (t/minus (t/now) (t/days 14)))
-                   :end_date (c/to-sql-time (t/minus (t/now) (t/days 1)))))
+                   :end_date (c/to-sql-time (t/minus (t/now) (t/days 1))))
+          (fixture :offer-condition-product-views
+                   :uuid (java.util.UUID/randomUUID)
+                   :offer_id :offer-1-with-product-views-condition
+                   :type "product-views"
+                   :product_views 2
+                   :period_in_days 2))
    (table :events
           (fixture :event-pa-1
                    :site_id site-3-id
@@ -153,4 +211,32 @@
                           :sku "T100",
                           :variation "",
                           :event-name "productadd",
-                          :session-id (str session-id)}))))
+                          :session-id (str session-id)})
+          (fixture :event-pv-valid-1
+                   :site_id site-4-id
+                   :event_id (java.util.UUID/randomUUID)
+                   :shopper_id shopper-2-id
+                   :site_shopper_id site-shopper-2-id
+                   :session_id session-2-id
+                   :type "productview"
+                   :created_at (c/to-sql-time (t/now))
+                   :data {:quantity 1,
+                          :site-id (str site-4-id),
+                          :shopper-id (str shopper-2-id),
+                          :sku "T100",
+                          :event-name "productview",
+                          :session-id (str session-2-id)})
+           (fixture :event-pv-valid-2
+                   :site_id site-4-id
+                   :event_id (java.util.UUID/randomUUID)
+                   :shopper_id shopper-2-id
+                   :site_shopper_id site-shopper-2-id
+                   :session_id session-2-id
+                   :type "productview"
+                   :created_at (c/to-sql-time (t/now))
+                   :data {:quantity 1,
+                          :site-id (str site-4-id),
+                          :shopper-id (str shopper-2-id),
+                          :sku "T101",
+                          :event-name "productview",
+                          :session-id (str session-2-id)}))))

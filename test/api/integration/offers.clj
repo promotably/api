@@ -186,10 +186,17 @@
                                                      :site-id integer?
                                                      :updated-at string?
                                                      :uuid string?})])})))
-              
+
               (facts "Offer with number of cart adds condition"
                 (let [r (get-rcos offers-fixture/site-3-id
                                   offers-fixture/site-shopper-id)
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just {:offers (just [(contains {:code "OFFER-CART-ADD"})])})))))
+                  pr => (just {:offers (just [(contains {:code "OFFER-CART-ADD"})])})))
+
+              (facts "Offer with product-views condition"
+                (let [r (get-rcos offers-fixture/site-4-id
+                                  offers-fixture/site-shopper-2-id)
+                      pr (json/read-str (:body r) :key-fn keyword)]
+                  (:status r) => 200
+                  pr => (just {:offers (just [(contains {:code "OFFER-PRODUCT-VIEWS-VALID"})])})))))
