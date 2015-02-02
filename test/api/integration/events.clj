@@ -29,5 +29,5 @@
 
     (fact "Count orders"
       (orders-since site-uuid fix/site-shopper-id 1) => 0
-      (orders-since site-uuid fix/site-shopper-id 90) => 1))
+      (orders-since site-uuid fix/site-shopper-id (* 365 2)) => 1))
 
