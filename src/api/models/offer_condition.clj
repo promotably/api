@@ -75,9 +75,9 @@
        (before? (now) (from-sql-date end-date))))
 
 (defmethod validate :product-views
-  [{:keys [site-id shopper-id] :as context}
+  [{:keys [site-id site-shopper-id] :as context}
    {:keys [product-views] :as condition}]
-  (let [k (str site-id "/" shopper-id "/product-any")
+  (let [k (str site-id "/" site-shopper-id "/product-any")
         product-any-views (get-integer k)]
     (>= product-any-views product-views)))
 
@@ -85,20 +85,20 @@
 ;; defined in the condition - or not at all? Right now this
 ;; assumes we have it in the context
 (defmethod validate :repeat-product-views
-  [{:keys [site-id shopper-id product-id] :as context}
+  [{:keys [site-id site-shopper-id product-id] :as context}
    {:keys [repeat-product-views] :as condition}]
-  (let [k (str site-id "/" shopper-id "/product-view/" product-id)
+  (let [k (str site-id "/" site-shopper-id "/product-view/" product-id)
         views (get-integer k)]
     (>= views repeat-product-views)))
 
 (defmethod validate :num-lifetime-orders
-  [{:keys [site-id shopper-id]}
+  [{:keys [site-id site-shopper-id]}
    {:keys [num-lifetime-orders] :as condition}]
-  (let [k (str site-id "/" shopper-id "/lifetime-orders")
+  (let [k (str site-id "/" site-shopper-id "/lifetime-orders")
         lifetime-orders (get-integer k)]
     (>= lifetime-orders num-lifetime-orders)))
 
 (defmethod validate :num-cart-adds-in-period
-  [{:keys [site-id shopper-id] :as context}
+  [{:keys [site-id site-shopper-id] :as context}
    {:keys [num-cart-adds period-in-days] :as condition}]
-  (>= (event/count-shopper-events-by-days shopper-id "productadd" period-in-days) num-cart-adds))
+  (>= (event/count-shopper-events-by-days site-shopper-id "productadd" period-in-days) num-cart-adds))

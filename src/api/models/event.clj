@@ -16,10 +16,10 @@
     (rename-keys r (zipmap ks (map hyphenify-key ks)))))
 
 (sm/defn count-shopper-events-by-days
-  [shopper-uuid :- s/Uuid event-type :- s/Str days-ago :- s/Int]
+  [site-shopper-uuid :- s/Uuid event-type :- s/Str days-ago :- s/Int]
   (let [r (select events
             (aggregate (count :*) :cnt)
-            (where {:shopper_id shopper-uuid
+            (where {:site_shopper_id site-shopper-uuid
                     :type event-type
                     :created_at [>= (to-sql-date (minus (now) (days days-ago)))]}))
         count (get (first r) :cnt 0)]
