@@ -490,7 +490,7 @@
 
                  #(= (:type %) :num-orders-in-period)
                  (merge BaseOfferCondition {:num-orders s/Int
-                                                   :period-in-days s/Int})
+                                            :period-in-days s/Int})
 
                  #(= (:type %) :num-cart-adds-in-period)
                  (merge BaseOfferCondition {:num-cart-adds s/Int

@@ -3,6 +3,7 @@
   (:require
     [api.models.event :refer :all]
     [api.fixtures.event-data :as fix]
+    [api.fixtures.common :refer [site-uuid]]
     [clj-http.client :as client]
     [midje.sweet :refer :all]
     [api.integration.helper :refer :all]
@@ -21,12 +22,12 @@
 
   (fact-group :integration
     (fact "Can count shopper events by days"
-          (count-shopper-events-by-days fix/site-shopper-id "productadd" 1) => 2
-          (count-shopper-events-by-days fix/site-shopper-id "productadd" 2) => 3
-          (count-shopper-events-by-days fix/site-shopper-id "productadd" 3) => 4
-          (count-shopper-events-by-days fix/site-shopper-id "thankyou" 30) => 1))
+      (count-shopper-events-by-days fix/site-shopper-id "productadd" 1) => 2
+      (count-shopper-events-by-days fix/site-shopper-id "productadd" 2) => 3
+      (count-shopper-events-by-days fix/site-shopper-id "productadd" 3) => 4
+      (count-shopper-events-by-days fix/site-shopper-id "thankyou" 30) => 2))
 
-  (future-facts "Something"
-    (let [resp (client/get "http://localhost:3000/health-check")]
-      (:body resp) => "<h1>I'm here</h1>"
-      (get (:cookies resp) "promotably") => truthy)))
+    (fact "Count orders"
+      (orders-since site-uuid fix/site-shopper-id 1) => 0
+      (orders-since site-uuid fix/site-shopper-id 90) => 1))
+
