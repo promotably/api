@@ -80,10 +80,8 @@
         id (:account-id (site/find-by-site-uuid (:site-id site)))
         account-id (:account-id (account/find-by-id id))]
     (if (user-access-to-account? (:user-id site) account-id)
-      (let [result (site/update-site-for-account! id site)]
-        (if-not (or (empty? result)
-                    (nil? result))
-          (let [account-with-sites (account/find-by-account-id account-id)]
-            (build-response 200 :account account-with-sites))
-          (build-response 400 :error "Unable to update site, invalid or missing parameters.")))
+      (if-let [result (site/update-site-for-account! id site)]
+        (let [account-with-sites (account/find-by-account-id account-id)]
+          (build-response 200 :account account-with-sites))
+        (build-response 400 :error "Unable to update site, invalid or missing parameters."))
       (build-response 403 :error "User does not have access to this account."))))

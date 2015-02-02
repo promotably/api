@@ -62,9 +62,11 @@
                     :currency :language :site-url]]
   (defn update-site-for-account!
     [account-id site]
-    (let [params-for-update (assoc (dash-to-underscore-keys
-                                    (select-keys site allowed-keys))
-                              :updated_at (sqlfn now))]
+    (let [params-for-update (->> (assoc (dash-to-underscore-keys
+                                         (select-keys site allowed-keys))
+                                   :updated_at (sqlfn now))
+                                 (remove (comp nil? second))
+                                 (into {}))]
       (update sites
               (set-fields params-for-update)
               (where {:uuid (:site-id site)

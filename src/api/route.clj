@@ -113,7 +113,7 @@
            (POST "/users" [] create-new-user!)
            (PUT "/users/:user-id" [] update-user!)
            (POST "/sites" [] create-site-for-account!)
-           (PUT "/sites" [] update-site-for-account!)
+           (PUT "/sites/:site-id" [] update-site-for-account!)
            promo-secure-routes
            offer-routes))
 
