@@ -106,7 +106,7 @@
   (>= (event/count-shopper-events-by-days site-shopper-id "productadd" period-in-days) num-cart-adds))
 
 (defmethod validate :min-orders-in-period
-  [{:keys [site-id shopper-id site-shopper-id] :as context}
+  [{:keys [site-id site-shopper-id] :as context}
    {:keys [num-orders period-in-days] :as condition}]
   (> (event/orders-since site-id site-shopper-id period-in-days) num-orders))
 
