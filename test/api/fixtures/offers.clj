@@ -12,6 +12,8 @@
 (def site-2-id #uuid "2072f5d5-1d9a-49f3-8f06-8311088e8623")
 (def site-3-id #uuid "2072f5d4-1d9a-49f3-8f06-8311088e8623")
 (def site-4-id #uuid "22a37e2d-7f1c-4bce-9666-70b0c26de872")
+(def minorder-site-id #uuid "34a37e2d-7f1c-4bce-9666-70b0c26de843")
+(def maxorder-site-id #uuid "32a37e2d-7f1c-4bce-9666-70b0c26de873")
 
 (def shopper-id #uuid "7f2fe574-974e-4f48-87fd-5ada3a4cb2bb")
 (def site-shopper-id #uuid "001fd699-9d50-4b7c-af3b-3e022d379647")
@@ -21,6 +23,9 @@
 (def site-shopper-2-id #uuid "5c171a4e-2528-4714-88d8-f7f3f9cab8df")
 (def session-2-id #uuid "8fe0b04c-d4ee-4eda-a2fa-08ca8283f98d")
 
+(def minorder-shopper-id #uuid "4327a72b-d2e0-4fba-b872-d857c5453609")
+(def minorder-site-shopper-id #uuid "3c171a4e-2528-4714-88d8-f7f3f9cab8df")
+(def minorder-session-id #uuid "1fe0b04c-d4ee-4eda-a2fa-08ca8283f98d")
 
 (def fixture-set
   (set
@@ -52,7 +57,25 @@
                    :uuid site-4-id
                    :site_code "site4"
                    :api_secret (java.util.UUID/randomUUID)
-                   :site_url "http://zombo.com"))
+                   :site_url "http://zombo.com")
+          (fixture :site-min-order
+                   :account_id :account-1
+                   :name "Site Min Order"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))
+                   :uuid minorder-site-id
+                   :site_code "site-min-order"
+                   :api_secret (java.util.UUID/randomUUID)
+                   :site_url "http://minorder.com")
+          (fixture :site-max-order
+                   :account_id :account-1
+                   :name "Site Max Order"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))
+                   :uuid maxorder-site-id
+                   :site_code "site-max-order"
+                   :api_secret (java.util.UUID/randomUUID)
+                   :site_url "http://maxorder.com"))
    (table :promos
           (fixture :site-2-promo-1
                    :uuid (java.util.UUID/randomUUID)
@@ -83,6 +106,32 @@
           (fixture :site-4-promo-1
                    :uuid (java.util.UUID/randomUUID)
                    :site_id :site-4
+                   :code "EASTER PROMO FOR SITE 4"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Easter Coupon"
+                   :seo_text "Best effing coupon evar"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now)))
+          (fixture :site-min-order-promo-1
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-min-order
+                   :code "EASTER PROMO FOR SITE 4"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Easter Coupon"
+                   :seo_text "Best effing coupon evar"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now)))
+          (fixture :site-max-order-promo-1
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-max-order
                    :code "EASTER PROMO FOR SITE 4"
                    :active true
                    :reward_amount 20
@@ -126,6 +175,30 @@
                    :name "SITE 3 OFFER 1"
                    :active true
                    :display_text "Book it, dano"
+                   :presentation_type "lightbox"
+                   :presentation_page "product-detail"
+                   :created_at (c/to-sql-date (t/now))
+                   :updated_at (c/to-sql-date (t/now)))
+          (fixture :offer-1-with-min-order-condition
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-min-order
+                   :promo_id :site-min-order-promo-1
+                   :code "OFFER-MIN-ORDER"
+                   :name "SITE 3 OFFER 1 W MIN ORDER"
+                   :active true
+                   :display_text "MIN ORDER OFFER"
+                   :presentation_type "lightbox"
+                   :presentation_page "product-detail"
+                   :created_at (c/to-sql-date (t/now))
+                   :updated_at (c/to-sql-date (t/now)))
+          (fixture :offer-1-with-max-order-condition
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-max-order
+                   :promo_id :site-max-order-promo-1
+                   :code "OFFER-MAX-ORDER"
+                   :name "SITE 3 OFFER 1 W MAX ORDER"
+                   :active true
+                   :display_text "MAX ORDER OFFER"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
                    :created_at (c/to-sql-date (t/now))
@@ -175,6 +248,22 @@
                    :period_in_days 5
                    :start_date (c/to-sql-time (t/minus (t/now) (t/days 14)))
                    :end_date (c/to-sql-time (t/minus (t/now) (t/days 1))))
+          (fixture :offer-with-min-orders-condition
+                   :uuid (java.util.UUID/randomUUID)
+                   :offer_id :offer-1-with-min-order-condition
+                   :type "min-orders-in-period"
+                   :num_orders 2
+                   :period_in_days 5
+                   :start_date (c/to-sql-time (t/minus (t/now) (t/days 14)))
+                   :end_date (c/to-sql-time (t/minus (t/now) (t/days 1))))
+          (fixture :offer-with-max-of-one-in-one-orders-condition
+                   :uuid (java.util.UUID/randomUUID)
+                   :offer_id :offer-1-with-max-order-condition
+                   :type "max-orders-in-period"
+                   :num_orders 1
+                   :period_in_days 1
+                   :start_date (c/to-sql-time (t/minus (t/now) (t/days 14)))
+                   :end_date (c/to-sql-time (t/minus (t/now) (t/days 1))))
           (fixture :offer-condition-product-views
                    :uuid (java.util.UUID/randomUUID)
                    :offer_id :offer-1-with-product-views-condition
@@ -212,6 +301,36 @@
                           :variation "",
                           :event-name "productadd",
                           :session-id (str session-id)})
+          (fixture :event-minorder-1
+                   :site_id minorder-site-id
+                   :event_id (java.util.UUID/randomUUID)
+                   :shopper_id minorder-shopper-id
+                   :site_shopper_id minorder-site-shopper-id
+                   :session_id minorder-session-id
+                   :type "productorder"
+                   :created_at (c/to-sql-date (t/minus (t/now) (t/days 2)))
+                   :data {:quantity 1,
+                          :site-id (str minorder-site-id),
+                          :shopper-id (str minorder-shopper-id ),
+                          :sku "T100",
+                          :variation "",
+                          :event-name "productorder",
+                          :session-id (str minorder-session-id)})
+          (fixture :event-minorder-2
+                   :site_id minorder-site-id
+                   :event_id (java.util.UUID/randomUUID)
+                   :shopper_id minorder-shopper-id
+                   :site_shopper_id minorder-site-shopper-id
+                   :session_id minorder-session-id
+                   :type "productorder"
+                   :created_at (c/to-sql-date (t/minus (t/now) (t/days 2)))
+                   :data {:quantity 1,
+                          :site-id (str minorder-site-id),
+                          :shopper-id (str minorder-shopper-id ),
+                          :sku "T100",
+                          :variation "",
+                          :event-name "productorder",
+                          :session-id (str minorder-session-id)})
           (fixture :event-pv-valid-1
                    :site_id site-4-id
                    :event_id (java.util.UUID/randomUUID)

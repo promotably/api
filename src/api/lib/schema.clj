@@ -407,7 +407,8 @@
    :billing-zipcode
    :referer-domain
    :shopper-device-type
-   :num-orders-in-period
+   :min-orders-in-period
+   :max-orders-in-period
    :num-cart-adds-in-period
    :num-lifetime-orders
    :last-order-total
@@ -488,9 +489,13 @@
                  (merge BaseOfferCondition {:shopper-device-type
                                             (apply s/enum (vec valid-devices))})
 
-                 #(= (:type %) :num-orders-in-period)
+                 #(= (:type %) :min-orders-in-period)
                  (merge BaseOfferCondition {:num-orders s/Int
-                                                   :period-in-days s/Int})
+                                            :period-in-days s/Int})
+
+                 #(= (:type %) :max-orders-in-period)
+                 (merge BaseOfferCondition {:num-orders s/Int
+                                            :period-in-days s/Int})
 
                  #(= (:type %) :num-cart-adds-in-period)
                  (merge BaseOfferCondition {:num-cart-adds s/Int
