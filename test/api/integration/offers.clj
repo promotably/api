@@ -194,6 +194,20 @@
                   (:status r) => 200
                   pr => (just {:offers (just [(contains {:code "OFFER-CART-ADD"})])})))
 
+              (facts "Offer with min orders condition"
+                     (let [r (get-rcos offers-fixture/minorder-site-id
+                                       offers-fixture/minorder-site-shopper-id)
+                           pr (json/read-str (:body r) :key-fn keyword)]
+                       (:status r) => 200
+                       pr => (just {:offers (just [(contains {:code "OFFER-MIN-ORDER"})])})))
+
+              (facts "Offer with max orders condition"
+                     (let [r (get-rcos offers-fixture/maxorder-site-id
+                                       offers-fixture/minorder-site-shopper-id)
+                           pr (json/read-str (:body r) :key-fn keyword)]
+                       (:status r) => 200
+                       pr => (just {:offers (just [(contains {:code "OFFER-MAX-ORDER"})])})))
+
               (facts "Offer with product-views condition"
                 (let [r (get-rcos offers-fixture/site-4-id
                                   offers-fixture/site-shopper-2-id)

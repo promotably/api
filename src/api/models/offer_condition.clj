@@ -105,7 +105,12 @@
    {:keys [num-cart-adds period-in-days] :as condition}]
   (>= (event/count-shopper-events-by-days site-shopper-id "productadd" period-in-days) num-cart-adds))
 
-(defmethod validate :num-orders-in-period
+(defmethod validate :min-orders-in-period
   [{:keys [site-id shopper-id site-shopper-id] :as context}
    {:keys [num-orders period-in-days] :as condition}]
-  (>= (event/orders-since site-id site-shopper-id period-in-days) num-orders))
+  (> (event/orders-since site-id site-shopper-id period-in-days) num-orders))
+
+(defmethod validate :max-orders-in-period
+  [{:keys [site-id site-shopper-id] :as context}
+   {:keys [num-orders period-in-days] :as condition}]
+  (< (event/orders-since site-id site-shopper-id period-in-days) num-orders))
