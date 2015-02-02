@@ -252,18 +252,14 @@
                    :uuid (java.util.UUID/randomUUID)
                    :offer_id :offer-1-with-min-order-condition
                    :type "min-orders-in-period"
-                   :num_orders 2
-                   :period_in_days 5
-                   :start_date (c/to-sql-time (t/minus (t/now) (t/days 14)))
-                   :end_date (c/to-sql-time (t/minus (t/now) (t/days 1))))
+                   :num_orders 0
+                   :period_in_days (* 2 365))
           (fixture :offer-with-max-of-one-in-one-orders-condition
                    :uuid (java.util.UUID/randomUUID)
                    :offer_id :offer-1-with-max-order-condition
                    :type "max-orders-in-period"
-                   :num_orders 1
-                   :period_in_days 1
-                   :start_date (c/to-sql-time (t/minus (t/now) (t/days 14)))
-                   :end_date (c/to-sql-time (t/minus (t/now) (t/days 1))))
+                   :num_orders 2
+                   :period_in_days (* 2 365))
           (fixture :offer-condition-product-views
                    :uuid (java.util.UUID/randomUUID)
                    :offer_id :offer-1-with-product-views-condition
@@ -307,30 +303,78 @@
                    :shopper_id minorder-shopper-id
                    :site_shopper_id minorder-site-shopper-id
                    :session_id minorder-session-id
-                   :type "productorder"
+                   :type "thankyou"
                    :created_at (c/to-sql-date (t/minus (t/now) (t/days 2)))
-                   :data {:quantity 1,
-                          :site-id (str minorder-site-id),
-                          :shopper-id (str minorder-shopper-id ),
-                          :sku "T100",
-                          :variation "",
-                          :event-name "productorder",
-                          :session-id (str minorder-session-id)})
+                   :data {:site-id (str minorder-site-id),
+                          :shopper-id (str minorder-shopper-id),
+                          :event-name "thankyou",
+                          :session-id (str minorder-session-id)
+                          :order-date "2014-12-14 09:04:27",
+                          :applied-coupons [{:discount "28", :code "p4"}],
+                          :shipping-methods [{:cost "0", :method "free_shipping"}],
+                          :tax "0",
+                          :shipping-address "Colin,Steele,Suite 1450,,Dallas,VA,75219,US",
+                          :cart-items
+                          [{:quantity 3,
+                            :variation "",
+                            :variation-id "0",
+                            :categories [""],
+                            :title "WIDGET",
+                            :sku "W100",
+                            :subtotal 60,
+                            :total 60}
+                           {:quantity 1,
+                            :variation "",
+                            :variation-id "0",
+                            :categories [""],
+                            :title "THNEED",
+                            :sku "T100",
+                            :subtotal 10,
+                            :total 10}],
+                          :total "112",
+                          :order-id "16",
+                          :billing-address "Colin,Steele,Suite 1450,,Dallas,VA,75219,US,",
+                          :shipping "0",
+                          :discount "28"})
           (fixture :event-minorder-2
-                   :site_id minorder-site-id
+                   :site_id maxorder-site-id
                    :event_id (java.util.UUID/randomUUID)
                    :shopper_id minorder-shopper-id
                    :site_shopper_id minorder-site-shopper-id
                    :session_id minorder-session-id
-                   :type "productorder"
+                   :type "thankyou"
                    :created_at (c/to-sql-date (t/minus (t/now) (t/days 2)))
-                   :data {:quantity 1,
-                          :site-id (str minorder-site-id),
+                   :data {:site-id (str maxorder-site-id),
                           :shopper-id (str minorder-shopper-id ),
-                          :sku "T100",
-                          :variation "",
-                          :event-name "productorder",
-                          :session-id (str minorder-session-id)})
+                          :session-id (str minorder-session-id)
+                          :event-name :thankyou,
+                          :order-date "2014-12-14 09:04:27",
+                          :applied-coupons [{:discount "28", :code "p4"}],
+                          :shipping-methods [{:cost "0", :method "free_shipping"}],
+                          :tax "0",
+                          :shipping-address "Colin,Steele,Suite 1450,,Dallas,VA,75219,US",
+                          :cart-items
+                          [{:quantity 3,
+                            :variation "",
+                            :variation-id "0",
+                            :categories [""],
+                            :title "WIDGET",
+                            :sku "W100",
+                            :subtotal 60,
+                            :total 60}
+                           {:quantity 1,
+                            :variation "",
+                            :variation-id "0",
+                            :categories [""],
+                            :title "THNEED",
+                            :sku "T100",
+                            :subtotal 10,
+                            :total 10}],
+                          :total "112",
+                          :order-id "16",
+                          :billing-address "Colin,Steele,Suite 1450,,Dallas,VA,75219,US,",
+                          :shipping "0",
+                          :discount "28"})
           (fixture :event-pv-valid-1
                    :site_id site-4-id
                    :event_id (java.util.UUID/randomUUID)

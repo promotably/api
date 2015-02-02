@@ -19,24 +19,6 @@
                    (s/optional-key :promotably-auth) s/Str
                    :offer-code s/Str})
 
-(def mock-offer {:offers [{:coupon {:code "TWENTYOFF"
-                                    :description "20% off all items"
-                                    :reward-amount 20
-                                    :reward-type :percent
-                                    :reward-applied-to :cart
-                                    :reward-tax :after-tax
-                                    :conditions [{:type :total-discounts
-                                                  :total-discounts 500.00}
-                                                 {:type :item-count
-                                                  :item-count 3}
-                                                 {:type :min-order-value
-                                                  :amount 50.00}
-                                                 {:type :individual-use}]}
-                           :rco {:display-text "Thank you for shopping with us. We'd like to offer you a one-time only 20% discount on your order. But hurry this offer expires soon!"
-                                 :presentation-type :fly-in
-                                 :presentation-page :any
-                                 :dynamic-coupon-code "ASDSDF"}}]})
-
 (defn lookup-offers
   [{:keys [params] :as request}]
   (let [{:keys [site-id] :as coerced-params}
@@ -134,5 +116,6 @@
         site-shopper-id (uuid-from-request-or-new :site-shopper-id params request)
         available-offers (offer/get-offers-for-site site-id)
         valid-offers (filter #(offer/valid? {:shopper-id shopper-id
+                                             :site-id site-id
                                              :site-shopper-id site-shopper-id} %) available-offers)]
     (shape-rcos valid-offers)))

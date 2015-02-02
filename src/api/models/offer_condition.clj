@@ -82,9 +82,9 @@
                                                      period-in-days)]
     (>= pv-count product-views)))
 
-;;TODO: will we know the product-id from either the context or
-;; defined in the condition - or not at all? Right now this
-;; assumes we have it in the context
+;; TODO: This needs to be rewritten to use DB, not redis, or we need to
+;; clarify that the condition applies to repeat product views in a
+;; single session.
 (defmethod validate :repeat-product-views
   [{:keys [site-id site-shopper-id product-id] :as context}
    {:keys [repeat-product-views] :as condition}]
@@ -92,6 +92,7 @@
         views (get-integer k)]
     (>= views repeat-product-views)))
 
+;; TODO: This needs to be rewritten to use DB, not redis
 (defmethod validate :num-lifetime-orders
   [{:keys [site-id site-shopper-id]}
    {:keys [num-lifetime-orders] :as condition}]
@@ -107,9 +108,9 @@
 (defmethod validate :min-orders-in-period
   [{:keys [site-id site-shopper-id] :as context}
    {:keys [num-orders period-in-days] :as condition}]
-  (>= (event/count-shopper-events-by-days site-shopper-id "productorder" period-in-days) num-orders))
+  (> (event/orders-since site-id site-shopper-id period-in-days) num-orders))
 
 (defmethod validate :max-orders-in-period
   [{:keys [site-id site-shopper-id] :as context}
    {:keys [num-orders period-in-days] :as condition}]
-  (<= (event/count-shopper-events-by-days site-shopper-id "productorder" period-in-days) num-orders))
+  (< (event/orders-since site-id site-shopper-id period-in-days) num-orders))
