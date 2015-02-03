@@ -222,9 +222,9 @@
                                                  offer-code)})))]
     (if row (db-to-offer row))))
 
-(defn get-offers-for-site
+(sm/defn ^:always-validate get-offers-for-site
   ;; Returns cached offers for a site
-  [site-uuid]
+  [site-uuid :- s/Uuid]
   (if (cache/has? @OffersCache site-uuid)
     (swap! OffersCache #(cache/hit % site-uuid))
     (swap! OffersCache #(cache/miss % site-uuid (find-by-site-uuid site-uuid))))
@@ -232,7 +232,15 @@
 
 (defn valid?
   [context {:keys [conditions] :as offer}]
-  (let [validated-conditions (map #(c/validate context %) conditions)]
-    (if (seq validated-conditions)
-      (every? true? validated-conditions)
-      false)))
+  (let [promo (promo/find-by-uuid (-> offer :reward :promo-id))
+        validated-conditions (map #(c/validate context %) conditions)]
+    (cond
+     (not (promo/valid-for-offer? promo))
+     false
+     (not (seq conditions))
+     true
+     (every? true? validated-conditions)
+     true
+     :else
+     false)))
+

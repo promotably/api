@@ -242,81 +242,6 @@
    :daily-total-discounts
    :total-discounts])
 
-(defn total-usage
-  [site-id promo-id & {:keys [start end] :or {start (epoch)
-                                              end (plus (today-at-midnight) (days 1))}}]
-  (try
-    (let [{cnt :cnt} (first (select promo-redemptions
-                                    (aggregate (count :promo_redemptions.id) :cnt)
-                                    (join promos (= :promos.id :promo_id))
-                                    (join sites (= :sites.id :promos.site_id))
-                                    (where {:sites.uuid site-id
-                                            :promos.uuid promo-id})
-                                    (where {:created_at [>= (to-sql-time start)]})
-                                    (where {:created_at [<= (to-sql-time end)]})))]
-      (if-not (nil? cnt)
-        cnt
-        0))
-    (catch java.sql.BatchUpdateException ex
-      (log/error (.getNextException ex) "Exception in total-usage"))))
-
-(defn total-discounts
-  [site-id promo-id & {:keys [start end] :or {start (epoch)
-                                              end (plus (today-at-midnight) (days 1))}}]
-  (try
-    (let [{total :total} (first (select promo-redemptions
-                                        (aggregate (sum :promo_redemptions.discount) :total)
-                                        (join promos (= :promos.id :promo_id))
-                                        (join sites (= :sites.id :promos.site_id))
-                                        (where {:sites.uuid site-id
-                                                :promos.uuid promo-id})
-                                        (where {:created_at [>= (to-sql-time start)]})
-                                        (where {:created_at [<= (to-sql-time end)]})))]
-      (if-not (nil? total)
-        total
-        0))
-    (catch java.sql.BatchUpdateException ex
-      (log/error (.getNextException ex) "Exception in total-discounts"))))
-
-(defn- add-current-usage-count
-  "Adds current-usage-count to the context, but only if there are promo
-  conditions that need it"
-  [{:keys [conditions] :as promo} context]
-  (if (seq (filterv #(= (:type %) :usage-count) conditions))
-    (let [cut (total-usage (get-in context [:site :uuid]) (:uuid promo))]
-      (assoc context :current-usage-count cut))
-    context))
-
-(defn- add-current-daily-usage-count
-  "Adds current-daily-usage-count to the context, but only if there are
-  promo conditions that need it"
-  [{:keys [conditions] :as promo} context]
-  (if (seq (filterv #(= (:type %) :daily-usage-count) conditions))
-    (assoc context :current-daily-usage-count
-           (total-usage (get-in context [:site :uuid])
-                        (:uuid promo)
-                        :start (today-at 00 00)))
-    context))
-
-(defn- add-current-total-discounts
-  "Adds current-total-discounts to the context, but only if there are promo
-  conditions that need it"
-  [{:keys [conditions] :as promo} context]
-  (if (seq (filterv #(= (:type %) :total-discounts) conditions))
-    (assoc context :current-total-discounts (total-discounts (get-in context [:site :uuid])
-                                                             (:uuid promo)))
-    context))
-
-(defn- add-current-daily-total-discounts
-  "Adds current-daily-total-discounts to the context, but only if there are promo
-  conditions that need it"
-  [{:keys [conditions] :as promo} context]
-  (if (seq (filterv #(= (:type %) :daily-total-discounts) conditions))
-    (assoc context :current-daily-total-discounts (total-discounts (get-in context [:site :uuid])
-                                                                   (:uuid promo)
-                                                                   :start (today-at 00 00)))
-    context))
-
 (defn valid?
   [{:keys [active conditions] :as promo}
    {:keys [cart-contents] :as context}]
@@ -324,18 +249,46 @@
     [context ["That promo is currently inactive"]]
     (let [ordered-conditions (mapcat #(filter (fn [c] (= % (:type c))) conditions)
                                      condition-order)
-          c2 (->> context
-                  (add-current-usage-count promo)
-                  (add-current-daily-usage-count promo)
-                  (add-current-total-discounts promo)
-                  (add-current-daily-total-discounts promo))
+          context* (assoc context :promo promo)
           validation (reduce
                       #(c/validate %1 %2)
-                      c2
+                      context*
                       ordered-conditions)
           errors (:errors validation)
           errors (if errors (reverse errors))]
       [validation errors])))
+
+(defn in-the-past?
+  [{:keys [active conditions] :as promo}]
+  (if-let [date-cond (first (filter #(#{:dates} (:type %)) conditions))]
+    (contains? (c/validate {} date-cond) :errors)))
+
+(defn deactivated?
+  [{:keys [active conditions] :as promo}]
+  (not active))
+
+(defn usage-maxed-out?
+  [{:keys [active conditions] :as promo}]
+  (let [daily-cond (first (filter #(#{:daily-usage-count} (:type %)) conditions))
+        total-cond (first (filter #(#{:usage-count} (:type %)) conditions))
+        e1 (if daily-cond (contains? (c/validate {:promo promo} daily-cond) :errors))
+        e2 (if total-cond (contains? (c/validate {:promo promo} total-cond) :errors))]
+    (or e1 e2)))
+
+(defn spend-maxed-out?
+  [{:keys [active conditions] :as promo}]
+  (let [daily-cond (first (filter #(#{:daily-total-discounts} (:type %)) conditions))
+        total-cond (first (filter #(#{:total-discounts} (:type %)) conditions))
+        e1 (if daily-cond (contains? (c/validate {:promo promo} daily-cond) :errors))
+        e2 (if total-cond (contains? (c/validate {:promo promo} total-cond) :errors))]
+    (or e1 e2)))
+
+(defn valid-for-offer?
+  [{:keys [active conditions] :as promo}]
+  (not (or (in-the-past? promo)
+           (deactivated? promo)
+           (usage-maxed-out? promo)
+           (spend-maxed-out? promo))))
 
 (defn discount-amount
   [{:keys [reward-applied-to reward-type reward-amount active conditions] :as promo}

@@ -71,7 +71,6 @@
 (comment
 
   (System/setProperty "ENV" "dev")
-  (System/setProperty "ENV" "localdev")
   (System/getProperty "ENV")
 
   (prn api.system/current-system)

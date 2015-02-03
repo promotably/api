@@ -174,7 +174,9 @@
                   pr => (just {:offers (just [(contains {:code "OFFER-VALID-DATES"})])})
                   pr => (just {:offers (just [(just {:code "OFFER-VALID-DATES"
                                                      :active true
-                                                     :conditions (just [(just {:start-date string? :end-date string? :type "dates"})])
+                                                     :conditions (just [(just {:start-date string?
+                                                                               :end-date string?
+                                                                               :type "dates"})])
                                                      :created-at string?
                                                      :display-text "Book it, dano"
                                                      :id integer?

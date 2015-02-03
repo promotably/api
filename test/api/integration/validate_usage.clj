@@ -96,7 +96,7 @@
                        response-body (json/read-str (:body r) :key-fn keyword)]
                    response-body => (contains {:code code
                                                :valid false
-                                               :messages (just ["This promotion has ended"])})
+                                               :messages (just ["This promotion has ended."])})
                    (:status r) => 201))
 
                (facts "Validate Non-Exceeded Usage Count"

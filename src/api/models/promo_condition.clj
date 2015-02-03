@@ -13,7 +13,8 @@
    [clj-time.coerce :refer [from-sql-date from-sql-time
                             from-date to-sql-date to-sql-time
                             to-date]]
-   [clj-time.core :refer [before? after? now today-at hour minute]]
+   [clj-time.core :refer [before? after? now today-at hour minute
+                          today-at-midnight epoch minus plus days]]
    [schema.core :as s]
    [schema.coerce :as sc]))
 
@@ -233,32 +234,41 @@
    :else context))
 
 (defmethod validate :total-discounts
-  [{:keys [current-total-discounts] :as context}
+  [{:keys [promo] :as context}
    {:keys [total-discounts] :as condition}]
-  (cond
-   (>= current-total-discounts total-discounts)
-   (update-in context [:errors] conj "This promotion has ended")
-   :else context))
+  (let [promo-uuid (:uuid promo)
+        current (redemption/total-discounts promo-uuid)]
+    (cond
+     (>= current total-discounts)
+     (update-in context [:errors] conj "This promotion has ended")
+     :else context)))
 
 (defmethod validate :daily-total-discounts
-  [{:keys [current-daily-total-discounts] :as context}
-   {:keys [total-discounts] :as promo}]
-  (cond
-   (>= current-daily-total-discounts total-discounts)
-   (update-in context [:errors] conj "No more for today, check back tomorrow!")
-   :else context))
+  [{:keys [promo] :as context}
+   {:keys [total-discounts] :as condition}]
+  (let [promo-uuid (:uuid promo)
+        current (redemption/total-discounts promo-uuid :start (minus (today-at-midnight) (days 1)))]
+    (cond
+     (>= current total-discounts)
+     (update-in context [:errors] conj "No more for today, check back tomorrow!")
+     :else context)))
 
 (defmethod validate :usage-count
-  [{:keys [current-usage-count] :as context}
+  [{:keys [promo] :as context}
    {:keys [usage-count] :as condition}]
-  (cond
-   (>= current-usage-count usage-count)
-   (update-in context [:errors] conj "This promotion has ended")
-   :else context))
+  (let [promo-uuid (:uuid promo)
+        current (redemption/count-in-period promo-uuid)]
+    (cond
+     (>= current usage-count)
+     (update-in context [:errors] conj "This promotion has ended.")
+     :else context)))
 
 (defmethod validate :daily-usage-count
-  [{:keys [current-daily-usage-count] :as context}
-   {:keys [usage-count] :as promo}]
-  (cond
-    (>= current-daily-usage-count usage-count)
-    (update-in context [:errors] conj "No more for today, check back tomorrow!")))
+  [{:keys [promo] :as context}
+   {:keys [usage-count] :as condition}]
+  (let [promo-uuid (:uuid promo)
+        current (redemption/count-in-period promo-uuid :start (minus (today-at-midnight) (days 1)))]
+    (cond
+     (>= current usage-count)
+     (update-in context [:errors] conj "No more for today, check back tomorrow!")
+     :else context)))

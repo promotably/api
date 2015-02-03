@@ -90,6 +90,19 @@
                    :seo_text "Best effing coupon evar"
                    :updated_at (c/to-sql-date (t/now))
                    :created_at (c/to-sql-date (t/now)))
+          (fixture :site-2-expired-promo
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-2
+                   :code "SITE 2 EXPIRED PROMO"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Expired promo"
+                   :seo_text "Best effing coupon evar"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now)))
           (fixture :site-3-promo-1
                    :uuid (java.util.UUID/randomUUID)
                    :site_id :site-3
@@ -215,8 +228,20 @@
                    :presentation_page "product-detail"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
+          (fixture :offer-with-expired-promo
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-2
+                   :promo_id :site-2-expired-promo
+                   :code "OFFER-EXPIRED-PROMO"
+                   :name "NAME HERE"
+                   :active true
+                   :display_text "Book it, dano"
+                   :presentation_type "lightbox"
+                   :presentation_page "product-detail"
+                   :created_at (c/to-sql-date (t/now))
+                   :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-product-views-not-valid
-                    :uuid (java.util.UUID/randomUUID)
+                   :uuid (java.util.UUID/randomUUID)
                    :site_id :site-4
                    :promo_id :site-4-promo-1
                    :code "OFFER-PRODUCT-VIEWS-INVALID"
@@ -227,6 +252,13 @@
                    :presentation_page "product-detail"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-expired
+                   :promo_id :site-2-expired-promo
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "dates"
+                   :start_date (c/to-sql-time (t/minus (t/now) (t/days 10)))
+                   :end_date (c/to-sql-time (t/minus (t/now) (t/days 3)))))
    (table :offer_conditions
           (fixture :offer-1-date-condition
                    :uuid (java.util.UUID/randomUUID)
@@ -265,6 +297,12 @@
                    :offer_id :offer-1-with-product-views-condition
                    :type "product-views"
                    :product_views 2
+                   :period_in_days 2)
+          (fixture :offer-condition-product-views-invalid
+                   :uuid (java.util.UUID/randomUUID)
+                   :offer_id :offer-product-views-not-valid
+                   :type "product-views"
+                   :product_views 20
                    :period_in_days 2))
    (table :events
           (fixture :event-pa-1
@@ -389,7 +427,7 @@
                           :sku "T100",
                           :event-name "productview",
                           :session-id (str session-2-id)})
-           (fixture :event-pv-valid-2
+          (fixture :event-pv-valid-2
                    :site_id site-4-id
                    :event_id (java.util.UUID/randomUUID)
                    :shopper_id shopper-2-id
