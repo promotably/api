@@ -32,6 +32,23 @@
  100                true     100
  100                true     101)
 
+(tabular
+ (fact "validation for repeat-product-views condition works properly"
+   (let [oc {:type :repeat-product-views
+             :repeat-product-views ?rpv
+             :period-in-days ?pid}
+         sid (java.util.UUID/randomUUID)
+         ssid (java.util.UUID/randomUUID)
+         context {:site-id sid
+                  :site-shopper-id ssid}]
+     (validate context oc) => ?result
+     (provided (api.models.event/shopper-events anything anything anything anything)
+               => ?events)))
+ ?rpv ?pid ?result ?events
+ 1    1    true    [{:data {:sku "1234"}}]
+ 1    1    falsey  []
+ 2    1    falsey  [{:data {:sku "1234"}} {:data {:sku "5678"}}])
+
 
 (tabular
  (fact "validation for num-lifetime-orders condition works properly"
@@ -48,3 +65,5 @@
  100                      false    10
  100                      true     100
  100                      true     101)
+
+

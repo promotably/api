@@ -82,15 +82,13 @@
                                                      period-in-days)]
     (>= pv-count product-views)))
 
-;; TODO: This needs to be rewritten to use DB, not redis, or we need to
-;; clarify that the condition applies to repeat product views in a
-;; single session.
 (defmethod validate :repeat-product-views
-  [{:keys [site-id site-shopper-id product-id] :as context}
-   {:keys [repeat-product-views] :as condition}]
-  (let [k (str site-id "/" site-shopper-id "/product-view/" product-id)
-        views (get-integer k)]
-    (>= views repeat-product-views)))
+  [{:keys [site-id site-shopper-id] :as context}
+   {:keys [repeat-product-views period-in-days] :as condition}]
+  (let [pv-events (group-by #(get-in % [:data :sku])
+                            (event/shopper-events site-id site-shopper-id "productview" period-in-days))]
+    (some #(>= (count %) repeat-product-views)
+          (vals pv-events))))
 
 ;; TODO: This needs to be rewritten to use DB, not redis
 (defmethod validate :num-lifetime-orders

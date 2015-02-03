@@ -1,7 +1,7 @@
 (ns api.models.event
   (:require [api.entities :refer :all]
             [clj-time.core :refer [now minus days]]
-            [clj-time.coerce :refer [to-sql-date]]
+            [clj-time.coerce :refer [to-sql-date to-sql-time]]
             [clojure.set :refer [rename-keys]]
             [clojure.data.json :as json]
             [clojure.java.jdbc :as jdbc]
@@ -50,5 +50,26 @@
                      "   ((data->>'order-id') IS NOT NULL)) "
                      "GROUP BY events.data->>'order-id'")
                 [site-id site-shopper-id then]] :results))))
+
+
+(sm/defn shopper-events
+  "Returns a collection of all events for the specified site, site shopper, and type.
+   Defaults to 1 day look-back"
+  [site-id :- s/Uuid site-shopper-id :- s/Uuid event-type :- s/Str days-ago :- s/Int]
+  (let [since (to-sql-time (minus (now) (days days-ago)))]
+    (map db-to-event
+         (select events
+                 (where {:site_id site-id
+                         :site_shopper_id site-shopper-id
+                         :type event-type
+                         :created_at [>= since]})))))
+
+
+
+
+
+
+
+
 
 
