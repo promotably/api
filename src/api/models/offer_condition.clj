@@ -87,8 +87,10 @@
    {:keys [repeat-product-views period-in-days] :as condition}]
   (let [pv-events (group-by #(get-in % [:data :sku])
                             (event/shopper-events site-id site-shopper-id "productview" period-in-days))]
-    (some #(>= (count %) repeat-product-views)
-          (vals pv-events))))
+    (if-not (nil? (some #(>= (count %) repeat-product-views)
+                        (vals pv-events)))
+      true
+      false)))
 
 ;; TODO: This needs to be rewritten to use DB, not redis
 (defmethod validate :num-lifetime-orders
