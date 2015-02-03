@@ -48,7 +48,7 @@
             auth-cookie-user-id (get-user-id-from-auth-token cookie-auth-token api-secret)]
         (= current-user-id auth-cookie-user-id)))))
 
-(defn- add-user-id-to-params
+(defn- add-user-id-to-request
   [request]
   (let [user-id (-> request
                     :cookies
@@ -66,7 +66,7 @@
   ;; TODO: add role based authorization
   (fn [request]
     (if (authorized? request (api-secret-fn))
-      (handler (add-user-id-to-params request))
+      (handler (add-user-id-to-request request))
       {:status 401})))
 
 (defn- auth-response
