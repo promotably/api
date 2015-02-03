@@ -63,13 +63,3 @@
                          :site_shopper_id site-shopper-id
                          :type event-type
                          :created_at [>= since]})))))
-
-
-
-
-
-
-
-
-
-

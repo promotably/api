@@ -55,11 +55,11 @@
    (let [oc {:type :num-lifetime-orders
              :num-lifetime-orders ?oc-num-lifetime-orders}
          site-id (java.util.UUID/randomUUID)
-         shopper-id (java.util.UUID/randomUUID)
+         site-shopper-id (java.util.UUID/randomUUID)
          context {:site-id site-id
-                  :shopper-id shopper-id}]
+                  :site-shopper-id site-shopper-id}]
      (validate context oc) => ?result
-     (provided (api.lib.redis/get-integer anything)
+     (provided (api.models.event/orders-since anything anything anything)
                => ?actual-lifetime-orders)))
  ?oc-num-lifetime-orders  ?result  ?actual-lifetime-orders
  100                      false    10

@@ -92,13 +92,12 @@
       true
       false)))
 
-;; TODO: This needs to be rewritten to use DB, not redis
 (defmethod validate :num-lifetime-orders
   [{:keys [site-id site-shopper-id]}
    {:keys [num-lifetime-orders] :as condition}]
-  (let [k (str site-id "/" site-shopper-id "/lifetime-orders")
-        lifetime-orders (get-integer k)]
-    (>= lifetime-orders num-lifetime-orders)))
+  ;; Okay, so by lifetime we mean anytime in the last 100 years
+  (>= (event/orders-since site-id site-shopper-id (* 100 365))
+      num-lifetime-orders))
 
 (defmethod validate :num-cart-adds-in-period
   [{:keys [site-id site-shopper-id] :as context}
