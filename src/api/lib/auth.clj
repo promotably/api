@@ -54,6 +54,8 @@
                              qs-str "\n")
           computed-sig (hmac-sha1 (.getBytes ^String (str api-secret))
                                   (.getBytes ^String sign-me))]
+      ;; For debuggin'
+      ;; (prn "AUTH" computed-sig signature sign-me)
       (= computed-sig signature))))
 
 (def transform-auth

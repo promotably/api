@@ -6,7 +6,8 @@
             [api.models.event :as event]
             [api.models.redemption :as redemption]
             [api.util :refer [hyphenify-key]]
-            [clj-time.core :refer [before? after? now]]
+            [clj-time.format]
+            [clj-time.core :refer [before? after? now] :as t]
             [clj-time.coerce :refer [from-sql-date]]
             [clojure.set :refer [rename-keys intersection]]
             [clojure.string :refer [trim]]
@@ -113,3 +114,23 @@
   [{:keys [site-id site-shopper-id] :as context}
    {:keys [num-orders period-in-days] :as condition}]
   (< (event/orders-since site-id site-shopper-id period-in-days) num-orders))
+
+(defmethod validate :minutes-on-site
+  [{:keys [session site-id site-shopper-id] :as context}
+   {:keys [minutes-on-site] :as condition}]
+  (if (contains? session :started-at)
+    (let [session-start (clj-time.format/parse (:started-at session))
+          min-time (clj-time.core/plus session-start (clj-time.core/minutes minutes-on-site))]
+      (clj-time.core/after? (now) min-time))
+    false))
+
+(defmethod validate :minutes-since-last-engagement
+  [{:keys [session site-id site-shopper-id] :as context}
+   {:keys [minutes-since-last-engagement] :as condition}]
+  (if (contains? session :last-event-at)
+    (let [last (clj-time.format/parse (:last-event-at session))
+          min-time (t/plus last (t/minutes minutes-since-last-engagement))]
+      (t/after? (now) min-time))
+    false))
+
+

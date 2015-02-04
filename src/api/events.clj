@@ -3,7 +3,8 @@
             [clojure.set :as set]
             [clojure.tools.logging :as log]
             [clj-time.format]
-            [clj-time.coerce]
+            [clj-time.coerce :as t-coerce]
+            [clj-time.core :as t]
             [api.config :as config]
             [api.kinesis :as kinesis]
             [api.models.helper :refer :all]
@@ -171,8 +172,9 @@
          ;; (clojure.pprint/pprint out)
          (kinesis/record-event! kinesis-comp (:event-name out) out)
          (put-metric "event-record-success")
-         (let [response {:headers {"Content-Type" "text/javascript"}
+         (let [session (assoc (:session request) :last-event-at (t-coerce/to-string (t/now)))
+               response {:headers {"Content-Type" "text/javascript"}
                          :body ""
-                         :session (:session request)
+                         :session session
                          :status 200}]
            response))))))

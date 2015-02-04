@@ -240,6 +240,7 @@
           response (cond->
                     (handler request)
                     sid (update-in [:session :site-id] (constantly sid))
+                    true (update-in [:session :last-request-at] (constantly (t-coerce/to-string (t/now))))
                     true (update-in [:session :expires] (constantly expires))
                     true (update-in [:session :shopper-id] (constantly (:shopper-id request))))]
       response)))

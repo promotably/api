@@ -21,6 +21,7 @@
             [schema.macros :as sm]
             [schema.coerce :as sc]))
 
+;; TODO: remove this
 (def OffersCache (atom (cache/ttl-cache-factory {} :ttl 300000))) ;; TTL 5 minutes
 
 (defn db-to-offer

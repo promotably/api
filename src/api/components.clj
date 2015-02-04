@@ -13,6 +13,7 @@
             [clj-time.core :refer [before? after? now] :as t]
             [clj-time.coerce :as t-coerce]
             [taoensso.carmine :as car :refer [wcar]]
+            [api.lib.coercion-helper :refer [remove-nils]]
             [api.cloudwatch :as cw]
             [api.config :as config]
             [api.route :as route]
@@ -127,6 +128,7 @@
           new-data (if (or (nil? session-id) (nil? old-data))
                      (assoc data :started-at (t-coerce/to-string (t/now)))
                      data)
+          new-data (remove-nils (merge old-data data))
           s (-> config :session-length-in-seconds)]
       (when (nil? session-id)
         ;; TODO: more data? Shopper's browser, etc???

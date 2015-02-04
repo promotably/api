@@ -7,8 +7,10 @@
    [api.core :as core]
    [api.models.site]
    [api.models.promo :as promo]
+   [api.models.offer :as offer]
    [clj-http.client :as client]
    [cheshire.core :refer :all]
+   [korma.core :refer :all]
    [clojure.data.json :as json]
    [midje.sweet :refer :all]))
 

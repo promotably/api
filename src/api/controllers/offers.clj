@@ -117,5 +117,6 @@
         available-offers (offer/get-offers-for-site site-id)
         valid-offers (filter #(offer/valid? {:shopper-id shopper-id
                                              :site-id site-id
+                                             :session session
                                              :site-shopper-id site-shopper-id} %) available-offers)]
     (shape-rcos valid-offers)))
