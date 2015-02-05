@@ -235,11 +235,18 @@
                (-> request :multipart-params :site-id)
                (-> request :body-params :site-id)
                (-> request :params :site-id))
+          ssid (or
+                (-> request :form-params :site-shopper-id)
+                (-> request :query-params :site-shopper-id)
+                (-> request :multipart-params :site-shopper-id)
+                (-> request :body-params :site-shopper-id)
+                (-> request :params :site-shopper-id))
           s (-> current-system :config :session-length-in-seconds)
           expires (t-coerce/to-string (t/plus (t/now) (t/seconds s)))
           response (cond->
                     (handler request)
                     sid (update-in [:session :site-id] (constantly sid))
+                    ssid (update-in [:session :site-shopper-id] (constantly ssid))
                     true (update-in [:session :last-request-at] (constantly (t-coerce/to-string (t/now))))
                     true (update-in [:session :expires] (constantly expires))
                     true (update-in [:session :shopper-id] (constantly (:shopper-id request))))]

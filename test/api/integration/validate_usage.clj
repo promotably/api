@@ -31,25 +31,6 @@
    (def site (api.models.site/find-by-name "site-1"))
    (def site-id (:uuid site))
 
-   (defn compute-sig-hash
-     [host verb path body site-id api-secret]
-     (let [body-hash (hmac-sha1 (.getBytes api-secret)
-                                (.getBytes body))
-           time-val (tf/unparse (tf/formatters :basic-date-time-no-ms)
-                                (t/now))
-           sig-str (hmac-sha1 (.getBytes api-secret)
-                              (.getBytes (apply str
-                                                (str site-id) "\n"
-                                                api-secret "\n"
-                                                host "\n"
-                                                verb "\n"
-                                                path "\n"
-                                                time-val "\n"
-                                                body-hash "\n"
-                                                "" "\n"
-                                                "" "\n")))]
-       (str "hmac-sha1///" time-val "/" sig-str)))
-
    (defn basic-request-data
      [site-id code]
      {:site-id (str site-id)

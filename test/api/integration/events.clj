@@ -1,8 +1,8 @@
 (ns api.integration.events
-  (:import org.postgresql.util.PGobject)
   (:require
     [api.models.event :refer :all]
     [api.fixtures.event-data :as fix]
+    [api.lib.seal :refer [hmac-sha1 url-encode]]
     [api.fixtures.common :refer [site-uuid]]
     [clj-http.client :as client]
     [midje.sweet :refer :all]
@@ -10,6 +10,18 @@
     [api.route :as route]
     [api.system :as system]
     [api.core :as core]))
+
+(defn track
+  [sig params]
+  (client/get "http://localhost:3000/api/v1/track"
+              {:body nil
+               :headers {:promotably-auth sig}
+               :query-params params
+               :content-type :json
+               :accept :json
+               :throw-exceptions false
+               :socket-timeout 10000
+               :conn-timeout 10000}))
 
 (against-background [(before :contents
                              (do (when (nil? system/current-system)
@@ -20,14 +32,37 @@
                      (after :contents
                             (comment migrate-down))]
 
+  (def site (api.models.site/find-by-name "site-1"))
+  (def site-id (:site-id site))
+
   (fact-group :integration
+
     (fact "Can count shopper events by days"
       (count-shopper-events-by-days fix/site-shopper-id "productadd" 1) => 2
       (count-shopper-events-by-days fix/site-shopper-id "productadd" 2) => 3
       (count-shopper-events-by-days fix/site-shopper-id "productadd" 3) => 4
-      (count-shopper-events-by-days fix/site-shopper-id "thankyou" 30) => 2))
+      (count-shopper-events-by-days fix/site-shopper-id "thankyou" 30) => 2)
 
     (fact "Count orders"
       (orders-since site-uuid fix/site-shopper-id 1) => 0
-      (orders-since site-uuid fix/site-shopper-id (* 365 2)) => 1))
+      (orders-since site-uuid fix/site-shopper-id (* 365 2)) => 1)
 
+    (fact "Should work when :uuid is :site-id"
+      (let [api-secret (str (:api-secret site))
+            path (url-encode "/api/v1/track")
+            sig-hash (compute-sig-hash "localhost"
+                                       "GET"
+                                       path
+                                       nil
+                                       (str site-id)
+                                       api-secret)
+            params {:site-id (str site-id)
+                    :site-shopper-id "6880a72f-4d33-4abb-ad2f-c88b51ebbe19"
+                    :event-name "_trackProductView"
+                    :sku "T100"
+                    :user-id "1"
+                    :promotably-auth sig-hash
+                    :callback "jQuery1111034964492078870535_1423111893735"
+                    "_" "1423111893736"}
+            r (track sig-hash params)]
+        (:status r) => 200))))

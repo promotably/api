@@ -9,10 +9,12 @@
    [korma.db :as kdb]
    [api.q-fix :as qfix]
    [api.db :as db]
+   [api.lib.seal :refer [hmac-sha1 url-encode]]
+   [clj-time.format :as tf]
    [clj-time.coerce :refer (to-sql-time)]
    [clojure.java.jdbc :as jdbc]
    [clojure.walk :refer [postwalk]]
-   [clj-time.core :refer (now)]
+   [clj-time.core :refer (now) :as t]
    [drift.execute :as drift]
    [midje.sweet :refer :all]
    [clj-http.client :as client]
@@ -117,3 +119,23 @@
                 :throw-exceptions false
                 :socket-timeout 10000
                 :conn-timeout 10000}))
+
+(defn compute-sig-hash
+  [host verb path body site-id api-secret]
+  (let [body-hash (if body (hmac-sha1 (.getBytes api-secret)
+                                      (.getBytes body)))
+        time-val (tf/unparse (tf/formatters :basic-date-time-no-ms)
+                             (t/now))
+        sig-str (hmac-sha1 (.getBytes api-secret)
+                           (.getBytes (apply str
+                                             (str site-id) "\n"
+                                             api-secret "\n"
+                                             host "\n"
+                                             verb "\n"
+                                             path "\n"
+                                             time-val "\n"
+                                             body-hash "\n"
+                                             "" "\n"
+                                             "" "\n")))]
+    (str "hmac-sha1///" time-val "/" sig-str)))
+
