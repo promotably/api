@@ -161,13 +161,20 @@
   (let [the-promo (promo/find-by-uuid (-> offer :reward :promo-id))]
     (>= (redemption/total-discounts (:uuid the-promo) max-discount-per-day))))
 
-(defmethod validate :device-type
+(defmethod validate :shopper-device-type
   [{:keys [session site-id site-shopper-id offer] :as context}
-   {:keys [device-type] :as condition}]
+   {:keys [shopper-device-type] :as condition}]
   (let [ua (:user-agent session)]
     (cond
-     (= :all device-type) true
-     (= :phone device-type) (#{:phone} (:device ua))
-     (= :tablet device-type) (#{:tablet} (:device ua))
-     (= :desktop device-type) (#{:desktop} (:device ua))
+     (= :all shopper-device-type) true
+     (= :phone shopper-device-type) (#{:phone} (:device ua))
+     (= :tablet shopper-device-type) (#{:tablet} (:device ua))
+     (= :desktop shopper-device-type) (#{:desktop} (:device ua))
      :else false)))
+
+(defmethod validate :num-visits-in-period
+  [{:keys [session site-id site-shopper-id offer] :as context}
+   {:keys [num-visits period-in-days] :as condition}]
+  (let [visits (event/count-shopper-events-by-days site-shopper-id "session-start" period-in-days)]
+    (>= visits num-visits)))
+

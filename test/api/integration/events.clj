@@ -47,6 +47,9 @@
       (orders-since site-uuid fix/site-shopper-id 1) => 0
       (orders-since site-uuid fix/site-shopper-id (* 365 2)) => 1)
 
+    (fact "Count visits"
+      (count-shopper-events-by-days fix/site-shopper-id "session-start" (* 365 2)) => 1)
+
     (fact "Should work when :uuid is :site-id"
       (let [api-secret (str (:api-secret site))
             path (url-encode "/api/v1/track")

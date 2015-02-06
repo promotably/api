@@ -409,6 +409,7 @@
    :shopper-device-type
    :min-orders-in-period
    :max-orders-in-period
+   :num-visits-in-period
    :num-cart-adds-in-period
    :num-lifetime-orders
    :last-order-total
@@ -498,6 +499,10 @@
                  (merge BaseOfferCondition {:num-orders s/Int
                                             :period-in-days s/Int})
 
+                 #(= (:type %) :num-visits-in-period)
+                 (merge BaseOfferCondition {:num-visits s/Int
+                                            :period-in-days s/Int})
+
                  #(= (:type %) :num-cart-adds-in-period)
                  (merge BaseOfferCondition {:num-cart-adds s/Int
                                             :period-in-days s/Int})
@@ -554,7 +559,7 @@
    (s/optional-key :shipping-zipcode) (s/maybe s/Str)
    (s/optional-key :billing-zipcode) (s/maybe s/Str)
    (s/optional-key :referer-domain) (s/maybe s/Str)
-   (s/optional-key :shopper-device-type) (s/maybe (s/enum :mobile :desktop :all))
+   (s/optional-key :shopper-device-type) (s/maybe (s/enum :phone :tablet :desktop :all))
    (s/optional-key :num-orders) (s/maybe s/Int)
    (s/optional-key :period-in-days) (s/maybe s/Int)
    (s/optional-key :num-lifetime-orders) (s/maybe s/Int)
@@ -562,6 +567,9 @@
    (s/optional-key :last-order-item-count) (s/maybe s/Int)
    (s/optional-key :last-order-max-discount) (s/maybe s/Int)
    (s/optional-key :last-order-includes-item-id) [s/Str]
+   (s/optional-key :num-visits) (s/maybe s/Int)
+   (s/optional-key :max-discount-per-day) (s/maybe s/Num)
+   (s/optional-key :max-redemptions-per-day) (s/maybe s/Num)
    (s/optional-key :num-cart-adds) (s/maybe s/Int)})
 
 (def BaseOffer

@@ -251,9 +251,11 @@
                               (assoc %1 cookie-name cookie-val))
                            {}
                            set-cookies)
-              session-id (get set-cookies promotably-session-cookie-name)]
-          (->> (assoc k-data :session-id session-id)
-               (kinesis/record-event! (:kinesis current-system) "session-start"))))
+              session-id (get set-cookies promotably-session-cookie-name)
+              k-data* (-> (assoc k-data :session-id session-id)
+                          (assoc :event-format-version "1")
+                          (assoc :event-name "session-start"))]
+          (kinesis/record-event! (:kinesis current-system) "session-start" k-data*)))
       response)))
 
 (defn wrap-ensure-session
@@ -318,11 +320,11 @@
 (defn app
   [{:keys [config session-cache] :as options}]
   (-> all-routes
+      wrap-detect-user-agent
       wrap-ensure-session
       (wrap-permacookie {:name "promotably" :request-key :shopper-id})
       (wrap-restful-format :formats [:json-kw :edn])
       jsonp/wrap-json-with-padding
-      wrap-detect-user-agent
       (session/wrap-session {:store session-cache
                              :cookie-name promotably-session-cookie-name})
       wrap-record-new-session
