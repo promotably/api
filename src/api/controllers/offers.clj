@@ -118,5 +118,6 @@
         valid-offers (filter #(offer/valid? {:shopper-id shopper-id
                                              :site-id site-id
                                              :session session
+                                             :offer %
                                              :site-shopper-id site-shopper-id} %) available-offers)]
     (shape-rcos valid-offers)))

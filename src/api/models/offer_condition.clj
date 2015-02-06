@@ -5,6 +5,7 @@
             [api.lib.schema :refer :all]
             [api.models.event :as event]
             [api.models.redemption :as redemption]
+            [api.models.promo :as promo]
             [api.util :refer [hyphenify-key]]
             [clj-time.format]
             [clj-time.core :refer [before? after? now] :as t]
@@ -133,4 +134,40 @@
       (t/after? (now) min-time))
     false))
 
+(defmethod validate :last-order-item-count
+  [{:keys [session site-id site-shopper-id] :as context}
+   {:keys [last-order-item-count] :as condition}]
+  (>= (event/item-count-in-last-order site-id site-shopper-id) last-order-item-count))
 
+(defmethod validate :last-order-value
+  [{:keys [session site-id site-shopper-id] :as context}
+   {:keys [last-order-value] :as condition}]
+  (>= (event/value-of-last-order site-id site-shopper-id) last-order-value))
+
+(defmethod validate :last-order-max-discount
+  [{:keys [session site-id site-shopper-id] :as context}
+   {:keys [max-discount] :as condition}]
+  (< (event/discount-last-order site-id site-shopper-id) max-discount))
+
+(defmethod validate :max-redemptions-per-day
+  [{:keys [session site-id site-shopper-id offer] :as context}
+   {:keys [max-redemptions-per-day] :as condition}]
+  (let [the-promo (promo/find-by-uuid (-> offer :reward :promo-id))]
+    (>= (redemption/count-in-period (:uuid the-promo) max-redemptions-per-day))))
+
+(defmethod validate :max-discount-per-day
+  [{:keys [session site-id site-shopper-id offer] :as context}
+   {:keys [max-discount-per-day] :as condition}]
+  (let [the-promo (promo/find-by-uuid (-> offer :reward :promo-id))]
+    (>= (redemption/total-discounts (:uuid the-promo) max-discount-per-day))))
+
+(defmethod validate :device-type
+  [{:keys [session site-id site-shopper-id offer] :as context}
+   {:keys [device-type] :as condition}]
+  (let [ua (:user-agent session)]
+    (cond
+     (= :all device-type) true
+     (= :phone device-type) (#{:phone} (:device ua))
+     (= :tablet device-type) (#{:tablet} (:device ua))
+     (= :desktop device-type) (#{:desktop} (:device ua))
+     :else false)))

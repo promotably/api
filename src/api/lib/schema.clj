@@ -413,8 +413,9 @@
    :num-lifetime-orders
    :last-order-total
    :last-order-item-count
+   :last-order-max-discount
    :last-order-includes-item-id])
-(def valid-devices #{:mobile :desktop :all})
+(def valid-devices #{:desktop :phone :tablet :all})
 (def valid-reward-types #{:promo :dynamic-promo})
 (def valid-presentation-types #{:lightbox :fly-in :fixed-div :inline :on-exit})
 (def valid-presentation-page-types #{:product-detail :cart :checkout
@@ -510,6 +511,9 @@
                  #(= (:type %) :last-order-item-count)
                  (merge BaseOfferCondition {:last-order-item-count s/Int})
 
+                 #(= (:type %) :last-order-max-discount)
+                 (merge BaseOfferCondition {:last-order-max-discount s/Int})
+
                  #(= (:type %) :last-order-includes-item-id)
                  (merge BaseOfferCondition {:last-order-includes-item-id s/Str})))
 
@@ -556,6 +560,7 @@
    (s/optional-key :num-lifetime-orders) (s/maybe s/Int)
    (s/optional-key :last-order-total) (s/maybe s/Num)
    (s/optional-key :last-order-item-count) (s/maybe s/Int)
+   (s/optional-key :last-order-max-discount) (s/maybe s/Int)
    (s/optional-key :last-order-includes-item-id) [s/Str]
    (s/optional-key :num-cart-adds) (s/maybe s/Int)})
 

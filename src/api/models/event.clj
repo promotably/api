@@ -63,3 +63,41 @@
                          :site_shopper_id site-shopper-id
                          :type event-type
                          :created_at [>= since]})))))
+
+(sm/defn last-event
+  "Get the last event for the site/site-shopper/event-type tuple."
+  [site-id :- s/Uuid site-shopper-id :- s/Uuid event-type :- s/Str]
+  (first (select events
+                 (where {:site_id site-id
+                         :site_shopper_id site-shopper-id
+                         :type event-type})
+                 (order :created_at :DESC)
+                 (limit 1))))
+
+;; (clojure.pprint/pprint (last-event #uuid "5669de1d-cc61-4590-9ef6-5cab58369df2" #uuid "001fd699-9d50-4b7c-af3b-3e022d379647" "thankyou"))
+
+(sm/defn item-count-in-last-order
+  "Get number of items in the shopper's last order."
+  [site-id :- s/Uuid site-shopper-id :- s/Uuid]
+  (let [e (last-event site-id site-shopper-id "thankyou")]
+    (if e
+      (apply + (map :quantity (-> e :data :cart-items)))
+      0)))
+
+(sm/defn value-of-last-order
+  "Get total of the shopper's last order."
+  [site-id :- s/Uuid site-shopper-id :- s/Uuid]
+  (let [e (last-event site-id site-shopper-id "thankyou")]
+    (if e
+      (-> e :data :total bigint)
+      0)))
+
+(sm/defn discount-last-order
+  "Get total of the shopper's last order."
+  [site-id :- s/Uuid site-shopper-id :- s/Uuid]
+  (let [e (last-event site-id site-shopper-id "thankyou")]
+    (if e
+      (-> e :data :discount bigint)
+      0)))
+
+;; (discount-last-order #uuid "5669de1d-cc61-4590-9ef6-5cab58369df2" #uuid "001fd699-9d50-4b7c-af3b-3e022d379647")

@@ -20,6 +20,8 @@
                                org.clojure/tools.reader
                                com.fasterxml.jackson.core/jackson-core]]
                  [clj-logging-config "1.9.12"]
+                 [log4j/log4j "1.2.17"]
+                 [org.slf4j/slf4j-log4j12 "1.2"]
                  [clj-time "0.8.0" :exclusions [joda-time]]
                  [clojure.joda-time "0.2.0" :exclusions [joda-time]]
                  [joda-time/joda-time "2.5"]
@@ -30,7 +32,6 @@
                                org.tukaani/xz
                                org.clojure/tools.reader]]
                  [korma "0.4.0"]
-                 [log4j/log4j "1.2.17"]
                  [org.clojure/clojure "1.6.0"]
                  [org.clojure/core.cache "0.6.4"]
                  [org.clojure/data.json "0.2.5"]
@@ -42,7 +43,7 @@
                                com.fasterxml.jackson.core/jackson-core]]
                  [slingshot "0.12.1"]
                  [clojurewerkz/scrypt "1.2.0"]
-                 [org.clojure/core.match "0.3.0-alpha1"]
+                 [org.clojure/core.match "0.3.0-alpha1" :exclusions [org.clojure/tools.reader]]
                  [prismatic/schema "0.2.6"]
                  [com.stuartsierra/dependency "0.1.1"]
                  [drift "1.5.2"]
@@ -64,7 +65,8 @@
                  [ring/ring-json "0.3.1"
                   :exclusions [joda-time com.fasterxml.jackson.core/jackson-core]]
                  [org.apache.commons/commons-daemon "1.0.9"]
-                 [commons-codec "1.10"]]
+                 [commons-codec "1.10"]
+                 [net.sf.uadetector/uadetector-resources "2014.10"]]
   :resource-paths ["resources"]
   :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC" "-XX:MaxPermSize=256m"
              ;; "–XX:+UseG1GC"

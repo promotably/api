@@ -26,6 +26,7 @@
              :refer [wrap-anti-forgery]]
             [api.authentication :as auth]
             [api.events :as events]
+            [api.kinesis :as kinesis]
             [api.controllers.users :refer [create-new-user! get-user update-user!]]
             [api.controllers.promos :refer [create-new-promo! show-promo query-promo
                                             validate-promo calculate-promo
@@ -39,6 +40,7 @@
                                               update-site-for-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]
             [api.cloudwatch :as cw]
+            [api.lib.detector :as detector]
             [api.system :refer [current-system]]
             [clj-time.core :refer [before? after? now] :as t]
             [clj-time.coerce :as t-coerce]
@@ -47,6 +49,7 @@
             [slingshot.slingshot :refer [try+]]))
 
 (defonce cached-index (atom {:cached-at nil :index nil}))
+(def promotably-session-cookie-name "promotably-session")
 
 ;;;;;;;;;;;;;;;;;;;
 ;;
@@ -225,8 +228,37 @@
                    (assoc :body (ByteArrayInputStream. (.getBytes slurped)))))
       (handler request))))
 
+(defn mark-new-session
+  [response request sid ssid]
+  (let [k-data {:created-at (t-coerce/to-string (t/now))
+                :shopper-id (:shopper-id request)
+                :site-shopper-id ssid
+                :request-headers (:headers request)
+                :session-id nil}
+        k-data (if sid (assoc k-data :site-id sid) k-data)]
+    (assoc response :new-session-data k-data)))
+
+(defn wrap-record-new-session
+  "When a new session is started, record relevant data to kinesis."
+  [handler]
+  (fn [request]
+    (let [response (handler request)]
+      (when-let [k-data (:new-session-data response)]
+        (let [set-cookies (get (:headers response) "Set-Cookie")
+              set-cookies (reduce
+                           #(let [parts (clojure.string/split %2 #";")
+                                  [cookie-name cookie-val] (clojure.string/split (first parts) #"=")]
+                              (assoc %1 cookie-name cookie-val))
+                           {}
+                           set-cookies)
+              session-id (get set-cookies promotably-session-cookie-name)]
+          (->> (assoc k-data :session-id session-id)
+               (kinesis/record-event! (:kinesis current-system) "session-start"))))
+      response)))
+
 (defn wrap-ensure-session
-  ""
+  "Ensure that all relevant data is in the response session map and
+  thence recorded to redis."
   [handler]
   (fn [request]
     (let [sid (or
@@ -243,14 +275,26 @@
                 (-> request :params :site-shopper-id))
           s (-> current-system :config :session-length-in-seconds)
           expires (t-coerce/to-string (t/plus (t/now) (t/seconds s)))
-          response (cond->
-                    (handler request)
-                    sid (update-in [:session :site-id] (constantly sid))
-                    ssid (update-in [:session :site-shopper-id] (constantly ssid))
-                    true (update-in [:session :last-request-at] (constantly (t-coerce/to-string (t/now))))
-                    true (update-in [:session :expires] (constantly expires))
-                    true (update-in [:session :shopper-id] (constantly (:shopper-id request))))]
-      response)))
+          response (handler request)
+          response (cond-> response
+                           sid (update-in [:session :site-id] (constantly sid))
+                           ssid (update-in [:session :site-shopper-id] (constantly ssid))
+                           true (update-in [:session :last-request-at] (constantly (t-coerce/to-string (t/now))))
+                           true (update-in [:session :expires] (constantly expires))
+                           true (update-in [:session :shopper-id] (constantly (:shopper-id request))))]
+      (if (empty? (:session request))
+        (mark-new-session response request sid ssid)
+        response))))
+
+(defn wrap-detect-user-agent
+  "Add a :user-agent key to the session map indicating the requestor's device type."
+  [handler]
+  (fn [request]
+    (if (-> request :session :user-agent)
+      (handler request)
+      (let [ua (detector/user-agent (get (:headers request) "user-agent"))
+            response (handler (assoc-in request [:session :user-agent] ua))]
+        (assoc-in response [:session :user-agent] ua)))))
 
 (defn wrap-token
   "Add a unique token identifier to each request for easy debugging."
@@ -278,8 +322,10 @@
       (wrap-permacookie {:name "promotably" :request-key :shopper-id})
       (wrap-restful-format :formats [:json-kw :edn])
       jsonp/wrap-json-with-padding
+      wrap-detect-user-agent
       (session/wrap-session {:store session-cache
-                             :cookie-name "promotably-session"})
+                             :cookie-name promotably-session-cookie-name})
+      wrap-record-new-session
       wrap-cookies
       wrap-keyword-params
       wrap-multipart-params
