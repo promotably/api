@@ -146,8 +146,8 @@
 
 (defmethod validate :last-order-max-discount
   [{:keys [session site-id site-shopper-id] :as context}
-   {:keys [max-discount] :as condition}]
-  (< (event/discount-last-order site-id site-shopper-id) max-discount))
+   {:keys [last-order-max-discount] :as condition}]
+  (< (event/discount-last-order site-id site-shopper-id) last-order-max-discount))
 
 (defmethod validate :max-redemptions-per-day
   [{:keys [session site-id site-shopper-id offer] :as context}
