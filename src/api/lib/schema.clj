@@ -415,6 +415,8 @@
    :last-order-total
    :last-order-item-count
    :last-order-max-discount
+   :max-redemptions-per-day
+   :max-discount-per-day
    :last-order-includes-item-id])
 (def valid-devices #{:desktop :phone :tablet :all})
 (def valid-reward-types #{:promo :dynamic-promo})
@@ -459,6 +461,9 @@
                  #(= (:type %) :times)
                  (merge BaseOfferCondition {:start-time s/Str
                                             :end-time s/Str})
+
+                 #(= (:type %) :max-redemptions-per-day)
+                 (merge BaseOfferCondition {:max-redemptions-per-day s/Int})
 
                  #(= (:type %) :minutes-since-last-offer)
                  (merge BaseOfferCondition {:minutes-since-last-offer s/Int})
@@ -519,6 +524,9 @@
                  #(= (:type %) :last-order-max-discount)
                  (merge BaseOfferCondition {:last-order-max-discount s/Int})
 
+                 #(= (:type %) :max-discount-per-day)
+                 (merge BaseOfferCondition {:max-discount-per-day s/Int})
+
                  #(= (:type %) :last-order-includes-item-id)
                  (merge BaseOfferCondition {:last-order-includes-item-id s/Str})))
 
@@ -557,6 +565,7 @@
    (s/optional-key :repeat-product-views) (s/maybe s/Int)
    (s/optional-key :items-in-cart) (s/maybe s/Int)
    (s/optional-key :shipping-zipcode) (s/maybe s/Str)
+   (s/optional-key :last-order-max-discount) (s/maybe s/Str)
    (s/optional-key :billing-zipcode) (s/maybe s/Str)
    (s/optional-key :referer-domain) (s/maybe s/Str)
    (s/optional-key :shopper-device-type) (s/maybe (s/enum :phone :tablet :desktop :all))
@@ -565,7 +574,6 @@
    (s/optional-key :num-lifetime-orders) (s/maybe s/Int)
    (s/optional-key :last-order-total) (s/maybe s/Num)
    (s/optional-key :last-order-item-count) (s/maybe s/Int)
-   (s/optional-key :last-order-max-discount) (s/maybe s/Int)
    (s/optional-key :last-order-includes-item-id) [s/Str]
    (s/optional-key :num-visits) (s/maybe s/Int)
    (s/optional-key :max-discount-per-day) (s/maybe s/Num)
