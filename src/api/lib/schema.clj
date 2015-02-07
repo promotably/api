@@ -580,7 +580,9 @@
    (s/required-key :display-text) (s/maybe s/Str)
    (s/required-key :reward) Reward
    (s/required-key :conditions) [OfferCondition]
-   (s/required-key :presentation) Presentation})
+   (s/required-key :presentation) Presentation
+   (s/optional-key :html) s/Str
+   (s/optional-key :css) s/Str})
 
 (def OutboundOffer (merge (dissoc BaseOffer :conditions)
                           {(s/required-key :id) s/Int

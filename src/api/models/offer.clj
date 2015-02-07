@@ -90,7 +90,9 @@
            presentation
            reward
            conditions
-           offer-id] :as params}]
+           offer-id
+           html
+           css] :as params}]
   (let [{p-type :type p-display-text :display-text p-page :page} presentation
         {:keys [promo-id expiry-in-minutes type]} reward
         p (promo/find-by-site-and-uuid site-id promo-id true)]
@@ -125,7 +127,9 @@
                         :presentation_display_text p-display-text
                         :created_at (sqlfn now)
                         :updated_at (sqlfn now)
-                        :uuid (java.util.UUID/randomUUID)}
+                        :uuid (java.util.UUID/randomUUID)
+                        :html html
+                        :css css}
             result (insert offers (values new-values))
             the-offer (db-to-offer result)]
         (when (seq conditions)
@@ -141,7 +145,9 @@
    {:keys [code name display-text
            presentation
            reward
-           conditions]
+           conditions
+           html
+           css]
     :as params}]
   (let [site-id (:site-id params)
         {p-type :type p-display-text :display-text p-page :page} presentation
@@ -175,7 +181,9 @@
                        :presentation_type (clojure.core/name p-type)
                        :presentation_page (clojure.core/name p-page)
                        :presentation_display_text p-display-text
-                       :updated_at (sqlfn now)}
+                       :updated_at (sqlfn now)
+                       :html html
+                       :css css}
            result (update offers
                           (set-fields new-values)
                           (where {:id id}))]

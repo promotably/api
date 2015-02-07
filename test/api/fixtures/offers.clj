@@ -166,6 +166,8 @@
                    :display_text "Book it, dano"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
+                   :html "<html></html>"
+                   :css "body {}"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-with-expired-dates
@@ -178,6 +180,8 @@
                    :display_text "YOU CANT HAVE THIS"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
+                   :html "<html></html>"
+                   :css "body {}"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-1-with-cart-add-condition
@@ -190,6 +194,8 @@
                    :display_text "Book it, dano"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
+                   :html "<html></html>"
+                   :css "body {}"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-1-with-min-order-condition
@@ -202,6 +208,8 @@
                    :display_text "MIN ORDER OFFER"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
+                   :html "<html></html>"
+                   :css "body {}"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-1-with-max-order-condition
@@ -214,6 +222,8 @@
                    :display_text "MAX ORDER OFFER"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
+                   :html "<html></html>"
+                   :css "body {}"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-1-with-product-views-condition
@@ -226,6 +236,8 @@
                    :display_text "Book it, dano"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
+                   :html "<html></html>"
+                   :css "body {}"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-with-expired-promo
@@ -238,6 +250,8 @@
                    :display_text "Book it, dano"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
+                   :html "<html></html>"
+                   :css "body {}"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-product-views-not-valid
@@ -250,6 +264,8 @@
                    :display_text "Book it, dano"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
+                   :html "<html></html>"
+                   :css "body {}"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now))))
    (table :promo_conditions

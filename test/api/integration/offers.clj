@@ -41,7 +41,9 @@
                    :start-date "2014-11-27T05:00:00Z"
                    :end-date "2014-11-29T04:59:59Z"}
                   {:type :minutes-since-last-offer
-                   :minutes-since-last-offer 10}]})
+                   :minutes-since-last-offer 10}]
+     :html "<html></html>"
+     :css "body {}"})
 
   (defn- create-offer
     [new-offer]
@@ -99,7 +101,9 @@
                                                    :end-date "2014-11-29T04:59:59Z"}
                                                   {:type "minutes-since-last-offer"
                                                    :minutes-since-last-offer 10}]
-                                                  :in-any-order)})
+                                                  :in-any-order)
+                                     :html "<html></html>"
+                                     :css "body {}"})
                                    (contains
                                     {:display-text "display text"
                                      :name "Easter Offer"
@@ -131,7 +135,9 @@
                                                     :page :search-results
                                                     :display-text "foo"}
                                      :conditions [{:type :product-views
-                                                   :product-views 3}]}
+                                                   :product-views 3}]
+                                     :html "<html></html>"
+                                     :css "body {}"}
                       r1 (update-offer (-> listed first :offer-id) updated-offer)
                       r2 (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r2) keyword)]
@@ -148,7 +154,9 @@
                                               :expiry-in-minutes 10}
                                      :code "OLD-VISITOR"
                                      :conditions [{:product-views 3
-                                                   :type "product-views"}]})
+                                                   :type "product-views"}]
+                                     :html "<html></html>"
+                                     :css "body {}"})
                                    (contains
                                     {:display-text "display text"
                                      :name "Easter Offer"
@@ -160,7 +168,9 @@
                                               :promo-id (-> promos first :uuid str)
                                               :expiry-in-minutes 20}
                                      :code "E1"
-                                     :conditions []})])))
+                                     :conditions []
+                                     :html "<html></html>"
+                                     :css "body {}"})])))
 
               (facts "Offer with dates condition"
 
@@ -189,6 +199,8 @@
                                                      :reward (just {:promo-id string? :type "promo"})
                                                      :site-id integer?
                                                      :updated-at string?
+                                                     :html "<html></html>"
+                                                     :css "body {}"
                                                      :uuid string?})])})))
 
               (facts "Offer with number of cart adds condition"

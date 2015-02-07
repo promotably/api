@@ -47,4 +47,6 @@
                    :presentation_page "any"
                    :presentation_display_text "presentation text"
                    :updated_at (c/to-sql-date (t/now))
-                   :created_at (c/to-sql-date (t/now))))))
+                   :created_at (c/to-sql-date (t/now))
+                   :html "<html></html>"
+                   :css "body {}"))))
