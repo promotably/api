@@ -49,4 +49,5 @@
                    :updated_at (c/to-sql-date (t/now))
                    :created_at (c/to-sql-date (t/now))
                    :html "<html></html>"
-                   :css "body {}"))))
+                   :css "body {}"
+                   :theme "theme"))))

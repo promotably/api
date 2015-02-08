@@ -168,6 +168,7 @@
                    :presentation_page "product-detail"
                    :html "<html></html>"
                    :css "body {}"
+                   :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-with-expired-dates
@@ -182,6 +183,7 @@
                    :presentation_page "product-detail"
                    :html "<html></html>"
                    :css "body {}"
+                   :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-1-with-cart-add-condition
@@ -196,6 +198,7 @@
                    :presentation_page "product-detail"
                    :html "<html></html>"
                    :css "body {}"
+                   :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-1-with-min-order-condition
@@ -210,6 +213,7 @@
                    :presentation_page "product-detail"
                    :html "<html></html>"
                    :css "body {}"
+                   :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-1-with-max-order-condition
@@ -224,6 +228,7 @@
                    :presentation_page "product-detail"
                    :html "<html></html>"
                    :css "body {}"
+                   :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-1-with-product-views-condition
@@ -238,6 +243,7 @@
                    :presentation_page "product-detail"
                    :html "<html></html>"
                    :css "body {}"
+                   :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-with-expired-promo
@@ -252,6 +258,7 @@
                    :presentation_page "product-detail"
                    :html "<html></html>"
                    :css "body {}"
+                   :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-product-views-not-valid
@@ -266,6 +273,7 @@
                    :presentation_page "product-detail"
                    :html "<html></html>"
                    :css "body {}"
+                   :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now))))
    (table :promo_conditions

@@ -43,7 +43,8 @@
                   {:type :minutes-since-last-offer
                    :minutes-since-last-offer 10}]
      :html "<html></html>"
-     :css "body {}"})
+     :css "body {}"
+     :theme "theme"})
 
   (defn- create-offer
     [new-offer]
@@ -103,7 +104,8 @@
                                                    :minutes-since-last-offer 10}]
                                                   :in-any-order)
                                      :html "<html></html>"
-                                     :css "body {}"})
+                                     :css "body {}"
+                                     :theme "theme"})
                                    (contains
                                     {:display-text "display text"
                                      :name "Easter Offer"
@@ -137,7 +139,8 @@
                                      :conditions [{:type :product-views
                                                    :product-views 3}]
                                      :html "<html></html>"
-                                     :css "body {}"}
+                                     :css "body {}"
+                                     :theme "theme"}
                       r1 (update-offer (-> listed first :offer-id) updated-offer)
                       r2 (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r2) keyword)]
@@ -156,7 +159,8 @@
                                      :conditions [{:product-views 3
                                                    :type "product-views"}]
                                      :html "<html></html>"
-                                     :css "body {}"})
+                                     :css "body {}"
+                                     :theme "theme"})
                                    (contains
                                     {:display-text "display text"
                                      :name "Easter Offer"
@@ -170,7 +174,8 @@
                                      :code "E1"
                                      :conditions []
                                      :html "<html></html>"
-                                     :css "body {}"})])))
+                                     :css "body {}"
+                                     :theme "theme"})])))
 
               (facts "Offer with dates condition"
 
@@ -201,6 +206,7 @@
                                                      :updated-at string?
                                                      :html "<html></html>"
                                                      :css "body {}"
+                                                     :theme "theme"
                                                      :uuid string?})])})))
 
               (facts "Offer with number of cart adds condition"

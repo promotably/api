@@ -92,7 +92,8 @@
            conditions
            offer-id
            html
-           css] :as params}]
+           css
+           theme] :as params}]
   (let [{p-type :type p-display-text :display-text p-page :page} presentation
         {:keys [promo-id expiry-in-minutes type]} reward
         p (promo/find-by-site-and-uuid site-id promo-id true)]
@@ -129,7 +130,8 @@
                         :updated_at (sqlfn now)
                         :uuid (java.util.UUID/randomUUID)
                         :html html
-                        :css css}
+                        :css css
+                        :theme theme}
             result (insert offers (values new-values))
             the-offer (db-to-offer result)]
         (when (seq conditions)
@@ -147,7 +149,8 @@
            reward
            conditions
            html
-           css]
+           css
+           theme]
     :as params}]
   (let [site-id (:site-id params)
         {p-type :type p-display-text :display-text p-page :page} presentation
@@ -183,7 +186,8 @@
                        :presentation_display_text p-display-text
                        :updated_at (sqlfn now)
                        :html html
-                       :css css}
+                       :css css
+                       :theme theme}
            result (update offers
                           (set-fields new-values)
                           (where {:id id}))]
