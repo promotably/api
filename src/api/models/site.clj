@@ -21,7 +21,7 @@
 
 (defn find-by-site-uuid
   [site-id]
-  (let [result (first (select sites (where {:uuid site-id})))]
+  (let [result (first (select sites (where {:site_id site-id})))]
     (underscore-to-dash-keys result)))
 
 (defn find-by-site-id
@@ -32,7 +32,7 @@
   [site-id]
   (:id (first (select sites
                       (fields [:id])
-                      (where {:uuid site-id})))))
+                      (where {:site_id site-id})))))
 
 (defn find-by-name
   [name]
@@ -69,5 +69,5 @@
                                  (into {}))]
       (update sites
               (set-fields params-for-update)
-              (where {:uuid (:site-id site)
+              (where {:site_id (:site-id site)
                       :account_id account-id})))))

@@ -81,7 +81,7 @@
   (seq (select offers
                (with offer-conditions)
                (join sites (= :sites.id :site_id))
-               (where {:sites.uuid site-uuid
+               (where {:sites.site_id site-uuid
                        :uuid offer-uuid}))))
 
 (sm/defn new-offer!
@@ -193,7 +193,7 @@
   (let [results (select offers
                         (with offer-conditions)
                         (join sites (= :sites.id :site_id))
-                        (where {:sites.uuid site-uuid}))]
+                        (where {:sites.site_id site-uuid}))]
     (map db-to-offer results)))
 
 (sm/defn find-by-uuid
@@ -218,7 +218,7 @@
   (let [row (first (select offers
                            (with offer-conditions)
                            (join sites (= :sites.id :site_id))
-                           (where {:sites.uuid site-uuid
+                           (where {:sites.site_id site-uuid
                                    :offers.code (clojure.string/upper-case
                                                  offer-code)})))]
     (if row (db-to-offer row))))
@@ -244,4 +244,3 @@
      true
      :else
      false)))
-

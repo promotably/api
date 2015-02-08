@@ -123,7 +123,7 @@
                                  (get headers "promotably-auth")))
                            prep-incoming
                            coercer)
-        site-id (-> coerced-params :site :uuid)
+        site-id (-> coerced-params :site :site-id)
         code (-> coerced-params :code clojure.string/upper-case)
         the-promo (promo/find-by-site-uuid-and-code site-id code)]
 

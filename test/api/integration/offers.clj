@@ -24,7 +24,7 @@
                             (comment migrate-down))]
 
   (def site (api.models.site/find-by-name "site-1"))
-  (def site-id (:uuid site))
+  (def site-id (:site-id site))
   (def promos (api.models.promo/find-by-site-uuid site-id false))
   (defn- default-offer []
     {:site-id (str site-id)
@@ -79,7 +79,7 @@
 
               (facts "List Offers"
                 (let [url (str "http://localhost:3000/api/v1/offers/?site-id="
-                               (:uuid site))
+                               (:site-id site))
                       r (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r) keyword)]
                   listed => (just [(contains

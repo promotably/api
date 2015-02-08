@@ -29,10 +29,10 @@
                             (comment migrate-down))]
 
    (def site (api.models.site/find-by-name "site-1"))
-   (def site-id (:uuid site))
+   (def site-id (:site-id site))
 
    (defn basic-request-data
-     [site-id code]
+     [sid code]
      {:site-id (str site-id)
       :applied-coupons ["other-coupon"],
       :code code
@@ -65,15 +65,15 @@
                (facts "Validate Exceeded Usage Count"
                  (let [code "P5"
                        api-secret (str (:api-secret site))
-                       rq-body (json/write-str (basic-request-data (str site-id) code))
+                       rq-body (json/write-str (basic-request-data site-id code))
                        path (url-encode (str "/api/v1/promos/validation/" code))
                        sig-hash (compute-sig-hash "localhost"
                                                   "POST"
                                                   path
                                                   rq-body
-                                                  (str site-id)
+                                                  site-id
                                                   api-secret)
-                       r (validate-promo code (str site-id) rq-body sig-hash)
+                       r (validate-promo code site-id rq-body sig-hash)
                        response-body (json/read-str (:body r) :key-fn keyword)]
                    response-body => (contains {:code code
                                                :valid false
@@ -83,15 +83,15 @@
                (facts "Validate Non-Exceeded Usage Count"
                    (let [code "P6"
                          api-secret (str (:api-secret site))
-                         rq-body (json/write-str (basic-request-data (str site-id) code))
+                         rq-body (json/write-str (basic-request-data site-id code))
                          path (url-encode (str "/api/v1/promos/validation/" code))
                          sig-hash (compute-sig-hash "localhost"
                                                     "POST"
                                                     path
                                                     rq-body
-                                                    (str site-id)
+                                                    site-id
                                                     api-secret)
-                         r (validate-promo code (str site-id) rq-body sig-hash)
+                         r (validate-promo code site-id rq-body sig-hash)
                          response-body (json/read-str (:body r) :key-fn keyword)]
                      response-body => (contains {:code code
                                                  :valid true
@@ -101,15 +101,15 @@
                (facts "Validate Non-Exceeded Total Discounts"
                    (let [code "P7"
                          api-secret (str (:api-secret site))
-                         rq-body (json/write-str (basic-request-data (str site-id) code))
+                         rq-body (json/write-str (basic-request-data site-id code))
                          path (url-encode (str "/api/v1/promos/validation/" code))
                          sig-hash (compute-sig-hash "localhost"
                                                     "POST"
                                                     path
                                                     rq-body
-                                                    (str site-id)
+                                                    site-id
                                                     api-secret)
-                         r (validate-promo code (str site-id) rq-body sig-hash)
+                         r (validate-promo code site-id rq-body sig-hash)
                          response-body (json/read-str (:body r) :key-fn keyword)]
                      response-body => (contains {:code code
                                                  :valid true
@@ -119,15 +119,15 @@
                (facts "Validate Exceeded Total Discounts"
                  (let [code "P8"
                        api-secret (str (:api-secret site))
-                       rq-body (json/write-str (basic-request-data (str site-id) code))
+                       rq-body (json/write-str (basic-request-data site-id code))
                        path (url-encode (str "/api/v1/promos/validation/" code))
                        sig-hash (compute-sig-hash "localhost"
                                                   "POST"
                                                   path
                                                   rq-body
-                                                  (str site-id)
+                                                  site-id
                                                   api-secret)
-                       r (validate-promo code (str site-id) rq-body sig-hash)
+                       r (validate-promo code site-id rq-body sig-hash)
                        response-body (json/read-str (:body r) :key-fn keyword)]
                    response-body => (contains {:code code
                                                :valid false
@@ -137,15 +137,15 @@
                (facts "Validate Exceeded Daily Usage Count"
                    (let [code "P9"
                          api-secret (str (:api-secret site))
-                         rq-body (json/write-str (basic-request-data (str site-id) code))
+                         rq-body (json/write-str (basic-request-data site-id code))
                          path (url-encode (str "/api/v1/promos/validation/" code))
                          sig-hash (compute-sig-hash "localhost"
                                                     "POST"
                                                     path
                                                     rq-body
-                                                    (str site-id)
+                                                    site-id
                                                     api-secret)
-                         r (validate-promo code (str site-id) rq-body sig-hash)
+                         r (validate-promo code site-id rq-body sig-hash)
                          response-body (json/read-str (:body r) :key-fn keyword)]
                      response-body => (contains {:code code
                                                  :valid false
@@ -155,15 +155,15 @@
                 (facts "Validate Exceeded Daily Total Discounts"
                    (let [code "P10"
                          api-secret (str (:api-secret site))
-                         rq-body (json/write-str (basic-request-data (str site-id) code))
+                         rq-body (json/write-str (basic-request-data site-id code))
                          path (url-encode (str "/api/v1/promos/validation/" code))
                          sig-hash (compute-sig-hash "localhost"
                                                     "POST"
                                                     path
                                                     rq-body
-                                                    (str site-id)
+                                                    site-id
                                                     api-secret)
-                         r (validate-promo code (str site-id) rq-body sig-hash)
+                         r (validate-promo code site-id rq-body sig-hash)
                          response-body (json/read-str (:body r) :key-fn keyword)]
                      response-body => (contains {:code code
                                                  :valid false
@@ -173,15 +173,15 @@
                (facts "Validate Non-Exceeded Daily Discounts"
                  (let [code "P11"
                        api-secret (str (:api-secret site))
-                       rq-body (json/write-str (basic-request-data (str site-id) code))
+                       rq-body (json/write-str (basic-request-data site-id code))
                        path (url-encode (str "/api/v1/promos/validation/" code))
                        sig-hash (compute-sig-hash "localhost"
                                                   "POST"
                                                   path
                                                   rq-body
-                                                  (str site-id)
+                                                  site-id
                                                   api-secret)
-                       r (validate-promo code (str site-id) rq-body sig-hash)
+                       r (validate-promo code site-id rq-body sig-hash)
                        response-body (json/read-str (:body r) :key-fn keyword)]
                    response-body => (contains {:code code
                                                :valid true

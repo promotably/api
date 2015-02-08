@@ -29,7 +29,7 @@
                    :type "session-start"
                    :data {:event-format-version "1"
                           :event-name "session-start"
-                          :site-id (str site-uuid)
+                          :site-id site-id
                           :created-at "2015-02-06T20:49:39.248Z"
                           :shopper-id (str shopper-id)
                           :site-shopper-id (str site-shopper-id)
@@ -267,4 +267,3 @@
                           :variation "",
                           :event-name :trackproductadd,
                           :session-id (str session-id)}))))
-

@@ -57,7 +57,7 @@
                                        "GET"
                                        path
                                        nil
-                                       (str site-id)
+                                       site-id
                                        api-secret)
             params {:site-id (str site-id)
                     :site-shopper-id "6880a72f-4d33-4abb-ad2f-c88b51ebbe19"
