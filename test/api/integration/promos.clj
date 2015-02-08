@@ -25,7 +25,7 @@
                             (comment migrate-down))]
 
   (def site (api.models.site/find-by-name "site-1"))
-  (def site-id (:uuid site))
+  (def site-id (:site-id site))
 
   (fact-group :integration
 

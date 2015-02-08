@@ -36,7 +36,7 @@
                    :name "Site 2"
                    :updated_at (c/to-sql-date (t/now))
                    :created_at (c/to-sql-date (t/now))
-                   :uuid site-2-id
+                   :site_id site-2-id
                    :site_code "site2"
                    :api_secret (java.util.UUID/randomUUID)
                    :site_url "http://smnirven.com")
@@ -45,7 +45,7 @@
                    :name "Site 3"
                    :updated_at (c/to-sql-date (t/now))
                    :created_at (c/to-sql-date (t/now))
-                   :uuid site-3-id
+                   :site_id site-3-id
                    :site_code "site3"
                    :api_secret (java.util.UUID/randomUUID)
                    :site_url "http://bpromo.com")
@@ -54,7 +54,7 @@
                    :name "Site 4"
                    :updated_at (c/to-sql-date (t/now))
                    :created_at (c/to-sql-date (t/now))
-                   :uuid site-4-id
+                   :site_id site-4-id
                    :site_code "site4"
                    :api_secret (java.util.UUID/randomUUID)
                    :site_url "http://zombo.com")
@@ -63,7 +63,7 @@
                    :name "Site Min Order"
                    :updated_at (c/to-sql-date (t/now))
                    :created_at (c/to-sql-date (t/now))
-                   :uuid minorder-site-id
+                   :site_id minorder-site-id
                    :site_code "site-min-order"
                    :api_secret (java.util.UUID/randomUUID)
                    :site_url "http://minorder.com")
@@ -72,7 +72,7 @@
                    :name "Site Max Order"
                    :updated_at (c/to-sql-date (t/now))
                    :created_at (c/to-sql-date (t/now))
-                   :uuid maxorder-site-id
+                   :site_id maxorder-site-id
                    :site_code "site-max-order"
                    :api_secret (java.util.UUID/randomUUID)
                    :site_url "http://maxorder.com"))

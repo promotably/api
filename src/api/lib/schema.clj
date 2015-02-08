@@ -22,7 +22,7 @@
 
 (def site-spec
   {:site-id (fn [site] ; uuid coerced to string
-              (str (:uuid site)))
+              (str (:site-id site)))
    :site-code :site-code
    :site-name :name
    :site-url :site-url
@@ -42,7 +42,7 @@
               (cond
                (empty? sites) []
                (empty? (first sites)) []
-               (nil? (:uuid (first sites))) []
+               (nil? (:site-id (first sites))) []
                :else (mapv #(shape-to-spec % site-spec) sites))))})
 
 (def user-spec

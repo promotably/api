@@ -186,7 +186,7 @@
                            (with promo-conditions)
                            (with linked-products)
                            (join sites (= :sites.id :site_id))
-                           (where {:sites.uuid site-uuid}))]
+                           (where {:sites.site_id site-uuid}))]
        (if cooked-mode
          (map db-to-promo results)
          results))))
@@ -214,7 +214,7 @@
                            (with promo-conditions)
                            (with linked-products)
                            (join sites (= :sites.id :site_id))
-                           (where {:sites.uuid site-uuid
+                           (where {:sites.site_id site-uuid
                                    :promos.code promo-code})))]
     (if row (db-to-promo row))))
 
@@ -222,7 +222,7 @@
   [site-uuid :- s/Uuid]
   (select promos
           (aggregate (count :*) :cnt)
-          (where {:sites.uuid site-uuid})
+          (where {:sites.site_id site-uuid})
           (join sites (= :sites.id :site_id))))
 
 (def condition-order

@@ -23,7 +23,7 @@
                                   :name "site-1"
                                   :updated_at (c/to-sql-date (t/now))
                                   :created_at (c/to-sql-date (t/now))
-                                  :uuid site-uuid
+                                  :site_id site-uuid
                                   :site_code "site1"
                                   :api_secret site-secret
                                   :site_url "http://sekrit.com")))

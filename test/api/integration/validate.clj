@@ -25,11 +25,11 @@
                             (comment migrate-down))]
 
   (def site (api.models.site/find-by-name "site-1"))
-  (def site-id (:uuid site))
+  (def site-id (:site-id site))
 
   (defn basic-request-data
-    [site-id code]
-    {:site-id (str site-id)
+    [sid code]
+    {:site-id (str sid)
      :applied-coupons ["other-coupon"],
      :code code
      :shopper-email "colin@promotably.com",
@@ -68,7 +68,7 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
                       r (validate-promo code (str site-id) rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
@@ -86,9 +86,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid true
@@ -104,9 +104,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid false
@@ -122,9 +122,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid true
@@ -140,9 +140,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid true
@@ -158,9 +158,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid false
@@ -176,9 +176,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid true
@@ -194,9 +194,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid false
@@ -212,9 +212,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid false
@@ -230,9 +230,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid true
@@ -248,9 +248,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid true
@@ -266,9 +266,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid false
@@ -284,9 +284,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid false
@@ -312,9 +312,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid true
@@ -331,9 +331,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid false
@@ -354,9 +354,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid true
@@ -382,9 +382,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid false
@@ -410,9 +410,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid true
@@ -438,9 +438,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid false
@@ -466,9 +466,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid true
@@ -485,9 +485,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid false
@@ -505,9 +505,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid true
@@ -524,9 +524,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid false
@@ -555,9 +555,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid true
@@ -574,9 +574,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid false
@@ -593,9 +593,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid true
@@ -612,9 +612,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid false
@@ -631,9 +631,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid true
@@ -650,9 +650,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid false
@@ -679,9 +679,9 @@
                                                  "POST"
                                                  path
                                                  rq-body
-                                                 (str site-id)
+                                                 site-id
                                                  api-secret)
-                      r (validate-promo code (str site-id) rq-body sig-hash)
+                      r (validate-promo code site-id rq-body sig-hash)
                       response-body (json/read-str (:body r) :key-fn keyword)]
                   response-body => (contains {:code code
                                               :valid true
@@ -711,5 +711,5 @@
                                                            "" "\n"
                                                            "" "\n")))
                       sig-hash (str "hmac-sha1///" time-val "/" sig-str)
-                      r (validate-promo code (str site-id) rq-body sig-hash)]
+                      r (validate-promo code site-id rq-body sig-hash)]
                   (:status r) => 403))))
