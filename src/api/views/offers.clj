@@ -1,6 +1,8 @@
 (ns api.views.offers
   (:require [api.views.helper :refer [view-value-helper]]
-            [clojure.data.json :refer [write-str]]))
+            [clojure.data.json :refer [write-str]]
+            [clj-time.coerce :as t-coerce]
+            [clj-time.core :as t]))
 
 (defn shape-one
   [offer]
@@ -29,8 +31,12 @@
    :else {:status 500}))
 
 (defn shape-rcos
-  [offers]
-  {:headers {"Content-Type" "text/javascript"}
-   :body (write-str
-          {:offers offers}
-          :value-fn (fn [k v] (view-value-helper v)))})
+  [session offers]
+  (let [s (cond-> session
+            (seq offers) (assoc :last-offer-at (t-coerce/to-string (t/now))))
+        resp {:headers {"Content-Type" "text/javascript"}
+              :session s
+              :body (write-str
+                     {:offers offers}
+                     :value-fn (fn [k v] (view-value-helper v)))}]
+    resp))

@@ -134,6 +134,15 @@
       (t/after? (now) min-time))
     false))
 
+(defmethod validate :minutes-since-last-offer
+  [{:keys [session site-id site-shopper-id] :as context}
+   {:keys [minutes-since-last-offer] :as condition}]
+  (if (contains? session :last-offer-at)
+    (let [last (clj-time.format/parse (:last-offer-at session))
+          min-time (t/plus last (t/minutes minutes-since-last-offer))]
+      (t/after? (now) min-time))
+    true))
+
 (defmethod validate :last-order-item-count
   [{:keys [session site-id site-shopper-id] :as context}
    {:keys [last-order-item-count] :as condition}]

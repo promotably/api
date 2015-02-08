@@ -120,4 +120,4 @@
                                              :session session
                                              :offer %
                                              :site-shopper-id site-shopper-id} %) available-offers)]
-    (shape-rcos valid-offers)))
+    (shape-rcos session valid-offers)))

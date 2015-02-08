@@ -14,6 +14,7 @@
 (def site-4-id #uuid "22a37e2d-7f1c-4bce-9666-70b0c26de872")
 (def minorder-site-id #uuid "34a37e2d-7f1c-4bce-9666-70b0c26de843")
 (def maxorder-site-id #uuid "32a37e2d-7f1c-4bce-9666-70b0c26de873")
+(def last-offer-site-id #uuid "4ad8a905-498d-4a8e-ba50-397e2d5f5275")
 
 (def shopper-id #uuid "7f2fe574-974e-4f48-87fd-5ada3a4cb2bb")
 (def site-shopper-id #uuid "001fd699-9d50-4b7c-af3b-3e022d379647")
@@ -75,7 +76,16 @@
                    :site_id maxorder-site-id
                    :site_code "site-max-order"
                    :api_secret (java.util.UUID/randomUUID)
-                   :site_url "http://maxorder.com"))
+                   :site_url "http://maxorder.com")
+          (fixture :site-last-offer
+                   :account_id :account-1
+                   :name "Site Last Offer"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))
+                   :site_id last-offer-site-id
+                   :site_code "site-last-offer"
+                   :api_secret (java.util.UUID/randomUUID)
+                   :site_url "http://lastoffer.com"))
    (table :promos
           (fixture :site-2-promo-1
                    :uuid (java.util.UUID/randomUUID)
@@ -146,6 +156,19 @@
                    :uuid (java.util.UUID/randomUUID)
                    :site_id :site-max-order
                    :code "EASTER PROMO FOR SITE 4"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Easter Coupon"
+                   :seo_text "Best effing coupon evar"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now)))
+          (fixture :site-last-offer-promo-1
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-last-offer
+                   :code "EASTER PROMO FOR SITE LAST OFFER"
                    :active true
                    :reward_amount 20
                    :reward_type "percent"
@@ -251,6 +274,18 @@
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
                    :created_at (c/to-sql-date (t/now))
+                   :updated_at (c/to-sql-date (t/now)))
+          (fixture :offer-last-offer
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-last-offer
+                   :promo_id :site-last-offer-promo-1
+                   :code "OFFER-LAST-OFFER"
+                   :name "NAME HERE"
+                   :active true
+                   :display_text "Book it, dano"
+                   :presentation_type "lightbox"
+                   :presentation_page "product-detail"
+                   :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now))))
    (table :promo_conditions
           (fixture :pc-expired
@@ -303,7 +338,12 @@
                    :offer_id :offer-product-views-not-valid
                    :type "product-views"
                    :product_views 20
-                   :period_in_days 2))
+                   :period_in_days 2)
+          (fixture :offer-condition-last-offer
+                   :uuid (java.util.UUID/randomUUID)
+                   :offer_id :offer-last-offer
+                   :type "minutes-since-last-offer"
+                   :minutes_since_last_offer 1))
    (table :events
           (fixture :event-pa-1
                    :site_id site-3-id

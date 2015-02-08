@@ -60,11 +60,12 @@
                  :accept :json
                  :throw-exceptions false}))
   (defn- get-rcos
-    [site-id site-shopper-id]
+    [site-id site-shopper-id & {:keys [cookies] :as opts}]
     (client/get "http://localhost:3000/api/v1/realtime-conversion-offers"
-                {:throw-exceptions false
-                 :query-params {"site-id" (str site-id)
-                                "site-shopper-id" (str site-shopper-id)}}))
+                (merge {:throw-exceptions false
+                        :query-params {"site-id" (str site-id)
+                                       "site-shopper-id" (str site-shopper-id)}}
+                       opts)))
 
   (fact-group :integration
 
@@ -224,4 +225,16 @@
                                   offers-fixture/site-shopper-2-id)
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just {:offers (just [(contains {:code "OFFER-PRODUCT-VIEWS-VALID"})])})))))
+                  pr => (just {:offers (just [(contains {:code "OFFER-PRODUCT-VIEWS-VALID"})])})))
+              (facts "Offer with minutes-since-last-offer condition"
+                (let [r (get-rcos offers-fixture/last-offer-site-id
+                                  offers-fixture/site-shopper-2-id)
+                      pr (json/read-str (:body r) :key-fn keyword)
+                      r2 (get-rcos offers-fixture/last-offer-site-id
+                                   offers-fixture/site-shopper-2-id
+                                   :cookies (:cookies r))
+                      pr2 (json/read-str (:body r2) :key-fn keyword)]
+                  (:status r) => 200
+                  pr => (just {:offers (just [(contains {:code "OFFER-LAST-OFFER"})])})
+                  (:status r2) => 200
+                  pr2 => (just {:offers (just [])})))))
