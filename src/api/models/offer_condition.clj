@@ -187,3 +187,11 @@
   (let [visits (event/count-shopper-events-by-days site-shopper-id "session-start" period-in-days)]
     (>= visits num-visits)))
 
+(defmethod validate :referer-domain
+  [{:keys [session site-id site-shopper-id offer] :as context}
+   {:keys [referer-domain] :as condition}]
+  (let [d (get-in session [:initial-request-headers "referer"])]
+    (.contains d referer-domain)))
+
+
+

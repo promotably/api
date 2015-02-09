@@ -230,13 +230,16 @@
 
 (defn mark-new-session
   [response request sid ssid]
-  (let [k-data {:created-at (t-coerce/to-string (t/now))
-                :shopper-id (:shopper-id request)
-                :site-shopper-id ssid
-                :request-headers (:headers request)
-                :session-id nil}
-        k-data (if sid (assoc k-data :site-id sid) k-data)]
-    (assoc response :new-session-data k-data)))
+  (let [data {:created-at (t-coerce/to-string (t/now))
+              :shopper-id (:shopper-id request)
+              :site-shopper-id ssid
+              :request-headers (:headers request)
+              :session-id nil}
+        data (if sid (assoc data :site-id sid) data)]
+    (-> response
+        (assoc-in [:session :initial-request-headers]
+                  (:headers request))
+        (assoc :new-session-data data))))
 
 (defn wrap-record-new-session
   "When a new session is started, record relevant data to kinesis."

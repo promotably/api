@@ -170,6 +170,9 @@
                      (assoc :event-format-version "1"))]
          ;; For debugging
          ;; (clojure.pprint/pprint out)
+         (when (= schema.utils.ErrorContainer (type out))
+           (log/logf :error "Tracking event in invalid format: %s" (pr-str parsed))
+           (put-metric "invalid-event-format"))
          (kinesis/record-event! kinesis-comp (:event-name out) out)
          (put-metric "event-record-success")
          (let [session (assoc (:session request) :last-event-at (t-coerce/to-string (t/now)))

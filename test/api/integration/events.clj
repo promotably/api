@@ -8,7 +8,8 @@
     [midje.sweet :refer :all]
     [api.integration.helper :refer :all]
     [api.route :as route]
-    [api.system :as system]
+    [api.system :refer [current-system] :as system]
+    [api.config :as config]
     [api.core :as core]))
 
 (defn track
@@ -18,6 +19,8 @@
                :headers {:promotably-auth sig}
                :query-params params
                :content-type :json
+               :cookies {config/session-cookie-name
+                         {:discard true, :path "/", :value (str (java.util.UUID/randomUUID)), :version 0}}
                :accept :json
                :throw-exceptions false
                :socket-timeout 10000
@@ -68,4 +71,6 @@
                     :callback "jQuery1111034964492078870535_1423111893735"
                     "_" "1423111893736"}
             r (track sig-hash params)]
-        (:status r) => 200))))
+        (:status r) => 200))
+
+))
