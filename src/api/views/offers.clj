@@ -33,10 +33,12 @@
 (defn shape-rcos
   [session offers]
   (let [s (cond-> session
-            (seq offers) (assoc :last-offer-at (t-coerce/to-string (t/now))))
+                  (seq offers) (assoc :last-offer-at (t-coerce/to-string (t/now))))
+        o (cond-> []
+                  (seq offers) (conj (rand-nth offers)))
         resp {:headers {"Content-Type" "text/javascript"}
               :session s
               :body (write-str
-                     {:offers offers}
+                     {:offers o}
                      :value-fn (fn [k v] (view-value-helper v)))}]
     resp))
