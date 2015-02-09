@@ -172,10 +172,14 @@
          ;; (clojure.pprint/pprint out)
          (when (= schema.utils.ErrorContainer (type out))
            (log/logf :error "Tracking event in invalid format: %s" (pr-str parsed))
-           (put-metric "invalid-event-format"))
+           (put-metric "event-format-invalid"))
          (kinesis/record-event! kinesis-comp (:event-name out) out)
          (put-metric "event-record-success")
-         (let [session (assoc (:session request) :last-event-at (t-coerce/to-string (t/now)))
+         (let [session (cond-> (:session request)
+                               (#{:productadd :cartview :cartupdate :checkout} (:event-name out))
+                                 (assoc :last-cart-event out)
+                               true
+                                 (assoc :last-event-at (t-coerce/to-string (t/now))))
                response {:headers {"Content-Type" "text/javascript"}
                          :body ""
                          :session session

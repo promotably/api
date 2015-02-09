@@ -125,6 +125,7 @@
 
 (def EventType (s/enum :productview
                        :productadd
+                       :cartupdate
                        :cartview
                        :checkout
                        :thankyou))
@@ -181,6 +182,20 @@
                             (s/optional-key :short-description) (s/maybe s/Str)
                             (s/optional-key :modified-at) (s/maybe s/Inst)
                             (s/optional-key :variation) (s/maybe s/Str)
+                            (s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
+                            (s/optional-key :shipping-methods) (s/maybe [ShippingMethod])
+                            (s/optional-key :billing-address-1) (s/maybe s/Str)
+                            (s/optional-key :billing-city) (s/maybe s/Str)
+                            (s/optional-key :billing-state) (s/maybe s/Str)
+                            (s/optional-key :billing-country) (s/maybe s/Str)
+                            (s/optional-key :billing-postcode) (s/maybe s/Str)
+                            (s/optional-key :billing-email) (s/maybe s/Str)
+                            (s/optional-key :shipping-address-1) (s/maybe s/Str)
+                            (s/optional-key :shipping-city) (s/maybe s/Str)
+                            (s/optional-key :shipping-state) (s/maybe s/Str)
+                            (s/optional-key :shipping-country) (s/maybe s/Str)
+                            (s/optional-key :shipping-postcode) (s/maybe s/Str)
+                            (s/optional-key :shipping-email) (s/maybe s/Str)
                             (s/optional-key :cart-items) [CartItem]})
                     #(= (:event-name %) :productadd)
                     (merge ~base-event
@@ -188,6 +203,37 @@
                             (s/optional-key :category-id) (s/maybe s/Str)
                             (s/optional-key :quantity) s/Int
                             (s/optional-key :variation) (s/maybe s/Str)
+                            (s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
+                            (s/optional-key :shipping-methods) (s/maybe [ShippingMethod])
+                            (s/optional-key :billing-address-1) (s/maybe s/Str)
+                            (s/optional-key :billing-city) (s/maybe s/Str)
+                            (s/optional-key :billing-state) (s/maybe s/Str)
+                            (s/optional-key :billing-country) (s/maybe s/Str)
+                            (s/optional-key :billing-postcode) (s/maybe s/Str)
+                            (s/optional-key :billing-email) (s/maybe s/Str)
+                            (s/optional-key :shipping-address-1) (s/maybe s/Str)
+                            (s/optional-key :shipping-city) (s/maybe s/Str)
+                            (s/optional-key :shipping-state) (s/maybe s/Str)
+                            (s/optional-key :shipping-country) (s/maybe s/Str)
+                            (s/optional-key :shipping-postcode) (s/maybe s/Str)
+                            (s/optional-key :shipping-email) (s/maybe s/Str)
+                            (s/optional-key :cart-items) [CartItem]})
+                    #(= (:event-name %) :cartupdate)
+                    (merge ~base-event
+                           {(s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
+                            (s/optional-key :shipping-methods) (s/maybe [ShippingMethod])
+                            (s/optional-key :billing-address-1) (s/maybe s/Str)
+                            (s/optional-key :billing-city) (s/maybe s/Str)
+                            (s/optional-key :billing-state) (s/maybe s/Str)
+                            (s/optional-key :billing-country) (s/maybe s/Str)
+                            (s/optional-key :billing-postcode) (s/maybe s/Str)
+                            (s/optional-key :billing-email) (s/maybe s/Str)
+                            (s/optional-key :shipping-address-1) (s/maybe s/Str)
+                            (s/optional-key :shipping-city) (s/maybe s/Str)
+                            (s/optional-key :shipping-state) (s/maybe s/Str)
+                            (s/optional-key :shipping-country) (s/maybe s/Str)
+                            (s/optional-key :shipping-postcode) (s/maybe s/Str)
+                            (s/optional-key :shipping-email) (s/maybe s/Str)
                             (s/optional-key :cart-items) [CartItem]})
                     #(= (:event-name %) :cartview)
                     (merge ~base-event
