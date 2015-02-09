@@ -193,5 +193,29 @@
   (let [d (get-in session [:initial-request-headers "referer"])]
     (.contains d referer-domain)))
 
+(defmethod validate :items-in-cart
+  [{:keys [session site-id site-shopper-id offer] :as context}
+   {:keys [items-in-cart] :as condition}]
+  (let [c (:last-cart-event session)
+        how-many (apply + (map :quantity (:cart-items c)))]
+    (>= how-many items-in-cart)))
 
+(defmethod validate :cart-value
+  [{:keys [session site-id site-shopper-id offer] :as context}
+   {:keys [cart-value] :as condition}]
+  (let [c (:last-cart-event session)
+        total (apply + (map :subtotal (:cart-items c)))]
+    (>= total cart-value)))
+
+(defmethod validate :shipping-zipcode
+  [{:keys [session site-id site-shopper-id offer] :as context}
+   {:keys [shipping-zipcode] :as condition}]
+  (let [z (get-in session [:last-cart-event :shipping-postcode])]
+    (.contains z shipping-zipcode)))
+
+(defmethod validate :billing-zipcode
+  [{:keys [session site-id site-shopper-id offer] :as context}
+   {:keys [billing-zipcode] :as condition}]
+  (let [z (get-in session [:last-cart-event :billing-postcode])]
+    (.contains z billing-zipcode)))
 

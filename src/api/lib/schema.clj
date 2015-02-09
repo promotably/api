@@ -449,6 +449,7 @@
    :product-views
    :repeat-product-views
    :items-in-cart
+   :cart-value
    :shipping-zipcode
    :billing-zipcode
    :referer-domain
@@ -529,6 +530,9 @@
 
                  #(= (:type %) :items-in-cart)
                  (merge BaseOfferCondition {:items-in-cart s/Int})
+
+                 #(= (:type %) :cart-value)
+                 (merge BaseOfferCondition {:cart-value s/Int})
 
                  #(= (:type %) :shipping-zipcode)
                  (merge BaseOfferCondition {:shipping-zipcode s/Str})
@@ -614,6 +618,7 @@
    (s/optional-key :product-views) (s/maybe s/Int)
    (s/optional-key :repeat-product-views) (s/maybe s/Int)
    (s/optional-key :items-in-cart) (s/maybe s/Int)
+   (s/optional-key :cart-value) (s/maybe s/Int)
    (s/optional-key :shipping-zipcode) (s/maybe s/Str)
    (s/optional-key :last-order-max-discount) (s/maybe s/Str)
    (s/optional-key :billing-zipcode) (s/maybe s/Str)
