@@ -7,6 +7,7 @@
    [clj-time.core :as t]
    [clj-time.coerce :as c]
    [api.fixtures.basic :as base]
+   [api.fixtures.offers.html-css-theme :as offers-f-hct]
    [api.q-fix :refer :all]))
 
 (def site-2-id #uuid "2072f5d5-1d9a-49f3-8f06-8311088e8623")
@@ -31,6 +32,7 @@
 (def fixture-set
   (set
    base/fixture-set
+   offers-f-hct/fixture-set
    (table :sites
           (fixture :site-2
                    :account_id :account-1
@@ -189,6 +191,9 @@
                    :display_text "Book it, dano"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
+                   :html "<html></html>"
+                   :css "body {}"
+                   :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-with-expired-dates
@@ -201,6 +206,9 @@
                    :display_text "YOU CANT HAVE THIS"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
+                   :html "<html></html>"
+                   :css "body {}"
+                   :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-1-with-cart-add-condition
@@ -213,6 +221,9 @@
                    :display_text "Book it, dano"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
+                   :html "<html></html>"
+                   :css "body {}"
+                   :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-1-with-min-order-condition
@@ -225,6 +236,9 @@
                    :display_text "MIN ORDER OFFER"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
+                   :html "<html></html>"
+                   :css "body {}"
+                   :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-1-with-max-order-condition
@@ -237,6 +251,9 @@
                    :display_text "MAX ORDER OFFER"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
+                   :html "<html></html>"
+                   :css "body {}"
+                   :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-1-with-product-views-condition
@@ -249,6 +266,9 @@
                    :display_text "Book it, dano"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
+                   :html "<html></html>"
+                   :css "body {}"
+                   :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-with-expired-promo
@@ -261,6 +281,9 @@
                    :display_text "Book it, dano"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
+                   :html "<html></html>"
+                   :css "body {}"
+                   :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-product-views-not-valid
@@ -273,6 +296,9 @@
                    :display_text "Book it, dano"
                    :presentation_type "lightbox"
                    :presentation_page "product-detail"
+                   :html "<html></html>"
+                   :css "body {}"
+                   :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-last-offer
