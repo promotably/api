@@ -7,6 +7,7 @@
    [clj-time.core :as t]
    [clj-time.coerce :as c]
    [api.fixtures.basic :as base]
+   [api.fixtures.offers.html-css-theme :as offers-f-hct]
    [api.q-fix :refer :all]))
 
 (def site-2-id #uuid "2072f5d5-1d9a-49f3-8f06-8311088e8623")
@@ -30,6 +31,7 @@
 (def fixture-set
   (set
    base/fixture-set
+   offers-f-hct/fixture-set
    (table :sites
           (fixture :site-2
                    :account_id :account-1
