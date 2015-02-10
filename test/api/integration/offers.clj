@@ -82,9 +82,9 @@
                        (.contains (:body r) ":error") => true
                        (.contains (:body r) ":promo-id") => true))
 
-              (facts "Offer Create with no html param"
-                     (let [r (create-offer-exp (offers-f-hct/no-html-offer))]
-                       (:status r) => 201))
+              ;; (facts "Offer Create with no html param"
+              ;;        (let [r (create-offer-exp (offers-f-hct/no-html-offer))]
+              ;;          (:status r) => 201))
 
               (facts "List Offers"
                 (let [url (str "http://localhost:3000/api/v1/offers/?site-id="

@@ -42,7 +42,7 @@
                     :name "html-css-theme Site"
                     :updated_at (c/to-sql-date (t/now))
                     :created_at (c/to-sql-date (t/now))
-                    :uuid site-id
+                    :site_id site-id
                     :site_code "html-css-theme-site"
                     :api_secret (java.util.UUID/randomUUID)
                     :site_url "http://html-css-theme-site.com"))
