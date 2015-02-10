@@ -111,7 +111,6 @@
 
 (defn get-available-offers
   [{:keys [params session] :as request}]
-  (prn (:test-bucket session))
   (let [site-id (uuid-from-request-or-new :site-id params request)
         shopper-id (uuid-from-request-or-new :shopper-id params request)
         site-shopper-id (uuid-from-request-or-new :site-shopper-id params request)
