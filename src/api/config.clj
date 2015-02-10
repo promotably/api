@@ -102,6 +102,7 @@
                 :dashboard (get-dashboard-config)
                 :logging base-log-config
                 :session-length-in-seconds (* 60 60 2)
+                :bucket-assignment-length-in-seconds (* 60 60 24 30)
                 :auth-token-config (auth-token-config)
                 :env :dev}
    :test       {:database {:db "promotably_test"
@@ -117,6 +118,7 @@
                 :dashboard (get-dashboard-config)
                 :logging base-log-config
                 :session-length-in-seconds (* 60 60 2)
+                :bucket-assignment-length-in-seconds (* 60 60 24 30)
                 :auth-token-config (auth-token-config)
                 :env :test}
    :staging    {:database (get-database-config)
@@ -125,6 +127,7 @@
                 :dashboard (get-dashboard-config)
                 :logging base-log-config
                 :session-length-in-seconds (* 60 60 2)
+                :bucket-assignment-length-in-seconds (* 60 60 24 30)
                 :auth-token-config (auth-token-config)
                 :env :staging}
    :integration {:database (get-database-config)
@@ -135,6 +138,7 @@
                  :dashboard (get-dashboard-config)
                  :logging base-log-config
                  :session-length-in-seconds (* 60 60 2)
+                :bucket-assignment-length-in-seconds (* 60 60 24 30)
                  :auth-token-config (auth-token-config)
                  :env :integration}
    :production {:database (get-database-config)
@@ -143,6 +147,7 @@
                 :dashboard (get-dashboard-config)
                 :logging base-log-config
                 :session-length-in-seconds (* 60 60 2)
+                :bucket-assignment-length-in-seconds (* 60 60 24 30)
                 :auth-token-config (auth-token-config)
                 :env :production}})
 

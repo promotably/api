@@ -42,6 +42,7 @@
             [api.cloudwatch :as cw]
             [api.lib.detector :as detector]
             [api.system :refer [current-system]]
+            [api.sorting-hat :refer [wrap-sorting-hat wrap-record-bucket-assignment]]
             [clj-time.core :refer [before? after? now] :as t]
             [clj-time.coerce :as t-coerce]
             [amazonica.aws.s3]
@@ -246,7 +247,7 @@
   [handler]
   (fn [request]
     (let [response (handler request)]
-      (when-let [k-data (:new-session-data response)]
+      (if-let [k-data (:new-session-data response)]
         (let [set-cookies (get (:headers response) "Set-Cookie")
               set-cookies (reduce
                            #(let [parts (clojure.string/split %2 #";")
@@ -258,8 +259,9 @@
               k-data* (-> (assoc k-data :session-id session-id)
                           (assoc :event-format-version "1")
                           (assoc :event-name "session-start"))]
-          (kinesis/record-event! (:kinesis current-system) "session-start" k-data*)))
-      response)))
+          (kinesis/record-event! (:kinesis current-system) "session-start" k-data*)
+          (assoc response :session/key session-id))
+        response))))
 
 (defn wrap-ensure-session
   "Ensure that all relevant data is in the response session map and
@@ -323,14 +325,16 @@
 (defn app
   [{:keys [config session-cache] :as options}]
   (-> all-routes
+      wrap-sorting-hat
+      (wrap-permacookie {:name "promotably" :request-key :shopper-id})
       wrap-detect-user-agent
       wrap-ensure-session
-      (wrap-permacookie {:name "promotably" :request-key :shopper-id})
       (wrap-restful-format :formats [:json-kw :edn])
       jsonp/wrap-json-with-padding
       (session/wrap-session {:store session-cache
                              :cookie-name promotably-session-cookie-name})
       wrap-record-new-session
+      wrap-record-bucket-assignment
       wrap-cookies
       wrap-keyword-params
       wrap-multipart-params
