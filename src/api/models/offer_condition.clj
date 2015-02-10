@@ -6,12 +6,14 @@
             [api.models.event :as event]
             [api.models.redemption :as redemption]
             [api.models.promo :as promo]
+            [api.models.site :as site]
             [api.util :refer [hyphenify-key]]
             [clj-time.format]
-            [clj-time.core :refer [before? after? now] :as t]
+            [clj-time.core :refer [before? after? now time-zone-for-id to-time-zone
+                                   from-time-zone date-time year month day] :as t]
             [clj-time.coerce :refer [from-sql-date]]
             [clojure.set :refer [rename-keys intersection]]
-            [clojure.string :refer [trim]]
+            [clojure.string :refer [trim split]]
             [korma.core :refer :all]
             [korma.db :refer [transaction]]
             [schema.core :as s]
@@ -75,6 +77,33 @@
   [context {:keys [start-date end-date] :as condition}]
   (and (after? (now) (from-sql-date start-date))
        (before? (now) (from-sql-date end-date))))
+
+(defmethod validate :times
+  [{:keys [site-id] :as context}
+   {:keys [start-time end-time]}]
+  (let [the-site (site/find-by-site-uuid site-id)
+        site-tz (time-zone-for-id (:timezone the-site))
+        now-in-site-tz (to-time-zone (now) site-tz)
+        start-pieces (map (fn [s]
+                            (Integer/parseInt s))
+                          (split start-time #":"))
+        today-at-start (from-time-zone (date-time (year now-in-site-tz)
+                                                  (month now-in-site-tz)
+                                                  (day now-in-site-tz)
+                                                  (first start-pieces)
+                                                  (second start-pieces))
+                                       site-tz)
+        end-pieces (map (fn [s]
+                          (Integer/parseInt s))
+                        (split end-time #":"))
+        today-at-end (from-time-zone (date-time (year now-in-site-tz)
+                                                (month now-in-site-tz)
+                                                (day now-in-site-tz)
+                                                (first end-pieces)
+                                                (second end-pieces))
+                                     site-tz)]
+    (and (after? now-in-site-tz today-at-start)
+         (before? now-in-site-tz today-at-end))))
 
 (defmethod validate :product-views
   [{:keys [site-id site-shopper-id] :as context}

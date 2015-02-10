@@ -66,4 +66,14 @@
  100                      true     100
  100                      true     101)
 
+(future-fact "times offer condition validates properly"
+  (let [site-id (java.util.UUID/randomUUID)
+        context {:site-id site-id}
+        oc {:type :times
+            :start-time "8:00"
+            :end-time "20:00"}
+        site {:site-id site-id
+              :timezone "America/New_York"}]
+    (validate context oc) => true))
+
 
