@@ -113,7 +113,6 @@
 
 (defn get-available-offers
   [kinesis-comp {:keys [params session cookies] :as request}]
-  (println cookies)
   (let [site-id (uuid-from-request-or-new :site-id params request)
         shopper-id (uuid-from-request-or-new :shopper-id params request)
         site-shopper-id (uuid-from-request-or-new :site-shopper-id params request)
