@@ -113,9 +113,12 @@
 
 (defn get-available-offers
   [kinesis-comp {:keys [params session cookies] :as request}]
+  (println cookies)
   (let [site-id (uuid-from-request-or-new :site-id params request)
         shopper-id (uuid-from-request-or-new :shopper-id params request)
         site-shopper-id (uuid-from-request-or-new :site-shopper-id params request)
+        session-id (get-in cookies [config/session-cookie-name :value])
+        session-uuid (when session-id (java.util.UUID/fromString session-id))
         valid-offers (filter #(offer/valid? {:shopper-id shopper-id
                                              :site-id site-id
                                              :session session
@@ -131,7 +134,7 @@
                    :site-id site-id
                    :shopper-id shopper-id
                    :site-shopper-id site-shopper-id
-                   :session-id nil
+                   :session-id session-uuid
                    :offer-ids (mapv :uuid valid-offers)}]
         (kinesis/record-event! kinesis-comp :shopperqualifiedoffers event)
         (kinesis/record-event! kinesis-comp :offermade (-> event
