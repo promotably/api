@@ -133,6 +133,7 @@
                       listed (parse-string (:body r) keyword)
                       updated-offer {:site-id (str site-id)
                                      :offer-id (-> listed first :offer-id)
+                                     :active false
                                      :name "Old Visitor Offer"
                                      :code "OLD-VISITOR"
                                      :display-text "display text again"
@@ -157,7 +158,7 @@
                                      :presentation {:display-text "foo"
                                                     :page "search-results"
                                                     :type "fixed-div"}
-                                     :active true
+                                     :active false
                                      :reward {:type "dynamic-promo"
                                               :promo-id (-> promos first :uuid str)
                                               :expiry-in-minutes 10}
