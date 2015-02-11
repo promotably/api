@@ -150,7 +150,8 @@
            conditions
            html
            css
-           theme]
+           theme
+           active]
     :as params}]
   (let [site-id (:site-id params)
         {p-type :type p-display-text :display-text p-page :page} presentation
@@ -173,8 +174,8 @@
       :message (format "Promo id %s does not exist." promo-id)}
 
      :else
-     (let [new-values {;; TODO: should probably have this flag.
-                       ;; :active true
+     (let [new-values {
+                       :active active
                        :site_id site-id
                        :code code
                        :name name
