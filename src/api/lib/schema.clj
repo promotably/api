@@ -532,7 +532,7 @@
                  (merge BaseOfferCondition {:items-in-cart s/Int})
 
                  #(= (:type %) :cart-value)
-                 (merge BaseOfferCondition {:cart-value s/Int})
+                 (merge BaseOfferCondition {:cart-value s/Num})
 
                  #(= (:type %) :shipping-zipcode)
                  (merge BaseOfferCondition {:shipping-zipcode s/Str})
@@ -573,10 +573,10 @@
                  (merge BaseOfferCondition {:last-order-item-count s/Int})
 
                  #(= (:type %) :last-order-max-discount)
-                 (merge BaseOfferCondition {:last-order-max-discount s/Int})
+                 (merge BaseOfferCondition {:last-order-max-discount s/Num})
 
                  #(= (:type %) :max-discount-per-day)
-                 (merge BaseOfferCondition {:max-discount-per-day s/Int})
+                 (merge BaseOfferCondition {:max-discount-per-day s/Num})
 
                  #(= (:type %) :last-order-includes-item-id)
                  (merge BaseOfferCondition {:last-order-includes-item-id s/Str})
@@ -618,9 +618,9 @@
    (s/optional-key :product-views) (s/maybe s/Int)
    (s/optional-key :repeat-product-views) (s/maybe s/Int)
    (s/optional-key :items-in-cart) (s/maybe s/Int)
-   (s/optional-key :cart-value) (s/maybe s/Int)
+   (s/optional-key :cart-value) (s/maybe s/Num)
    (s/optional-key :shipping-zipcode) (s/maybe s/Str)
-   (s/optional-key :last-order-max-discount) (s/maybe s/Str)
+   (s/optional-key :last-order-max-discount) (s/maybe s/Num)
    (s/optional-key :billing-zipcode) (s/maybe s/Str)
    (s/optional-key :referer-domain) (s/maybe s/Str)
    (s/optional-key :shopper-device-type) (s/maybe (s/enum :phone :tablet :desktop :all))
