@@ -20,10 +20,11 @@
 ;; TODO: Put this in config, make it more robust
 (defn pick-bucket
   "Test or control?"
-  []
-  (if (< (rand) 0.5)
-    :test
-    :control))
+  [{:keys [params session] :as request}]
+  (cond
+   (:xyzzy params) :test
+   (< (rand) 0.5) :test
+   :else :control))
 
 (defn wrap-record-bucket-assignment
   "Record new bucket assignments."
@@ -58,7 +59,7 @@
                   (-> request :params :site-shopper-id))
             redis-key (str "bucket/" ssid)
             saved-bucket (redis/wcar* (car/get redis-key))
-            bucket (or saved-bucket (pick-bucket))
+            bucket (keyword (or saved-bucket (pick-bucket request)))
             s (-> current-system :config :bucket-assignment-length-in-seconds)
             assignment-data {:event-format-version "1"
                              :event-name "bucket-assigned"

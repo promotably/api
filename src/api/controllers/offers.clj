@@ -5,10 +5,12 @@
             [api.lib.schema :refer :all]
             [api.models.offer :as offer]
             [api.models.site :as site]
+            [api.system :refer [current-system]]
             [api.views.offers :refer [shape-offer
                                       shape-lookup
                                       shape-new-offer
                                       shape-rcos]]
+            [api.cloudwatch :as cw]
             [clj-time.core :as t]
             [clj-time.format :as tf]
             [clojure.data.json :refer [read-str write-str]]
@@ -113,31 +115,52 @@
 
 (defn get-available-offers
   [kinesis-comp {:keys [params session cookies] :as request}]
-  (let [site-id (uuid-from-request-or-new :site-id params request)
-        shopper-id (uuid-from-request-or-new :shopper-id params request)
-        site-shopper-id (uuid-from-request-or-new :site-shopper-id params request)
-        session-id (get-in cookies [config/session-cookie-name :value])
-        session-uuid (when session-id (java.util.UUID/fromString session-id))
-        valid-offers (filter #(offer/valid? {:shopper-id shopper-id
-                                             :site-id site-id
-                                             :session session
-                                             :offer %
-                                             :site-shopper-id site-shopper-id} %)
-                             (offer/get-offers-for-site site-id))
-        the-offer (cond-> []
-                    (seq valid-offers) (conj (rand-nth valid-offers)))]
-    ;; 'The Offer' is a collection for now until we change the
-    ;; response format in the view.
-    (when (seq valid-offers)
-      (let [event {:event-name :shopperqualifiedoffers
-                   :site-id site-id
-                   :shopper-id shopper-id
-                   :site-shopper-id site-shopper-id
-                   :session-id session-uuid
-                   :offer-ids (mapv :uuid valid-offers)}]
-        (kinesis/record-event! kinesis-comp :shopperqualifiedoffers event)
-        (kinesis/record-event! kinesis-comp :offermade (-> event
-                                                           (assoc :event-name :offermade)
-                                                           (dissoc :offer-ids)
-                                                           (assoc :offer-id (:uuid (first the-offer)))))))
-    (shape-rcos session the-offer)))
+  (if-let [active (:active-offer session)]
+    (shape-rcos session nil)
+    (let [site-id (uuid-from-request-or-new :site-id params request)
+          shopper-id (uuid-from-request-or-new :shopper-id params request)
+          site-shopper-id (uuid-from-request-or-new :site-shopper-id params request)
+          valid-offers (filter #(offer/valid? {:shopper-id shopper-id
+                                               :site-id site-id
+                                               :session session
+                                               :offer %
+                                               :site-shopper-id site-shopper-id} %)
+                               (offer/get-offers-for-site site-id))
+          test-bucket (:test-bucket session)
+          ;; the-offer: collection for now until we change the response format in the view.
+          the-offer (if (= :control test-bucket)
+                      []
+                      (cond-> []
+                              (seq valid-offers) (conj (rand-nth valid-offers))))
+          response (shape-rcos session the-offer)
+          qualified-event {:event-name :shopperqualifiedoffers
+                           :site-id site-id
+                           :shopper-id shopper-id
+                           :site-shopper-id site-shopper-id}]
+      (if (seq valid-offers)
+        (let [qualified-event (assoc qualified-event :offer-ids (mapv :uuid valid-offers))
+              assignment-event (-> qualified-event
+                                   (assoc :event-name :offermade)
+                                   (dissoc :offer-ids)
+                                   (assoc :offer-id (:uuid (first the-offer))))]
+          (cond-> response
+                  true (assoc :offer-qualification-event qualified-event)
+                  (seq the-offer) (assoc-in [:session :active-offer] the-offer)
+                  (seq the-offer) (assoc :offer-assignment-event assignment-event)))
+        (assoc response :offer-qualification-event qualified-event)))))
+
+(defn wrap-record-rco-events
+  "Record offer events."
+  [handler]
+  (fn [{:keys [session] :as request}]
+    (let [k (:kinesis current-system)
+          response (handler request)
+          sid (:session/key response)]
+      (when-let [qualified-event (:offer-qualification-event response)]
+        (cw/put-metric "rco-qualification")
+        (kinesis/record-event! k :shopperqualifiedoffers (assoc qualified-event :session-id sid)))
+      (when-let [assignment-event (:offer-assignment-event response)]
+        (cw/put-metric "rco-assignment")
+        (kinesis/record-event! k :offermade (assoc assignment-event :session-id sid)))
+      response)))
+

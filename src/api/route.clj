@@ -34,7 +34,8 @@
                                             lookup-promos]]
             [api.controllers.offers :refer [create-new-offer! show-offer
                                             update-offer! delete-offer!
-                                            lookup-offers get-available-offers]]
+                                            lookup-offers get-available-offers
+                                            wrap-record-rco-events]]
             [api.controllers.accounts :refer [get-account create-new-account!
                                               update-account! create-site-for-account!
                                               update-site-for-account!]]
@@ -335,6 +336,7 @@
                              :cookie-name promotably-session-cookie-name})
       wrap-record-new-session
       wrap-record-bucket-assignment
+      wrap-record-rco-events
       wrap-cookies
       wrap-keyword-params
       wrap-multipart-params
