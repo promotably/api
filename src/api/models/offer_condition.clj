@@ -1,6 +1,7 @@
 (ns api.models.offer-condition
   (:require [api.entities :refer :all]
-            [api.lib.coercion-helper :refer [custom-matcher dash-to-underscore-keys]]
+            [api.lib.coercion-helper
+             :refer [custom-matcher dash-to-underscore-keys make-trans]]
             [api.lib.redis :refer [get-integer]]
             [api.lib.schema :refer :all]
             [api.models.event :as event]
@@ -32,6 +33,10 @@
         base
         final)))
 
+(def fix-keywords
+  (make-trans (constantly true)
+              #(if (keyword? %2) [%1 (name %2)] [%1 %2])))
+
 ;; TODO: DRY up with promo-condition/create-conditions!
 (defn create-conditions!
   [conditions]
@@ -44,10 +49,11 @@
     (if (seq conditions)
       (doall (map
               (fn [c]
-                (let [coerced (-> c
+                (let [undered (-> c
                                   (assoc :type (name (:type c)))
-                                  coercer)
-                      undered (dash-to-underscore-keys coerced)
+                                  coercer
+                                  dash-to-underscore-keys
+                                  fix-keywords)
                       fixers (for [[k v] undered :when (vector? v)] k)
                       fixed (reduce
                              arrify
