@@ -114,10 +114,14 @@
   (let [site-id (uuid-from-request-or-new :site-id params request)
         shopper-id (uuid-from-request-or-new :shopper-id params request)
         site-shopper-id (uuid-from-request-or-new :site-shopper-id params request)
-        available-offers (offer/get-offers-for-site site-id)
         valid-offers (filter #(offer/valid? {:shopper-id shopper-id
                                              :site-id site-id
                                              :session session
                                              :offer %
-                                             :site-shopper-id site-shopper-id} %) available-offers)]
-    (shape-rcos session valid-offers)))
+                                             :site-shopper-id site-shopper-id} %)
+                             (offer/get-offers-for-site site-id))
+        the-offer (cond-> []
+                          (seq valid-offers) (conj (rand-nth valid-offers)))]
+    ;; 'The Offer' is a collection for now until we change the
+    ;; response format in the view.
+    (shape-rcos session the-offer)))
