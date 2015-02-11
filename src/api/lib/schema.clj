@@ -128,7 +128,8 @@
                        :cartupdate
                        :cartview
                        :checkout
-                       :thankyou))
+                       :thankyou
+                       :shopperqualifiedoffers))
 
 ;; TODO: WIP
 (def Auth

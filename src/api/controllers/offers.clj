@@ -1,5 +1,7 @@
 (ns api.controllers.offers
-  (:require [api.lib.coercion-helper :refer [custom-matcher]]
+  (:require [api.config :as config]
+            [api.kinesis :as kinesis]
+            [api.lib.coercion-helper :refer [custom-matcher]]
             [api.lib.schema :refer :all]
             [api.models.offer :as offer]
             [api.models.site :as site]
@@ -110,7 +112,7 @@
   (java.util.UUID/fromString (or (get params key) (get request key))))
 
 (defn get-available-offers
-  [{:keys [params session] :as request}]
+  [kinesis-comp {:keys [params session cookies] :as request}]
   (let [site-id (uuid-from-request-or-new :site-id params request)
         shopper-id (uuid-from-request-or-new :shopper-id params request)
         site-shopper-id (uuid-from-request-or-new :site-shopper-id params request)
@@ -121,7 +123,19 @@
                                              :site-shopper-id site-shopper-id} %)
                              (offer/get-offers-for-site site-id))
         the-offer (cond-> []
-                          (seq valid-offers) (conj (rand-nth valid-offers)))]
+                    (seq valid-offers) (conj (rand-nth valid-offers)))]
     ;; 'The Offer' is a collection for now until we change the
     ;; response format in the view.
+    (when (seq valid-offers)
+      (let [event {:event-name :shopperqualifiedoffers
+                   :site-id site-id
+                   :shopper-id shopper-id
+                   :site-shopper-id site-shopper-id
+                   :session-id nil
+                   :offer-ids (mapv :uuid valid-offers)}]
+        (kinesis/record-event! kinesis-comp :shopperqualifiedoffers event)
+        (kinesis/record-event! kinesis-comp :offermade (-> event
+                                                           (assoc :event-name :offermade)
+                                                           (dissoc :offer-ids)
+                                                           (assoc :offer-id (:uuid (first the-offer)))))))
     (shape-rcos session the-offer)))
