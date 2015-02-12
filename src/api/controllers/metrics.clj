@@ -1,10 +1,11 @@
 (ns api.controllers.metrics)
 
 (defn get-revenue [request]
-  {:status 200 :body {"discounts" 25360,
+  {:status 200 :body {"number-of-orders" 100000,
+                      "discount" 25360,
                       "promotably-commission" 38030,
-                      "net-revenue" 190170,
-                      "total" 253560}})
+                      "less-discounts-and-commission" 190170,
+                      "revenue" 253560}})
 
 (defn get-lift [request]
   {:status 200
@@ -29,13 +30,15 @@
   {:status 200 :body [{"id" "ff926081-a97a-4065-abe0-7da32064c3d8",
                        "code" "APRILSALE",
                        "redemptions" 159,
+                       "discount" 622
                        "revenue" 6223.23,
-                       "avg-order-value" 39.14},
+                       "avg-revenue" 39.14},
                       {"id" "gh926071-b97b-5055-bdf1-8dd22057h2a9",
                        "code" "SHIRTCLEARANCE",
                        "redemptions" 111,
+                       "discount" 457,
                        "revenue" 4568.32,
-                       "avg-order-value" 41.15}]})
+                       "avg-revenue" 41.15}]})
 
 (defn get-rco [request]
   {:status 200 :body [{"id" "df8236081-a97a-4065-abe0-7da320643ce9",
@@ -43,24 +46,28 @@
                        "visits" 16546,
                        "qualified" 9562,
                        "offered" 8123,
+                       "orders" 1099,
                        "redeemed" 1021,
-                       "redemption-rate" 41,
-                       "avg-cart-size" 3,
+                       "redemption-rate" 41.11,
+                       "conversion-rate" 43.11,
+                       "avg-items-in-cart" 6.4,
                        "avg-revenue" 122.05,
-                       "total-revenue" 125462.34,
+                       "revenue" 125462.34,
                        "avg-discount" 12.32,
-                       "total-discounts" 12252},
+                       "discount" 12252},
                       {"id" "eg9347081-a97a-4065-abe0-7da320612df8",
                        "code" "NEW-CUSTOMER",
                        "visits" 16546,
                        "qualified" 9562,
                        "offered" 8123,
+                       "orders" 1099,
                        "redeemed" 1021,
-                       "redemption-rate" 41,
-                       "avg-cart-size" 3,
+                       "redemption-rate" 41.11,
+                       "conversion-rate" 43.11,
+                       "avg-items-in-cart" 6.4,
                        "avg-revenue" 122.05,
-                       "total-revenue" 125462.34,
+                       "revenue" 125462.34,
                        "avg-discount" 12.32,
-                       "total-discounts" 12252}]})
+                       "discount" 12252}]})
 
 
