@@ -40,6 +40,7 @@
                                               update-account! create-site-for-account!
                                               update-site-for-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]
+            [api.controllers.metrics :refer [get-revenue get-lift get-promos get-rco]]
             [api.cloudwatch :as cw]
             [api.lib.detector :as detector]
             [api.system :refer [current-system]]
@@ -109,6 +110,13 @@
            (PUT ["/:promo-id", :promo-id promo-code-regex] [promo-id] update-promo!)
            (GET ["/query/:code", :code promo-code-regex] [code] query-promo)))
 
+(defroutes metrics-secure-routes
+           (context "/:site-id/metrics" []
+                    (GET "/revenue" [] get-revenue)
+                    (GET "/lift" [] get-lift)
+                    (GET "/promos" [] get-promos)
+                    (GET "/rco" [] get-rco)))
+
 (defroutes secure-routes
   (context "/api/v1" []
            (GET "/accounts" [] get-account)
@@ -117,8 +125,10 @@
            (GET "/users/:user-id" [user-id] (get-user user-id))
            (POST "/users" [] create-new-user!)
            (PUT "/users/:user-id" [] update-user!)
-           (POST "/sites" [] create-site-for-account!)
-           (PUT "/sites/:site-id" [] update-site-for-account!)
+           (context "/sites" []
+                    (POST "/" [] create-site-for-account!)
+                    (PUT "/:site-id" [] update-site-for-account!)
+                    metrics-secure-routes)
            promo-secure-routes
            offer-routes))
 
