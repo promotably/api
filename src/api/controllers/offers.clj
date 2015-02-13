@@ -145,6 +145,7 @@
                                    (assoc :offer-id (:uuid (first the-offer))))]
           (cond-> response
                   true (assoc :offer-qualification-event qualified-event)
+                  ;; TODO: active offer => {:code x :promo {...} :expires-at y}
                   (seq the-offer) (assoc-in [:session :active-offer] the-offer)
                   (seq the-offer) (assoc :offer-assignment-event assignment-event)))
         (assoc response :offer-qualification-event qualified-event)))))
