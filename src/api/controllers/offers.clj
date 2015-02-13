@@ -133,14 +133,14 @@
                       (cond-> []
                               (seq valid-offers) (conj (rand-nth valid-offers))))
           response (shape-rcos session the-offer)
-          qualified-event {:event-name :shopperqualifiedoffers
+          qualified-event {:event-name :shopper-qualified-offers
                            :site-id site-id
                            :shopper-id shopper-id
                            :site-shopper-id site-shopper-id}]
       (if (seq valid-offers)
         (let [qualified-event (assoc qualified-event :offer-ids (mapv :uuid valid-offers))
               assignment-event (-> qualified-event
-                                   (assoc :event-name :offermade)
+                                   (assoc :event-name :offer-made)
                                    (dissoc :offer-ids)
                                    (assoc :offer-id (:uuid (first the-offer))))]
           (cond-> response
@@ -159,9 +159,9 @@
           sid (:session/key response)]
       (when-let [qualified-event (:offer-qualification-event response)]
         (cw/put-metric "rco-qualification")
-        (kinesis/record-event! k :shopperqualifiedoffers (assoc qualified-event :session-id sid)))
+        (kinesis/record-event! k :shopper-qualified-offers (assoc qualified-event :session-id sid)))
       (when-let [assignment-event (:offer-assignment-event response)]
         (cw/put-metric "rco-assignment")
-        (kinesis/record-event! k :offermade (assoc assignment-event :session-id sid)))
+        (kinesis/record-event! k :offer-made (assoc assignment-event :session-id sid)))
       response)))
 

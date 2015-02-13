@@ -15,6 +15,7 @@
 (def site-4-id #uuid "22a37e2d-7f1c-4bce-9666-70b0c26de872")
 (def minorder-site-id #uuid "34a37e2d-7f1c-4bce-9666-70b0c26de843")
 (def maxorder-site-id #uuid "32a37e2d-7f1c-4bce-9666-70b0c26de873")
+(def second-offer-site-id #uuid "20c58874-911c-4e00-a81d-3ce3176a1cdd")
 (def last-offer-site-id #uuid "4ad8a905-498d-4a8e-ba50-397e2d5f5275")
 
 (def shopper-id #uuid "7f2fe574-974e-4f48-87fd-5ada3a4cb2bb")
@@ -24,6 +25,9 @@
 (def shopper-2-id #uuid "3327a72b-d2e0-4fba-b872-d857c5453609")
 (def site-shopper-2-id #uuid "5c171a4e-2528-4714-88d8-f7f3f9cab8df")
 (def session-2-id #uuid "8fe0b04c-d4ee-4eda-a2fa-08ca8283f98d")
+
+(def last-offer-site-shopper-id-1 #uuid "9cdbdb74-84a1-42cf-adf3-561ff1cd2ba2")
+(def last-offer-site-shopper-id-2 #uuid "e8240128-ca1c-41dc-b4d6-826308548e8e")
 
 (def minorder-shopper-id #uuid "4327a72b-d2e0-4fba-b872-d857c5453609")
 (def minorder-site-shopper-id #uuid "3c171a4e-2528-4714-88d8-f7f3f9cab8df")
@@ -79,6 +83,15 @@
                    :site_code "site-max-order"
                    :api_secret (java.util.UUID/randomUUID)
                    :site_url "http://maxorder.com")
+          (fixture :site-second-offer
+                   :account_id :account-1
+                   :name "Site Second Offer"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))
+                   :site_id second-offer-site-id
+                   :site_code "site-second-offer"
+                   :api_secret (java.util.UUID/randomUUID)
+                   :site_url "http://secondoffer.com")
           (fixture :site-last-offer
                    :account_id :account-1
                    :name "Site Last Offer"
@@ -158,6 +171,19 @@
                    :uuid (java.util.UUID/randomUUID)
                    :site_id :site-max-order
                    :code "EASTER PROMO FOR SITE 4"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Easter Coupon"
+                   :seo_text "Best effing coupon evar"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now)))
+          (fixture :site-second-offer-promo-1
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-second-offer
+                   :code "EASTER PROMO FOR SITE SECOND OFFER"
                    :active true
                    :reward_amount 20
                    :reward_type "percent"
@@ -301,6 +327,18 @@
                    :theme "theme"
                    :created_at (c/to-sql-date (t/now))
                    :updated_at (c/to-sql-date (t/now)))
+          (fixture :offer-second-offer
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-second-offer
+                   :promo_id :site-second-offer-promo-1
+                   :code "OFFER-SECOND-OFFER"
+                   :name "NAME HERE"
+                   :active true
+                   :display_text "Book it, dano"
+                   :presentation_type "lightbox"
+                   :presentation_page "product-detail"
+                   :created_at (c/to-sql-date (t/now))
+                   :updated_at (c/to-sql-date (t/now)))
           (fixture :offer-last-offer
                    :uuid (java.util.UUID/randomUUID)
                    :site_id :site-last-offer
@@ -368,8 +406,14 @@
           (fixture :offer-condition-last-offer
                    :uuid (java.util.UUID/randomUUID)
                    :offer_id :offer-last-offer
-                   :type "minutes-since-last-offer"
-                   :minutes_since_last_offer 1))
+                   :type "days-since-last-offer"
+                   :days_since_last_offer 1)
+          (fixture :offer-condition-second-offer
+                   :uuid (java.util.UUID/randomUUID)
+                   :offer_id :offer-second-offer
+                   :type "dates"
+                   :start_date (c/to-sql-time (t/minus (t/now) (t/days 14)))
+                   :end_date (c/to-sql-time (t/plus (t/now) (t/days 14)))))
    (table :events
           (fixture :event-pa-1
                    :site_id site-3-id
@@ -506,4 +550,22 @@
                           :shopper-id (str shopper-2-id),
                           :sku "T101",
                           :event-name "productview",
-                          :session-id (str session-2-id)}))))
+                          :session-id (str session-2-id)})
+          (fixture :event-dslo-shopper-1
+                   :site_id last-offer-site-id
+                   :event_id (java.util.UUID/randomUUID)
+                   :shopper_id (java.util.UUID/randomUUID)
+                   :site_shopper_id last-offer-site-shopper-id-1
+                   :session_id (java.util.UUID/randomUUID)
+                   :type "offer-made"
+                   :created_at (c/to-sql-time (t/now))
+                   :data {:offer-id (str (java.util.UUID/randomUUID))})
+          (fixture :event-dslo-shopper-2
+                   :site_id last-offer-site-id
+                   :event_id (java.util.UUID/randomUUID)
+                   :shopper_id (java.util.UUID/randomUUID)
+                   :site_shopper_id last-offer-site-shopper-id-2
+                   :session_id (java.util.UUID/randomUUID)
+                   :type "offer-made"
+                   :created_at (c/to-sql-time (t/minus (t/now) (t/days 5)))
+                   :data {:offer-id (str (java.util.UUID/randomUUID))}))))

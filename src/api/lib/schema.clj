@@ -129,7 +129,8 @@
                        :cartview
                        :checkout
                        :thankyou
-                       :shopperqualifiedoffers))
+                       :shopper-qualified-offers
+                       :offer-made))
 
 ;; TODO: WIP
 (def Auth
@@ -444,7 +445,7 @@
 (def valid-types
   [:dates
    :times
-   :minutes-since-last-offer
+   :days-since-last-offer
    :minutes-on-site
    :minutes-since-last-engagement
    :product-views
@@ -583,7 +584,10 @@
                  (merge BaseOfferCondition {:last-order-includes-item-id s/Str})
 
                  #(= (:type %) :last-order-value)
-                 (merge BaseOfferCondition {:last-order-value s/Int})))
+                 (merge BaseOfferCondition {:last-order-value s/Int})
+
+                 #(= (:type %) :days-since-last-offer)
+                 (merge BaseOfferCondition {:days-since-last-offer s/Int})))
 
 (def InboundOfferCondition
   (-> OfferCondition

@@ -40,9 +40,7 @@
                     :display-text "presentation text"}
      :conditions [{:type "dates"
                    :start-date "2014-11-27T05:00:00Z"
-                   :end-date "2014-11-29T04:59:59Z"}
-                  {:type :minutes-since-last-offer
-                   :minutes-since-last-offer 10}]
+                   :end-date "2014-11-29T04:59:59Z"}]
      :html "<html></html>"
      :css "body {}"
      :theme "theme"})
@@ -107,9 +105,7 @@
                                      :conditions (contains
                                                   [{:type "dates"
                                                    :start-date "2014-11-27T05:00:00Z"
-                                                   :end-date "2014-11-29T04:59:59Z"}
-                                                  {:type "minutes-since-last-offer"
-                                                   :minutes-since-last-offer 10}]
+                                                   :end-date "2014-11-29T04:59:59Z"}]
                                                   :in-any-order)
                                      :html "<html></html>"
                                      :css "body {}"
@@ -253,26 +249,26 @@
                   (:status r) => 200
                   pr => (just {:offers (just [(contains {:code "OFFER-PRODUCT-VIEWS-VALID"})])})))
               (facts "Don't make a second offer"
-                (let [r (get-rcos offers-fixture/last-offer-site-id
+                (let [r (get-rcos offers-fixture/second-offer-site-id
                                   offers-fixture/site-shopper-2-id)
                       pr (json/read-str (:body r) :key-fn keyword)
-                      r2 (get-rcos offers-fixture/last-offer-site-id
+                      r2 (get-rcos offers-fixture/second-offer-site-id
                                    offers-fixture/site-shopper-2-id
                                    :cookies (:cookies r))
                       pr2 (json/read-str (:body r2) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just {:offers (just [(contains {:code "OFFER-LAST-OFFER"})])})
+                  pr => (just {:offers (just [(contains {:code "OFFER-SECOND-OFFER"})])})
                   (:status r2) => 200
                   pr2 => (just {:offers nil})))
-              (facts "Offer with minutes-since-last-offer condition"
+              (facts "Offer with days-since-last-offer condition NOT offered as expected"
                 (let [r (get-rcos offers-fixture/last-offer-site-id
-                                  offers-fixture/site-shopper-2-id)
-                      pr (json/read-str (:body r) :key-fn keyword)
-                      r2 (get-rcos offers-fixture/last-offer-site-id
-                                   offers-fixture/site-shopper-2-id
-                                   :cookies (:cookies r))
-                      pr2 (json/read-str (:body r2) :key-fn keyword)]
+                                  offers-fixture/last-offer-site-shopper-id-1)
+                      pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just {:offers (just [(contains {:code "OFFER-LAST-OFFER"})])})
-                  (:status r2) => 200
-                  pr2 => (just {:offers (just [])})))))
+                  pr => (just {:offers []})))
+              (facts "Offer with days-since-last-offer condition offered as expected"
+                (let [r (get-rcos offers-fixture/last-offer-site-id
+                                  offers-fixture/last-offer-site-shopper-id-2)
+                      pr (json/read-str (:body r) :key-fn keyword)]
+                  (:status r) => 200
+                  pr => (just {:offers (just [(contains {:code "OFFER-LAST-OFFER"})])})))))

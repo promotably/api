@@ -28,9 +28,7 @@
                   :display-text "presentation text"}
    :conditions [{:type "dates"
                  :start-date "2014-11-27T05:00:00Z"
-                 :end-date "2014-11-29T04:59:59Z"}
-                {:type :minutes-since-last-offer
-                 :minutes-since-last-offer 10}]
+                 :end-date "2014-11-29T04:59:59Z"}]
    :css "body {}"
    :theme "theme"})
 
