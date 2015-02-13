@@ -65,7 +65,7 @@
                  :throw-exceptions false}))
   (defn- get-rcos
     [site-id site-shopper-id & {:keys [cookies] :as opts}]
-    (client/get "http://localhost:3000/api/v1/realtime-conversion-offers"
+    (client/get "http://localhost:3000/api/v1/rco"
                 (assoc-in (merge {:throw-exceptions false
                                   :query-params {"site-id" (str site-id)
                                                  "site-shopper-id" (str site-shopper-id)}}
