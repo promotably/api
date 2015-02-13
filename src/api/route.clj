@@ -86,7 +86,7 @@
   (context "/api/v1" []
            (GET "/track" req (fn [r] (events/record-event (:kinesis current-system) r)))
            (POST "/email-subscribers" [] create-email-subscriber!)
-           (GET "/rco" req (fn [r] (get-available-offers (:kinesis current-system) r)))k
+           (GET "/rco" req (fn [r] (get-available-offers (:kinesis current-system) r)))
            (POST "/login" req (fn [r]
                                 (let [auth-config (get-in current-system [:config :auth-token-config])]
                                   (auth/authenticate r auth-config get-user))))
