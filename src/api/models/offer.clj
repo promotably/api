@@ -34,15 +34,12 @@
                        hyphenified-params
                        (for [[k v] hyphenified-params :when (nil? v)] k))
         promo (first (promo/find-by-id (:promo-id cleaned)))
+        _ (clojure.pprint/pprint promo)
         renamed (-> cleaned
                     (assoc :presentation
                       {:page (keyword (:presentation-page cleaned))
                        :display-text (:presentation-display-text cleaned)
                        :type (keyword (:presentation-type cleaned))})
-                    (assoc :reward {:type (if (:dynamic cleaned)
-                                            :dynamic-promo
-                                            :promo)
-                                    :promo-id (:uuid promo)})
                     ((fn [o] (if (= (-> o :reward :type) :dynamic-promo)
                                (assoc-in o [:reward :expiry-in-minutes]
                                          (:expiry-in-minutes o))
@@ -50,7 +47,8 @@
                     (dissoc :promo-id :dynamic :expiry-in-minutes)
                     (dissoc :presentation-type
                             :presentation-page
-                            :presentation-display-text))
+                            :presentation-display-text)
+                    (assoc :promo promo))
         conditions (map
                     (comp unwrap-jdbc
                           c/db-to-condition)
@@ -246,7 +244,7 @@
 
 (defn valid?
   [context {:keys [conditions] :as offer}]
-  (let [promo (promo/find-by-uuid (-> offer :reward :promo-id))
+  (let [promo (promo/find-by-uuid (-> offer :promo :promo-id))
         validated-conditions (map #(c/validate context %) conditions)]
     (cond
      (not (promo/valid-for-offer? promo))

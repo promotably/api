@@ -488,14 +488,6 @@
                  (merge BasePresentation {})
                  #(= (:type %) :fly-in)
                  (merge BasePresentation {})))
-(def BaseReward
-  {(s/required-key :type) (apply s/enum (vec valid-reward-types))})
-(def Reward
-  (s/conditional #(= (:type %) :dynamic-promo)
-                 (merge BaseReward {:promo-id s/Uuid
-                                    :expiry-in-minutes s/Int})
-                 #(= (:type %) :promo)
-                 (merge BaseReward {:promo-id s/Uuid})))
 (def BaseOfferCondition
   {(s/required-key :type) (apply s/enum (vec valid-types))
    s/Keyword s/Any})
@@ -647,7 +639,6 @@
    (s/required-key :name) s/Str
    (s/required-key :active) s/Bool
    (s/required-key :display-text) (s/maybe s/Str)
-   (s/required-key :reward) Reward
    (s/required-key :conditions) [OfferCondition]
    (s/required-key :presentation) Presentation
    (s/optional-key :html) s/Str
@@ -660,7 +651,8 @@
                            (s/required-key :created-at) s/Inst
                            (s/required-key :updated-at) s/Inst
                            (s/required-key :uuid) s/Uuid
-                           (s/optional-key :conditions) [OutboundOfferCondition]}))
+                           (s/optional-key :conditions) [OutboundOfferCondition]
+                           (s/optional-key :promo) OutboundPromo}))
 
 (def NewOffer (merge (dissoc BaseOffer
                              (s/required-key :conditions)

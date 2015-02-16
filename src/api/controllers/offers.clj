@@ -120,12 +120,15 @@
     (let [site-id (uuid-from-request-or-new :site-id params request)
           shopper-id (uuid-from-request-or-new :shopper-id params request)
           site-shopper-id (uuid-from-request-or-new :site-shopper-id params request)
+          available-offers (offer/get-offers-for-site site-id)
+          _ (clojure.pprint/pprint available-offers)
           valid-offers (filter #(offer/valid? {:shopper-id shopper-id
                                                :site-id site-id
                                                :session session
                                                :offer %
                                                :site-shopper-id site-shopper-id} %)
-                               (offer/get-offers-for-site site-id))
+                               available-offers)
+          _ (clojure.pprint/pprint valid-offers)
           test-bucket (:test-bucket session)
           ;; the-offer: collection for now until we change the response format in the view.
           the-offer (if (= :control test-bucket)

@@ -32,6 +32,7 @@
 
 (defn shape-rcos
   [session offers]
+  (println offers)
   (let [s (cond-> session
                   (seq offers) (assoc :last-offer-at (t-coerce/to-string (t/now))))
         resp {:headers {"Content-Type" "text/javascript"}
