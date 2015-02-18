@@ -10,7 +10,7 @@
     (jdbc/db-do-commands
      db-con
      "DROP FUNCTION  upsertPromoRedemption (eventId uuid, siteId uuid,
-          orderId text, promoCode text, _discount numeric, shopperId uuid, sessionId uuid);"
+          orderId text, promoCode text, _discount numeric, shopperId uuid, siteShopperId uuid, sessionId uuid);"
      "CREATE OR REPLACE FUNCTION upsertPromoRedemption (eventId uuid, siteId uuid,
           orderId text, promoCode text, _discount numeric, shopperId uuid, siteShopperId uuid, sessionId uuid)
       RETURNS void AS $$
@@ -44,7 +44,7 @@
     (jdbc/db-do-commands
      db-con
      "DROP FUNCTION  upsertPromoRedemption (eventId uuid, siteId uuid,
-          orderId text, promoCode text, _discount numeric, shopperId uuid, sessionId uuid);"
+          orderId text, promoCode text, _discount numeric, shopperId uuid, siteShopperId uuid, sessionId uuid);"
      "CREATE OR REPLACE FUNCTION upsertPromoRedemption (eventId uuid, siteId uuid,
           orderId text, promoCode text, _discount numeric, shopperId uuid, siteShopperId uuid, sessionId uuid)
       RETURNS void AS $$
