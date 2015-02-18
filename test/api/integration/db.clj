@@ -20,7 +20,7 @@
                      (after :contents
                             (comment migrate-down))]
 
-  (future-facts "upsertPromoRedmption"
+  (facts "upsertPromoRedmption"
     (jdbc/with-db-connection [c @db/$db-config]
       (let [conn (jdbc/get-connection c)]
         (let [statement (doto (.prepareCall conn

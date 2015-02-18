@@ -18,7 +18,7 @@
       BEGIN
 
       SELECT p.id INTO promoId FROM promos p
-          JOIN sites ON p.site_id=s.id
+          JOIN sites s ON p.site_id=s.id
           WHERE p.code=promoCode
           AND s.site_id=siteId;
 
