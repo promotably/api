@@ -193,61 +193,49 @@
                                   (str (java.util.UUID/randomUUID)))
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just {:offers (just [(contains {:code "OFFER-VALID-DATES"})])})
-                  pr => (just {:offers (just [(just {:code "OFFER-VALID-DATES"
-                                                     :active true
-                                                     :conditions (just [(just {:start-date string?
-                                                                               :end-date string?
-                                                                               :type "dates"})])
-                                                     :created-at string?
-                                                     :display-text "Book it, dano"
-                                                     :id integer?
-                                                     :name "NAME HERE"
-                                                     :presentation (just {:display-text nil
-                                                                          :page "product-detail"
-                                                                          :type "lightbox"})
-                                                     :reward (just {:promo-id string? :type "promo"})
-                                                     :site-id integer?
-                                                     :updated-at string?
-                                                     :html "<html></html>"
-                                                     :css "body {}"
-                                                     :theme "theme"
-                                                     :uuid string?})])})))
+                  pr => (contains {:code "EASTER PROMO FOR SITE 2"})
+                  pr => (contains {:code "EASTER PROMO FOR SITE 2"
+                                   :active true
+                                   :promo {:conditions []}
+                                   :presentation {:display-text nil
+                                                  :page "product-detail"
+                                                  :type "lightbox"}})))
 
               (facts "Offer with number of cart adds condition"
                 (let [r (get-rcos offers-fixture/site-3-id
                                   offers-fixture/site-shopper-id)
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just {:offers (just [(contains {:code "OFFER-CART-ADD"})])})))
+                  pr => (contains {:code "SITE 3 PROMO"})))
 
               (facts "Offer with min orders condition"
                 (let [r (get-rcos (java.util.UUID/randomUUID)
                                   (java.util.UUID/randomUUID))
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  pr => {:offers []}))
+                  pr => nil))
 
               (facts "Offer with min orders condition"
                 (let [r (get-rcos offers-fixture/minorder-site-id
                                   offers-fixture/minorder-site-shopper-id)
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just {:offers (just [(contains {:code "OFFER-MIN-ORDER"})])})))
+                  pr => (contains {:code "EASTER PROMO FOR SITE 4"})))
 
               (facts "Offer with max orders condition"
                 (let [r (get-rcos offers-fixture/maxorder-site-id
                                   offers-fixture/minorder-site-shopper-id)
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just {:offers (just [(contains {:code "OFFER-MAX-ORDER"})])})))
+                  pr => (contains {:code "EASTER PROMO FOR SITE 4"})))
 
               (facts "Offer with product-views condition"
                 (let [r (get-rcos offers-fixture/site-4-id
                                   offers-fixture/site-shopper-2-id)
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just {:offers (just [(contains {:code "OFFER-PRODUCT-VIEWS-VALID"})])})))
+                  pr => (contains {:code "EASTER PROMO FOR SITE 4"})))
+
               (facts "Don't make a second offer"
                 (let [r (get-rcos offers-fixture/second-offer-site-id
                                   offers-fixture/site-shopper-2-id)
@@ -257,18 +245,34 @@
                                    :cookies (:cookies r))
                       pr2 (json/read-str (:body r2) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just {:offers (just [(contains {:code "OFFER-SECOND-OFFER"})])})
+                  pr => (contains {:code "EASTER PROMO FOR SITE SECOND OFFER"})
                   (:status r2) => 200
-                  pr2 => (just {:offers nil})))
+                  pr2 => nil))
+
               (facts "Offer with days-since-last-offer condition NOT offered as expected"
                 (let [r (get-rcos offers-fixture/last-offer-site-id
                                   offers-fixture/last-offer-site-shopper-id-1)
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just {:offers []})))
+                  pr => nil))
+
               (facts "Offer with days-since-last-offer condition offered as expected"
                 (let [r (get-rcos offers-fixture/last-offer-site-id
                                   offers-fixture/last-offer-site-shopper-id-2)
                       pr (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  pr => (just {:offers (just [(contains {:code "OFFER-LAST-OFFER"})])})))))
+                  pr => (contains {:code "EASTER PROMO FOR SITE LAST OFFER"})))
+
+              (facts "Dynamic offer"
+                (let [r (get-rcos offers-fixture/dynamic-site-id
+                                  offers-fixture/dynamic-site-shopper-id)
+                      pr (json/read-str (:body r) :key-fn keyword)]
+                  (:status r) => 200
+                  pr => (contains {:expires string?
+                                   :promo {:conditions []},
+                                   :presentation {:display-text nil,
+                                                  :page "product-detail",
+                                                  :type "lightbox"},
+                                   :is-limited-time true,
+                                   :code string?,
+                                   :active true})))))

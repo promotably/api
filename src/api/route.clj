@@ -71,6 +71,7 @@
   (context "/promos" []
            (POST ["/validation/:code", :code promo-code-regex]
                  [code] validate-promo)
+           (GET ["/query/:code", :code promo-code-regex] [code] query-promo)
            (POST ["/calculation/:code", :code promo-code-regex]
                  [code] calculate-promo)))
 
@@ -101,14 +102,13 @@
 (defroutes promo-secure-routes
   (context "/promos" []
            (POST "/" [] (fn [r] (create-new-promo! (merge
-                                                   (:kinesis current-system)
-                                                   (-> current-system :config :kinesis))
-                                                  r)))
+                                                    (:kinesis current-system)
+                                                    (-> current-system :config :kinesis))
+                                                   r)))
            (GET "/" [] lookup-promos)
            (DELETE ["/:promo-id", :promo-id promo-code-regex] [promo-id] delete-promo!)
            (GET ["/:promo-id", :promo-id promo-code-regex] [promo-id] show-promo)
-           (PUT ["/:promo-id", :promo-id promo-code-regex] [promo-id] update-promo!)
-           (GET ["/query/:code", :code promo-code-regex] [code] query-promo)))
+           (PUT ["/:promo-id", :promo-id promo-code-regex] [promo-id] update-promo!)))
 
 (defroutes metrics-secure-routes
            (context "/:site-id/metrics" []
@@ -242,12 +242,11 @@
 
 (defn mark-new-session
   [response request sid ssid]
-  (let [data {:created-at (t-coerce/to-string (t/now))
-              :shopper-id (:shopper-id request)
-              :site-shopper-id ssid
-              :request-headers (:headers request)
-              :session-id nil}
-        data (if sid (assoc data :site-id sid) data)]
+  (let [data (cond-> {:created-at (t-coerce/to-string (t/now))
+                      :shopper-id (:shopper-id request)
+                      :site-shopper-id ssid
+                      :request-headers (:headers request)}
+                     sid (assoc :site-id sid))]
     (-> response
         (assoc-in [:session :initial-request-headers]
                   (:headers request))
@@ -255,24 +254,32 @@
 
 (defn wrap-record-new-session
   "When a new session is started, record relevant data to kinesis."
-  [handler]
+  [handler & [{:keys [cookie-name]}]]
   (fn [request]
-    (let [response (handler request)]
+    (let [response (handler request)
+          set-cookies (get (:headers response) "Set-Cookie")
+          set-cookies (reduce
+                       #(let [parts (clojure.string/split %2 #";")
+                              [cookie-name cookie-val] (clojure.string/split (first parts) #"=")]
+                          (assoc %1 cookie-name cookie-val))
+                       {}
+                       set-cookies)
+          cookies-req (ring.middleware.cookies/cookies-request request)
+          req-key  (get-in cookies-req [:cookies cookie-name :value])
+          session-id (or req-key (get set-cookies cookie-name))
+          response* (assoc response :session/key session-id)]
       (if-let [k-data (:new-session-data response)]
-        (let [set-cookies (get (:headers response) "Set-Cookie")
-              set-cookies (reduce
-                           #(let [parts (clojure.string/split %2 #";")
-                                  [cookie-name cookie-val] (clojure.string/split (first parts) #"=")]
-                              (assoc %1 cookie-name cookie-val))
-                           {}
-                           set-cookies)
-              session-id (get set-cookies promotably-session-cookie-name)
-              k-data* (-> (assoc k-data :session-id session-id)
+        (let [k-data* (-> k-data
+                          (assoc :session-id session-id)
                           (assoc :event-format-version "1")
                           (assoc :event-name "session-start"))]
-          (kinesis/record-event! (:kinesis current-system) "session-start" k-data*)
-          (assoc response :session/key session-id))
-        response))))
+          (if session-id
+            (kinesis/record-event! (:kinesis current-system) "session-start" k-data*)
+            (do
+              (log/logf :error "Error recording session start: missing session id.")
+              (cw/put-metric "session-start-missing-session-id")))
+          response*)
+        response*))))
 
 (defn wrap-ensure-session
   "Ensure that all relevant data is in the response session map and
@@ -300,7 +307,7 @@
                            true (update-in [:session :last-request-at] (constantly (t-coerce/to-string (t/now))))
                            true (update-in [:session :expires] (constantly expires))
                            true (update-in [:session :shopper-id] (constantly (:shopper-id request))))]
-      (if (empty? (:session request))
+      (if (nil? (:session request))
         (mark-new-session response request sid ssid)
         response))))
 
@@ -337,14 +344,14 @@
   [{:keys [config session-cache] :as options}]
   (-> all-routes
       wrap-sorting-hat
-      (wrap-permacookie {:name "promotably" :request-key :shopper-id})
       wrap-detect-user-agent
       wrap-ensure-session
+      (wrap-permacookie {:name "promotably" :request-key :shopper-id})
       (wrap-restful-format :formats [:json-kw :edn])
       jsonp/wrap-json-with-padding
       (session/wrap-session {:store session-cache
                              :cookie-name promotably-session-cookie-name})
-      wrap-record-new-session
+      (wrap-record-new-session {:cookie-name promotably-session-cookie-name})
       wrap-record-bucket-assignment
       wrap-record-rco-events
       wrap-cookies

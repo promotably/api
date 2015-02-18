@@ -5,14 +5,16 @@
             [api.lib.schema :refer :all]
             [api.models.offer :as offer]
             [api.models.site :as site]
+            [api.models.promo :as promo]
             [api.system :refer [current-system]]
             [api.views.offers :refer [shape-offer
                                       shape-lookup
-                                      shape-new-offer
-                                      shape-rcos]]
+                                      shape-new-offer]]
             [api.cloudwatch :as cw]
             [clj-time.core :as t]
+            [clj-time.coerce :as t-coerce]
             [clj-time.format :as tf]
+            [api.views.helper :refer [view-value-helper]]
             [clojure.data.json :refer [read-str write-str]]
             [clojure.tools.logging :as log]
             [slingshot.slingshot :refer [throw+ try+]]
@@ -113,42 +115,77 @@
   [key params request]
   (java.util.UUID/fromString (or (get params key) (get request key))))
 
+(defn select-offer
+  [session offers]
+  (let [test-bucket (:test-bucket session)
+        control? (= :control test-bucket)]
+    (if (and (not control?) (seq offers))
+      (rand-nth offers))))
+
+(defn create-response
+  [promo offer is-dynamic? exploding-code expiry]
+  (cond-> {:promo {:conditions (:conditions promo)}
+           :presentation (:presentation offer)
+           :is-limited-time is-dynamic?
+           :code (if is-dynamic? exploding-code (:code promo))
+           :active true}
+          is-dynamic? (assoc :expires expiry)))
+
+(defn find-valid-offers
+  [shopper-id site-shopper-id site-id session]
+  (filter #(let [context {:shopper-id shopper-id
+                          :site-id site-id
+                          :session session
+                          :offer %
+                          :site-shopper-id site-shopper-id}]
+             (offer/valid? context %))
+          (offer/get-offers-for-site site-id)))
+
 (defn get-available-offers
   [kinesis-comp {:keys [params session cookies] :as request}]
   (if-let [active (:active-offer session)]
-    (shape-rcos session nil)
+    {:body nil}
     (let [site-id (uuid-from-request-or-new :site-id params request)
           shopper-id (uuid-from-request-or-new :shopper-id params request)
           site-shopper-id (uuid-from-request-or-new :site-shopper-id params request)
-          valid-offers (filter #(offer/valid? {:shopper-id shopper-id
-                                               :site-id site-id
-                                               :session session
-                                               :offer %
-                                               :site-shopper-id site-shopper-id} %)
-                               (offer/get-offers-for-site site-id))
-          test-bucket (:test-bucket session)
-          ;; the-offer: collection for now until we change the response format in the view.
-          the-offer (if (= :control test-bucket)
-                      []
-                      (cond-> []
-                              (seq valid-offers) (conj (rand-nth valid-offers))))
-          response (shape-rcos session the-offer)
+          valid-offers (find-valid-offers shopper-id
+                                          site-shopper-id
+                                          site-id
+                                          session)
+          the-offer (select-offer session valid-offers)
+          {:keys [promo-id expiry-in-minutes]} (:reward the-offer)
+          promo (if the-offer (promo/find-by-uuid promo-id))
+          is-dynamic? (= :dynamic-promo (-> the-offer :reward :type))
+          [exploding-code expiry] (if is-dynamic?
+                                    (offer/generate-exploding-code the-offer))
           qualified-event {:event-name :shopper-qualified-offers
                            :site-id site-id
                            :shopper-id shopper-id
-                           :site-shopper-id site-shopper-id}]
-      (if (seq valid-offers)
+                           :site-shopper-id site-shopper-id}
+          response-data (create-response promo
+                                         the-offer
+                                         is-dynamic?
+                                         exploding-code
+                                         expiry)]
+      (if (empty? valid-offers)
+        {:body nil :offer-qualification-event qualified-event}
         (let [qualified-event (assoc qualified-event :offer-ids (mapv :uuid valid-offers))
               assignment-event (-> qualified-event
                                    (assoc :event-name :offer-made)
                                    (dissoc :offer-ids)
-                                   (assoc :offer-id (:uuid (first the-offer))))]
-          (cond-> response
-                  true (assoc :offer-qualification-event qualified-event)
-                  ;; TODO: active offer => {:code x :promo {...} :expires-at y}
-                  (seq the-offer) (assoc-in [:session :active-offer] the-offer)
-                  (seq the-offer) (assoc :offer-assignment-event assignment-event)))
-        (assoc response :offer-qualification-event qualified-event)))))
+                                   (assoc :promo-id (:uuid promo))
+                                   (assoc :offer-id (:uuid the-offer)))
+              now (t-coerce/to-string (t/now))]
+          (cond-> {:offer-qualification-event qualified-event
+                   :body (write-str response-data
+                                    :value-fn (fn [k v] (view-value-helper v)))}
+                  the-offer (assoc-in [:session :active-offer] the-offer)
+                  is-dynamic? (assoc-in [:session :active-offer :code] exploding-code)
+                  is-dynamic? (assoc-in [:session :active-offer :expires] expiry)
+                  the-offer (assoc-in [:session :last-offer-at] now)
+                  the-offer (assoc :offer-assignment-event assignment-event)
+                  is-dynamic? (assoc-in [:offer-assignment-event :code] exploding-code)
+                  is-dynamic? (assoc-in [:offer-assignment-event :expiry] expiry)))))))
 
 (defn wrap-record-rco-events
   "Record offer events."
@@ -157,11 +194,16 @@
     (let [k (:kinesis current-system)
           response (handler request)
           sid (:session/key response)]
-      (when-let [qualified-event (:offer-qualification-event response)]
-        (cw/put-metric "rco-qualification")
-        (kinesis/record-event! k :shopper-qualified-offers (assoc qualified-event :session-id sid)))
-      (when-let [assignment-event (:offer-assignment-event response)]
-        (cw/put-metric "rco-assignment")
-        (kinesis/record-event! k :offer-made (assoc assignment-event :session-id sid)))
+      (if sid
+        (do
+          (when-let [qualified-event (:offer-qualification-event response)]
+            (cw/put-metric "rco-qualification")
+            (kinesis/record-event! k :shopper-qualified-offers (assoc qualified-event :session-id sid)))
+          (when-let [assignment-event (:offer-assignment-event response)]
+            (cw/put-metric "rco-assignment")
+            (kinesis/record-event! k :offer-made (assoc assignment-event :session-id sid))))
+        (do
+          (log/logf :error "Error recording rco: missing session id.")
+          (cw/put-metric "rco-session-id-error")))
       response)))
 

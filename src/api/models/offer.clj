@@ -1,7 +1,8 @@
 (ns api.models.offer
   (:require [clojure.tools.logging :as log]
-            [clj-time.core :refer [before? after? now]]
-            [clj-time.coerce :refer [from-sql-date]]
+            [clj-time.coerce :refer [from-sql-date] :as t-coerce]
+            [clj-time.core :refer [before? after? now time-zone-for-id to-time-zone
+                                   from-time-zone date-time year month day] :as t]
             [clojure.set :refer [rename-keys intersection]]
             [api.entities :refer :all]
             [api.lib.coercion-helper :refer [custom-matcher underscore-to-dash-keys]]
@@ -17,6 +18,7 @@
             [clojure.core.cache :as cache]
             [korma.core :refer :all]
             [korma.db :refer [transaction] :as kdb]
+            [crypto.random :as random]
             [schema.core :as s]
             [schema.macros :as sm]
             [schema.coerce :as sc]))
@@ -245,8 +247,9 @@
   (cache/lookup @OffersCache site-uuid))
 
 (defn valid?
-  [context {:keys [conditions] :as offer}]
-  (let [promo (promo/find-by-uuid (-> offer :reward :promo-id))
+  [context {:keys [reward conditions] :as offer}]
+  (let [{:keys [promo-id expiry-in-minutes]} reward
+        promo (promo/find-by-uuid promo-id)
         validated-conditions (map #(c/validate context %) conditions)]
     (cond
      (not (promo/valid-for-offer? promo))
@@ -257,3 +260,12 @@
      true
      :else
      false)))
+
+(defn generate-exploding-code
+  [{:keys [reward] :as offer}]
+  (let [{:keys [promo-id expiry-in-minutes]} reward
+        promo (promo/find-by-uuid promo-id)
+        code (clojure.string/upper-case (random/url-part 4))
+        expiry (t-coerce/to-string (t/plus (t/now) (t/minutes expiry-in-minutes)))]
+    [code expiry]))
+

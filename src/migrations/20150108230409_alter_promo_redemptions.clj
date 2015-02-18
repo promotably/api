@@ -31,7 +31,7 @@
       SELECT p.id INTO STRICT promoId FROM promos p
           JOIN sites ON p.site_id=s.id
           WHERE p.code=promoCode
-          AND s.uuid=siteId;
+          AND s.site_id=siteId;
       EXCEPTION
         WHEN NO_DATA_FOUND THEN
             RAISE EXCEPTION 'promo % not found', promoCode;

@@ -20,6 +20,7 @@
                   (ByteBuffer/wrap (.toByteArray out-stream))
                   (str (java.util.UUID/randomUUID))))
     (catch Exception e
+      (log/error "oops" (:event-name message-map))
       (log/warn e (format "Failed to send Kinesis message to %s: %s"
                           stream-name
                           (pr-str message-map))))))

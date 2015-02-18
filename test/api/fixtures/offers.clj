@@ -17,6 +17,7 @@
 (def maxorder-site-id #uuid "32a37e2d-7f1c-4bce-9666-70b0c26de873")
 (def second-offer-site-id #uuid "20c58874-911c-4e00-a81d-3ce3176a1cdd")
 (def last-offer-site-id #uuid "4ad8a905-498d-4a8e-ba50-397e2d5f5275")
+(def dynamic-site-id #uuid "9be8a905-498d-4a8e-ba50-397e2d5f5275")
 
 (def shopper-id #uuid "7f2fe574-974e-4f48-87fd-5ada3a4cb2bb")
 (def site-shopper-id #uuid "001fd699-9d50-4b7c-af3b-3e022d379647")
@@ -28,6 +29,8 @@
 
 (def last-offer-site-shopper-id-1 #uuid "9cdbdb74-84a1-42cf-adf3-561ff1cd2ba2")
 (def last-offer-site-shopper-id-2 #uuid "e8240128-ca1c-41dc-b4d6-826308548e8e")
+
+(def dynamic-site-shopper-id #uuid "ecdbdb74-84a1-42cf-adf3-561ff1cd2ba6")
 
 (def minorder-shopper-id #uuid "4327a72b-d2e0-4fba-b872-d857c5453609")
 (def minorder-site-shopper-id #uuid "3c171a4e-2528-4714-88d8-f7f3f9cab8df")
@@ -100,7 +103,16 @@
                    :site_id last-offer-site-id
                    :site_code "site-last-offer"
                    :api_secret (java.util.UUID/randomUUID)
-                   :site_url "http://lastoffer.com"))
+                   :site_url "http://lastoffer.com")
+          (fixture :site-dynamic
+                   :account_id :account-1
+                   :name "Site Last Offer"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))
+                   :site_id dynamic-site-id
+                   :site_code "site-dynamic"
+                   :api_secret (java.util.UUID/randomUUID)
+                   :site_url "http://dynamic.com"))
    (table :promos
           (fixture :site-2-promo-1
                    :uuid (java.util.UUID/randomUUID)
@@ -203,6 +215,19 @@
                    :reward_tax "after-tax"
                    :reward_applied_to "cart"
                    :description "Easter Coupon"
+                   :seo_text "Best effing coupon evar"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now)))
+          (fixture :site-dynamic-promo-1
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-dynamic
+                   :code "DYNAMIC PROMO"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Dynamic offer Coupon"
                    :seo_text "Best effing coupon evar"
                    :updated_at (c/to-sql-date (t/now))
                    :created_at (c/to-sql-date (t/now))))
@@ -344,6 +369,20 @@
                    :site_id :site-last-offer
                    :promo_id :site-last-offer-promo-1
                    :code "OFFER-LAST-OFFER"
+                   :name "NAME HERE"
+                   :active true
+                   :display_text "Book it, dano"
+                   :presentation_type "lightbox"
+                   :presentation_page "product-detail"
+                   :created_at (c/to-sql-date (t/now))
+                   :updated_at (c/to-sql-date (t/now)))
+          (fixture :offer-dynamic
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-dynamic
+                   :dynamic true
+                   :expiry_in_minutes 5
+                   :promo_id :site-dynamic-promo-1
+                   :code "DYNAMIC"
                    :name "NAME HERE"
                    :active true
                    :display_text "Book it, dano"

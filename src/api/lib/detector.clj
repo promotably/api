@@ -3,7 +3,9 @@
   (:import
    [net.sf.uadetector.service UADetectorServiceFactory]
    [net.sf.uadetector UserAgent UserAgentType VersionNumber DeviceCategory ReadableDeviceCategory$Category])
-  (:require [clojure.string :as st]))
+  (:require
+   [clojure.string :as st]
+   [api.cloudwatch :as cw]))
 
 (defrecord Agent [name producer type version device])
 
@@ -14,11 +16,15 @@
   (UADetectorServiceFactory/getResourceModuleParser))
 
 (defn user-agent [s]
-  (let [a (to-clojure (.parse (parser) s))]
-    (reduce
-     (fn [m [k v]] (assoc m k v))
-     {}
-     a)))
+  (try
+    (let [agent-data (to-clojure (.parse (parser) s))]
+      (reduce
+       (fn [m [k v]] (assoc m k v))
+       {}
+       agent-data))
+    (catch Throwable t
+      (cw/put-metric "useragent-error")
+      nil)))
 
 (extend-protocol ToClojure
   DeviceCategory

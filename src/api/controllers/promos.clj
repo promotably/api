@@ -8,6 +8,7 @@
                                              custom-matcher
                                              underscore-to-dash-keys]]
             [api.models.site :as site]
+            [api.models.event :as event]
             [api.views.promos :refer [shape-promo
                                       shape-lookup
                                       shape-new-promo
@@ -22,6 +23,7 @@
 
 (def query-schema {:site-id s/Uuid
                    (s/optional-key :promotably-auth) s/Str
+                   (s/optional-key :site-shopper-id) s/Uuid
                    :code s/Str})
 
 (defn lookup-promos
@@ -113,6 +115,13 @@
         ;; (doto dbg)
         transform-auth)))
 
+(defn fallback-to-exploding
+  [site-id code]
+  (let [{:keys [offer-id] :as offer-event} (event/find-outstanding-offer site-id code)]
+    (when offer-event
+      (prn "Found outstanding offer" offer-event)
+      (promo/find-by-site-and-uuid site-id offer-id))))
+
 (defn validate-promo
   [{:keys [params body-params headers] :as request}]
   (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
@@ -125,7 +134,8 @@
                            coercer)
         site-id (-> coerced-params :site :site-id)
         code (-> coerced-params :code clojure.string/upper-case)
-        the-promo (promo/find-by-site-uuid-and-code site-id code)]
+        the-promo (or (promo/find-by-site-uuid-and-code site-id code)
+                      (fallback-to-exploding site-id code))]
 
     ;; For debugging
     ;; (clojure.pprint/pprint the-promo)

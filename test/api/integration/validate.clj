@@ -33,7 +33,8 @@
      :applied-coupons ["other-coupon"],
      :code code
      :shopper-email "colin@promotably.com",
-     :shopper-id nil,
+     :shopper-id (str (java.util.UUID/randomUUID)),
+     :site-shopper-id (str (java.util.UUID/randomUUID)),
      :cart-contents [{:sku "W100",
                       :variation "",
                       :variation-id "",
@@ -690,26 +691,27 @@
 
               (facts "Validate Promo 403 if auth not properly formed"
                      (let [b (json/read-str (:body (lookup-promos (str site-id))) :key-fn keyword)
-                      code (:code (first b))
-                      api-secret (str (:api-secret site))
-                      rq-body (json/write-str {:site-id (str site-id)
-                                               :code code
-                                               :shopper-email "shopper@shop.com"})
-                      body-hash (hmac-sha1 (.getBytes api-secret)
-                                           (.getBytes rq-body))
-                      time-val (tf/unparse (tf/formatters :basic-date-time-no-ms)
-                                           (t/now))
-                      sig-str (hmac-sha1 (.getBytes api-secret)
-                                         (.getBytes (apply str
-                                                           (str site-id) "\n"
-                                                           api-secret "\n"
-                                                           "localhost" "\n"
-                                                           "GET" "\n"
-                                                           (url-encode (str "/api/v1/promos/validation/" code)) "\n"
-                                                           time-val "\n"
-                                                           body-hash "\n"
-                                                           "" "\n"
-                                                           "" "\n")))
-                      sig-hash (str "hmac-sha1///" time-val "/" sig-str)
-                      r (validate-promo code site-id rq-body sig-hash)]
-                  (:status r) => 403))))
+                           code (:code (first b))
+                           api-secret (str (:api-secret site))
+                           rq-body (json/write-str {:site-id (str site-id)
+                                                    :site-shopper-id (str (java.util.UUID/randomUUID))
+                                                    :code code
+                                                    :shopper-email "shopper@shop.com"})
+                           body-hash (hmac-sha1 (.getBytes api-secret)
+                                                (.getBytes rq-body))
+                           time-val (tf/unparse (tf/formatters :basic-date-time-no-ms)
+                                                (t/now))
+                           sig-str (hmac-sha1 (.getBytes api-secret)
+                                              (.getBytes (apply str
+                                                                (str site-id) "\n"
+                                                                api-secret "\n"
+                                                                "localhost" "\n"
+                                                                "GET" "\n"
+                                                                (url-encode (str "/api/v1/promos/validation/" code)) "\n"
+                                                                time-val "\n"
+                                                                body-hash "\n"
+                                                                "" "\n"
+                                                                "" "\n")))
+                           sig-hash (str "hmac-sha1///" time-val "/" sig-str)
+                           r (validate-promo code site-id rq-body sig-hash)]
+                       (:status r) => 403))))

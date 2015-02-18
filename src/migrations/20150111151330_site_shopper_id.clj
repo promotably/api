@@ -9,7 +9,7 @@
   (jdbc/with-db-connection [db-con @db/$db-config]
     (jdbc/db-do-commands
      db-con
-     "ALTER TABLE events ADD COLUMN site_shopper_id uuid NOT NULL;"
+     "ALTER TABLE events ADD COLUMN site_shopper_id uuid;"
      "ALTER TABLE promo_redemptions ADD COLUMN site_shopper_id uuid NOT NULL;"
      "DROP FUNCTION upsertEvent(_type text, eventId uuid, siteId uuid, shopperId uuid,
                                              sessionId uuid, promoId uuid, _data json);"
@@ -45,24 +45,31 @@
       BEGIN
 
       SELECT p.id INTO STRICT promoId FROM promos p
-          JOIN sites ON p.site_id=s.id
+          JOIN sites s ON p.site_id=s.id
           WHERE p.code=promoCode
-          AND s.uuid=siteId;
+          AND s.site_id=siteId;
       EXCEPTION
         WHEN NO_DATA_FOUND THEN
             RAISE EXCEPTION 'promo % not found', promoCode;
         WHEN TOO_MANY_ROWS THEN
             RAISE EXCEPTION 'promo % not unique', promoCode;
 
+              INSERT INTO promo_redemptions (event_id, site_id, order_id, promo_id, promo_code,
+                                             discount, shopper_id, site_shopper_id, session_id)
+                  VALUES (eventId, siteId, orderId, promoId, promoCode, _discount, shopperId,
+                          siteShopperId, sessionId);
+
       IF NOT EXISTS (SELECT 1 FROM promo_redemptions
                          WHERE site_id=siteId
                          AND order_id=orderId
                          AND site_shopper_id=siteShopperId
                          AND promo_id=promoId) THEN
-          INSERT INTO promo_redemptions (event_id, site_id, order_id, promo_id, promo_code,
-                                         discount, shopper_id, site_shopper_id, session_id)
-              VALUES (eventId, siteId, orderId, promoId, promoCode, _discount, shopperId,
-                      siteShopperId, sessionId);
+              INSERT INTO promo_redemptions (event_id, site_id, order_id, promo_id, promo_code,
+                                             discount, shopper_id, site_shopper_id, session_id)
+                  VALUES (eventId, siteId, orderId, promoId, promoCode, _discount, shopperId,
+                          siteShopperId, sessionId);
+      ELSE
+          RAISE EXCEPTION 'WTF';
       END IF;
       NULL;
       END;
@@ -110,9 +117,9 @@
       BEGIN
 
       SELECT p.id INTO STRICT promoId FROM promos p
-          JOIN sites ON p.site_id=s.id
+          JOIN sites s ON p.site_id=s.id
           WHERE p.code=promoCode
-          AND s.uuid=siteId;
+          AND s.site_id=siteId;
       EXCEPTION
         WHEN NO_DATA_FOUND THEN
             RAISE EXCEPTION 'promo % not found', promoCode;

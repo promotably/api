@@ -66,7 +66,8 @@
                   :exclusions [joda-time com.fasterxml.jackson.core/jackson-core]]
                  [org.apache.commons/commons-daemon "1.0.9"]
                  [commons-codec "1.10"]
-                 [net.sf.uadetector/uadetector-resources "2014.10"]]
+                 [net.sf.uadetector/uadetector-resources "2014.10"]
+                 [crypto-random "1.2.0"]]
   :resource-paths ["resources"]
   :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC" "-XX:MaxPermSize=256m"
              ;; "–XX:+UseG1GC"
