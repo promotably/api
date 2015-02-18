@@ -12,7 +12,7 @@
      "DROP FUNCTION upsertEvent(_type text, eventId uuid, siteId uuid, shopperId uuid,
                                              siteShopperId uuid, sessionId uuid, promoId uuid, _data json);"
      "CREATE OR REPLACE FUNCTION upsertEvent(_type text, eventId uuid, siteId uuid, shopperId uuid,
-                                             siteShopperId uuid, sessionId uuid, promoId uuid, controlGroup bool, _data json)
+                                             siteShopperId uuid, sessionId uuid, promoId uuid, controlGroup boolean, _data json)
       RETURNS void AS $$
       BEGIN
       IF _type = 'thankyou' THEN
@@ -45,7 +45,7 @@
     (jdbc/db-do-commands
      db-con
      "DROP FUNCTION upsertEvent(_type text, eventId uuid, siteId uuid, shopperId uuid,
-                                             siteShopperId uuid, sessionId uuid, promoId uuid, controlGroup bool, _data json);"
+                                             siteShopperId uuid, sessionId uuid, promoId uuid, controlGroup boolean, _data json);"
      "CREATE OR REPLACE FUNCTION upsertEvent(_type text, eventId uuid, siteId uuid, shopperId uuid,
                                              siteShopperId uuid, sessionId uuid, promoId uuid, _data json)
       RETURNS void AS $$
