@@ -64,13 +64,6 @@
     (provided (by-offer-uuid ...site-id... offer-uuid) => [{:id 2}],
               (api.models.promo/find-by-site-and-uuid ...site-id... 1 true) => nil)))
 
-(fact "get offers for site uses the cache"
-  (let [site-uuid (java.util.UUID/randomUUID)]
-    ;; Lookup 10 times, the actual DB lookup only happens once
-    (dotimes [n 10] (get-offers-for-site site-uuid))
-    => nil
-    (provided (find-by-site-uuid site-uuid) => [{:id 1} {:id 2}] :times 1)))
-
 ;; EXPECTED OUTPUT AFTER DB-TO-OFFER
 ;;{:updated-at #inst "2014-10-17T19:42:00.952016000-00:00", :name "saalsdkjfls;akjdf", :reward {:type :promo, :promo-id #uuid "2eb88f44-e506-4fac-a458-9a1af11c5ca6"}, :display-text "aklsdjfldskajf;akefj", :conditions [{:created-at #inst "2014-10-29T00:47:04.000000000-00:00", :type :dates, :start-date #inst "2014-10-27T04:00:00.000-00:00", :end-date #inst "2014-10-31T04:00:00.000-00:00"}], :active true, :id 2, :code "DUCKAH DUCKAH", :site-id 1, :uuid #uuid "ba773e86-3bf0-41e4-a49c-88f7161a83b8", :presentation {:display-text nil, :page :any, :type :lightbox}, :created-at #inst "2014-10-17T19:42:00.952016000-00:00"}
 
