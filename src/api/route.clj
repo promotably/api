@@ -45,6 +45,7 @@
             [api.lib.detector :as detector]
             [api.system :refer [current-system]]
             [api.sorting-hat :refer [wrap-sorting-hat wrap-record-bucket-assignment]]
+            [api.vbucket :refer [wrap-vbucket wrap-record-vbucket-assignment]]
             [clj-time.core :refer [before? after? now] :as t]
             [clj-time.coerce :as t-coerce]
             [amazonica.aws.s3]
@@ -343,7 +344,8 @@
 (defn app
   [{:keys [config session-cache] :as options}]
   (-> all-routes
-      wrap-sorting-hat
+      ;; wrap-sorting-hat
+      wrap-vbucket
       wrap-detect-user-agent
       wrap-ensure-session
       (wrap-permacookie {:name "promotably" :request-key :shopper-id})
@@ -352,7 +354,8 @@
       (session/wrap-session {:store session-cache
                              :cookie-name promotably-session-cookie-name})
       (wrap-record-new-session {:cookie-name promotably-session-cookie-name})
-      wrap-record-bucket-assignment
+      ;; wrap-record-bucket-assignment
+      wrap-record-vbucket-assignment
       wrap-record-rco-events
       wrap-cookies
       wrap-keyword-params
