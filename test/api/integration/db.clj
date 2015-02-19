@@ -24,7 +24,7 @@
     (jdbc/with-db-connection [c @db/$db-config]
       (let [conn (jdbc/get-connection c)]
         (let [statement (doto (.prepareCall conn
-                                            "SELECT upsertPromoRedemption(?,?,?,?,?,?,?,?);")
+                                            "SELECT upsertPromoRedemption(?,?,?,?,?,?,?,?,?);")
                           (.setObject 1 (java.util.UUID/randomUUID)) ;; event-id
                           (.setObject 2 site-uuid)
                           (.setObject 3 "1")
@@ -32,7 +32,8 @@
                           (.setObject 5 (BigDecimal. "10"))
                           (.setObject 6 (java.util.UUID/randomUUID)) ;; shopper
                           (.setObject 7 (java.util.UUID/randomUUID)) ;; site-shopper
-                          (.setObject 8 (java.util.UUID/randomUUID)));; session
+                          (.setObject 8 (java.util.UUID/randomUUID)) ;; session
+                          (.setObject 9 false)) ;; control_group
               result (.execute statement)]
           result => truthy
           (count (jdbc/query c ["select * from promo_redemptions"])) => 1)))))
