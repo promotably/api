@@ -127,7 +127,6 @@
   [site-id code]
   (let [{:keys [offer-id] :as offer-event} (event/find-outstanding-offer site-id code)]
     (when offer-event
-      (prn "Found outstanding offer" offer-event)
       (promo/find-by-site-and-uuid site-id offer-id))))
 
 (defn validate-promo

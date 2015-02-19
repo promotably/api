@@ -139,7 +139,7 @@
                           :offer %
                           :site-shopper-id site-shopper-id}]
              (offer/valid? context %))
-          (offer/get-offers-for-site site-id)))
+          (offer/find-by-site-uuid site-id)))
 
 (defn get-available-offers
   [kinesis-comp {:keys [params session cookies] :as request}]
