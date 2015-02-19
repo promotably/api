@@ -25,7 +25,8 @@
                      (after :contents
                             (comment migrate-down))]
 
-  (def site (api.models.site/find-by-name "site-dynamic"))
+  (def max-retries 8)
+  (def site (api.models.site/find-by-name "site-dynamic-1"))
   (def site-id (:site-id site))
   (def api-secret (:api-secret site))
   (def promos (api.models.promo/find-by-site-uuid site-id false))
@@ -48,6 +49,35 @@
                           1)))
 
   (fact-group :integration
+
+              (facts "Expired offer check..."
+                (let [r1 (get-rcos fix/dynamic-site-id-2
+                                   fix/dynamic-site-shopper-id)
+                      pr1 (json/read-str (:body r1) :key-fn keyword)
+                      vid (get-in r1 [:cookies "promotably" :value])
+                      sid (get-in r1 [:cookies "promotably-session" :value])
+                      code (:code pr1)]
+                  ;; let scribe catch up
+                  (loop [tries 1
+                         e (event/find-offer fix/dynamic-site-id-2 code)]
+                    (if (and (not e) (< tries max-retries))
+                      (do
+                        (Thread/sleep 3000)
+                        (recur (+ 1 tries)
+                               (event/find-offer fix/dynamic-site-id-2 code)))
+                      (-> e :data :code) => code))
+                  (let [rq-body (json/write-str (basic-request-data fix/dynamic-site-id-2
+                                                                    code))
+                        path (url-encode (str "/api/v1/promos/query/" code))
+                        sig-hash (compute-sig-hash "localhost"
+                                                   "GET"
+                                                   path
+                                                   rq-body
+                                                   (str fix/dynamic-site-id-2)
+                                                   (str api-secret))
+                        r (query-promo code (str fix/dynamic-site-id-2) rq-body sig-hash)
+                        response-body (json/read-str (:body r) :key-fn keyword)]
+                    (:status r) => 404)))
 
               (facts "Get one and only one dynamic offer"
                 (let [r1 (get-rcos site-id
@@ -76,11 +106,10 @@
                   ;; let scribe catch up
                   (loop [tries 1]
                     (Thread/sleep 3000)
-                    (let [e (event/find-outstanding-offer fix/dynamic-site-id
-                                                          code)]
+                    (let [e (event/find-outstanding-offer site-id code)]
                       (if e
                         (-> e :data :code) => code
-                        (if (< tries 4)
+                        (if (< tries max-retries)
                           (recur (+ 1 tries))
                           (-> e :data :code) => code))))
                   (let [rq-body (json/write-str (basic-request-data site-id code))

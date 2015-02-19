@@ -249,7 +249,6 @@
        (log/logf :error "Can't find promo for offer.  Offer uuid %s, promo uuid %s"
                  (:uuid offer)
                  promo-id)
-       (prn "error" offer)
        false)
      (not (promo/valid-for-offer? promo))
      false

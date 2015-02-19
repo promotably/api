@@ -89,6 +89,16 @@
         promo (promo/find-by-site-and-uuid (:id site) promo-uuid)]
     (shape-promo {:promo promo})))
 
+(defn fallback-to-exploding
+  [site-id code]
+  (let [{:keys [offer-id] :as offer-event} (event/find-outstanding-offer site-id code)]
+    (when offer-event
+      (let [offer-promo (promo/find-by-uuid (-> offer-event
+                                                :data
+                                                :promo-id
+                                                java.util.UUID/fromString))]
+        (if offer-promo (assoc offer-promo :code code))))))
+
 ;; TODO: Check auth
 (defn query-promo
   [{:keys [params] :as request}]
@@ -97,14 +107,7 @@
         {:keys [site-id code] :as coerced-params} (coercer params)
         code (clojure.string/upper-case code)
         the-promo (promo/find-by-site-uuid-and-code site-id code)
-        offer-event (event/find-outstanding-offer site-id code)
-        offer-promo (if offer-event
-                      (promo/find-by-uuid (-> offer-event
-                                              :data
-                                              :promo-id
-                                              java.util.UUID/fromString)))
-        offer-promo (cond-> offer-promo
-                            offer-promo (assoc :code code))]
+        offer-promo (fallback-to-exploding site-id code)]
     (shape-promo {:promo (or the-promo offer-promo)})))
 
 (def coerce-site-id
@@ -122,12 +125,6 @@
         coerce-site-id
         ;; (doto dbg)
         transform-auth)))
-
-(defn fallback-to-exploding
-  [site-id code]
-  (let [{:keys [offer-id] :as offer-event} (event/find-outstanding-offer site-id code)]
-    (when offer-event
-      (promo/find-by-site-and-uuid site-id offer-id))))
 
 (defn validate-promo
   [{:keys [params body-params headers] :as request}]
@@ -179,7 +176,8 @@
                            coercer)
         site-id (-> coerced-params :site :site-id)
         code (-> coerced-params :code clojure.string/upper-case)
-        the-promo (promo/find-by-site-uuid-and-code site-id code)
+        the-promo (or (promo/find-by-site-uuid-and-code site-id code)
+                      (fallback-to-exploding site-id code))
         [context errors] (promo/valid? the-promo coerced-params)]
     (cond
      (not the-promo)

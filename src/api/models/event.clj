@@ -1,11 +1,14 @@
 (ns api.models.event
-  (:require [api.entities :refer :all]
+  (:require [clojure.tools.logging :as log]
+            [clj-time.format]
             [clj-time.core :refer [now minus days]]
             [clj-time.coerce :refer [to-sql-date to-sql-time]]
             [clojure.set :refer [rename-keys]]
             [clojure.data.json :as json]
             [clojure.java.jdbc :as jdbc]
+            [api.entities :refer :all]
             [api.util :refer [hyphenify-key assoc*]]
+            [api.cloudwatch :as cw]
             [api.lib.schema :refer :all]
             [korma.core :refer :all]
             [schema.core :as s]
@@ -102,23 +105,36 @@
 
 ;; (discount-last-order #uuid "5669de1d-cc61-4590-9ef6-5cab58369df2" #uuid "001fd699-9d50-4b7c-af3b-3e022d379647")
 
-(sm/defn find-outstanding-offer
+(sm/defn find-offer
+  "Find any (possibly redeemed, or expired) offer with the code."
   [site-id :- s/Uuid code :- s/Str]
-  (let [offer (first (exec-raw [(str "SELECT events.* "
-                                     "FROM events "
-                                     "WHERE "
-                                     "  (site_id = ? AND "
-                                     "   type = 'offer-made' AND "
-                                     "   data->>'code' = ?)"
-                                     "ORDER BY events.created_at DESC "
-                                     "LIMIT 1")
-                                [site-id code]] :results))
+  (first (exec-raw [(str "SELECT events.* "
+                         "FROM events "
+                         "WHERE "
+                         "  (site_id = ? AND "
+                         "   type = 'offer-made' AND "
+                         "   data->>'code' = ?)"
+                         "ORDER BY events.created_at DESC "
+                         "LIMIT 1")
+                    [site-id code]] :results)))
+
+(sm/defn find-outstanding-offer
+  "Find an unredeemed, unexpired offer with the code."
+  [site-id :- s/Uuid code :- s/Str]
+  (let [offer (find-offer site-id code)
+        expiry (-> offer :data :expiry clj-time.format/parse)
         redemption (first (select promo-redemptions
                                   (where {:site_id site-id
                                           :promo_code code})
                                   (order :created_at :DESC)
                                   (limit 1)))]
-    (if-not redemption offer)))
+    (if (and (not redemption) offer)
+      (if (clj-time.core/before? (now) expiry)
+        offer
+        (do
+          (log/logf :debug "Expired offer")
+          (cw/put-metric "offer-expired")
+          nil)))))
 
 ;; (find-outstanding-offer #uuid "9be8a905-498d-4a8e-ba50-397e2d5f5275" "XP9HEW")
 
