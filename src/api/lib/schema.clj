@@ -146,7 +146,8 @@
    (s/optional-key :user-id) s/Str
    (s/required-key :site) s/Any
    (s/optional-key :shopper-id) (s/maybe s/Uuid)
-   (s/optional-key :site-shopper-id) (s/maybe s/Uuid)})
+   (s/optional-key :site-shopper-id) (s/maybe s/Uuid)
+   (s/required-key :control-group) s/Bool})
 
 (def CartItem
   {:sku s/Str

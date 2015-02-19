@@ -133,7 +133,8 @@
   (put-metric "event-record")
   ;; for debug
   ;; (prn "PARAMS" params)
-  (let [parsed (parse-event params)]
+  (let [event-params (assoc params :control-group (= (:test-bucket (:session request)) :control))
+        parsed (parse-event event-params)]
     ;; for debug
     ;; (prn "PARSED" parsed)
     (cond
@@ -166,6 +167,7 @@
                      (assoc :shopper-id (:shopper-id request))
                      (assoc :site-id (-> parsed :site :site-id))
                      (assoc :session-id (get-in cookies [config/session-cookie-name :value]))
+                     (assoc :control-group (= (:test-bucket (:session request)) :control))
                      coercer
                      (assoc :event-format-version "1"))]
          ;; For debugging
