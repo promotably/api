@@ -101,3 +101,24 @@
       0)))
 
 ;; (discount-last-order #uuid "5669de1d-cc61-4590-9ef6-5cab58369df2" #uuid "001fd699-9d50-4b7c-af3b-3e022d379647")
+
+(sm/defn find-outstanding-offer
+  [site-id :- s/Uuid code :- s/Str]
+  (let [offer (first (exec-raw [(str "SELECT events.* "
+                                     "FROM events "
+                                     "WHERE "
+                                     "  (site_id = ? AND "
+                                     "   type = 'offer-made' AND "
+                                     "   data->>'code' = ?)"
+                                     "ORDER BY events.created_at DESC "
+                                     "LIMIT 1")
+                                [site-id code]] :results))
+        redemption (first (select promo-redemptions
+                                  (where {:site_id site-id
+                                          :promo_code code})
+                                  (order :created_at :DESC)
+                                  (limit 1)))]
+    (if-not redemption offer)))
+
+;; (find-outstanding-offer #uuid "9be8a905-498d-4a8e-ba50-397e2d5f5275" "XP9HEW")
+

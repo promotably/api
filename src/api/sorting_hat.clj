@@ -34,7 +34,7 @@
       (when-let [assignment-data (:new-bucket-assignment response)]
         (cw/put-metric "bucket-assigned")
         (kinesis/record-event! (:kinesis current-system) "bucket-assigned"
-                               (assoc assignment-data :session-id (:session/key request))))
+                               (assoc assignment-data :session-id (:session/key response))))
       response)))
 
 (defn wrap-sorting-hat

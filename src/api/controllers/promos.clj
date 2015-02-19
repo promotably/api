@@ -8,6 +8,7 @@
                                              custom-matcher
                                              underscore-to-dash-keys]]
             [api.models.site :as site]
+            [api.models.event :as event]
             [api.views.promos :refer [shape-promo
                                       shape-lookup
                                       shape-new-promo
@@ -22,6 +23,8 @@
 
 (def query-schema {:site-id s/Uuid
                    (s/optional-key :promotably-auth) s/Str
+                   (s/optional-key :shopper-id) s/Str
+                   (s/optional-key :site-shopper-id) s/Uuid
                    :code s/Str})
 
 (defn lookup-promos
@@ -92,10 +95,17 @@
   (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
         coercer (c/coercer query-schema matcher)
         {:keys [site-id code] :as coerced-params} (coercer params)
-        the-promo (promo/find-by-site-uuid-and-code
-                   site-id
-                   (clojure.string/upper-case code))]
-    (shape-promo {:promo the-promo})))
+        code (clojure.string/upper-case code)
+        the-promo (promo/find-by-site-uuid-and-code site-id code)
+        offer-event (event/find-outstanding-offer site-id code)
+        offer-promo (if offer-event
+                      (promo/find-by-uuid (-> offer-event
+                                              :data
+                                              :promo-id
+                                              java.util.UUID/fromString)))
+        offer-promo (cond-> offer-promo
+                            offer-promo (assoc :code code))]
+    (shape-promo {:promo (or the-promo offer-promo)})))
 
 (def coerce-site-id
   (make-trans #{:site-id}
@@ -113,6 +123,13 @@
         ;; (doto dbg)
         transform-auth)))
 
+(defn fallback-to-exploding
+  [site-id code]
+  (let [{:keys [offer-id] :as offer-event} (event/find-outstanding-offer site-id code)]
+    (when offer-event
+      (prn "Found outstanding offer" offer-event)
+      (promo/find-by-site-and-uuid site-id offer-id))))
+
 (defn validate-promo
   [{:keys [params body-params headers] :as request}]
   (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
@@ -125,7 +142,8 @@
                            coercer)
         site-id (-> coerced-params :site :site-id)
         code (-> coerced-params :code clojure.string/upper-case)
-        the-promo (promo/find-by-site-uuid-and-code site-id code)]
+        the-promo (or (promo/find-by-site-uuid-and-code site-id code)
+                      (fallback-to-exploding site-id code))]
 
     ;; For debugging
     ;; (clojure.pprint/pprint the-promo)

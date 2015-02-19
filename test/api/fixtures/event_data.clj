@@ -4,8 +4,8 @@
   (:require
    [clojure.data.json :as json]
    [clj-time.format :as f]
-   [clj-time.core :refer [now minus days]]
-   [clj-time.coerce :refer [to-sql-date]]
+   [clj-time.core :refer [now minus days] :as t]
+   [clj-time.coerce :refer [to-sql-date] :as c]
    [api.fixtures.common :refer [site-uuid default-account default-site]]
    [api.q-fix :refer :all]))
 
@@ -18,6 +18,20 @@
   (set
    default-account
    default-site
+   (table :promos
+          (fixture :some-promo
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "CODE"
+                   :active true
+                   :reward_amount 20
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Easter Coupon"
+                   :seo_text "Best effing coupon evar"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
    (table :events
           (fixture :event-start-session
                    :site_id site-uuid

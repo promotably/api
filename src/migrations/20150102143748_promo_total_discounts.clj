@@ -17,7 +17,7 @@
               FROM promo_redemptions pr
               JOIN promos p ON p.code = pr.promo_code
               JOIN sites s ON s.id = p.site_id
-              WHERE s.uuid=siteId
+              WHERE s.site_id=siteId
               AND p.uuid=promoId;
           RETURN total;
       END

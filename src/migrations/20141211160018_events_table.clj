@@ -15,7 +15,7 @@
                             [:type "TEXT NOT NULL"]
                             [:site_id "uuid NOT NULL"]
                             [:promo_id "uuid"]
-                            [:shopper_id "uuid NOT NULL"]
+                            [:shopper_id "uuid"]
                             [:session_id "uuid NOT NULL"]
                             [:created_at "timestamp DEFAULT current_timestamp"]
                             [:data "JSON"])

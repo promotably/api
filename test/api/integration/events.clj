@@ -73,4 +73,35 @@
             r (track sig-hash params)]
         (:status r) => 200))
 
+    (fact "Track thankyou"
+      (let [api-secret (str (:api-secret site))
+            path (url-encode "/api/v1/track")
+            sig-hash (compute-sig-hash "localhost"
+                                       "GET"
+                                       path
+                                       nil
+                                       site-id
+                                       api-secret)
+            params {:site-id (str site-id)
+                    :site-shopper-id "6880a72f-4d33-4abb-ad2f-c88b51ebbe19"
+                    :event-name "_trackThankYou"
+                    "applied-coupon[]" "CODE,5"
+                    "cart-item[]" "W100,WIDGET,,0,,1,10,10"
+                    :user-id "1"
+                    :promotably-auth sig-hash
+                    "shipping-method[]" "free_shipping,0"
+                    "discount" "5"
+                    "tax" "0"
+                    "shipping" "0"
+                    "total" "10"
+                    "order-id" "9"
+                    "order-date" "2015-02-13%2017:00:40"
+                    "billing-address" "Colin,Steele,Suite%201450,3811%20Turtle%20Creek%20Blvd,Dallas,TX,75219,US,"
+                    "shipping-address" "Colin,Steele,Suite%201450,3811%20Turtle%20Creek%20Blvd,Dallas,TX,75219,US"
+                    :callback "jQuery1111034964492078870535_1423111893735"
+                    "_" "1423111893736"}
+            r (track sig-hash params)]
+        (Thread/sleep 5000)
+        (:status r) => 200))
+
 ))
