@@ -64,8 +64,8 @@
   []
   (get-in current-system [:config :auth-token-config :api :api-secret]))
 
-(def promo-code-regex #"[a-zA-Z0-9-]{1,}")
-(def offer-code-regex #"[a-zA-Z0-9-]{1,}")
+(def promo-code-regex #"[a-zA-Z0-9-_]{1,}")
+(def offer-code-regex #"[a-zA-Z0-9-_]{1,}")
 
 (defroutes promo-routes
   (context "/promos" []

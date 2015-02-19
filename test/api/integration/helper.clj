@@ -40,19 +40,6 @@
                    (let [result (jdbc/insert! t-con table-name xformed)]
                      (-> result first :id))))))))
 
-(comment
-  (let [config (-> system/current-system :config :database)]
-    (jdbc/with-db-transaction [t-con (kdb/postgres config)]
-      (let [conn (jdbc/get-connection t-con)
-            x
-            result (jdbc/insert! t-con "promo_conditions" {"promo_id" 8
-                                                           "uuid" (java.util.UUID/randomUUID)
-                                                           "type" "product_ids"
-                                                           "product_ids" x})]
-        (-> result first :id))))
-
-  )
-
 (def test-user-id "872d9a85-4c68-4cc0-ae5c-a24ed5ed8899")
 
 (defn auth-cookie-token []
@@ -119,6 +106,17 @@
                 :throw-exceptions false
                 :socket-timeout 10000
                 :conn-timeout 10000}))
+
+(defn query-promo
+  [code sid body sig]
+  (client/get (str "http://localhost:3000/api/v1/promos/query/" code)
+              {:body body
+               :headers {:promotably-auth sig}
+               :content-type :json
+               :accept :json
+               :throw-exceptions false
+               :socket-timeout 10000
+               :conn-timeout 10000}))
 
 (defn compute-sig-hash
   [host verb path body site-id api-secret]

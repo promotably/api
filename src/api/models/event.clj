@@ -112,10 +112,13 @@
                                      "   data->>'code' = ?)"
                                      "ORDER BY events.created_at DESC "
                                      "LIMIT 1")
-                                [site-id code]] :results))]
-    offer)
-  ;; look for a redemption that cancels it out
-  )
+                                [site-id code]] :results))
+        redemption (first (select promo-redemptions
+                                  (where {:site_id site-id
+                                          :promo_code code})
+                                  (order :created_at :DESC)
+                                  (limit 1)))]
+    (if-not redemption offer)))
 
 ;; (find-outstanding-offer #uuid "9be8a905-498d-4a8e-ba50-397e2d5f5275" "XP9HEW")
 

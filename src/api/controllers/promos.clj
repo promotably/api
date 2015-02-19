@@ -23,6 +23,7 @@
 
 (def query-schema {:site-id s/Uuid
                    (s/optional-key :promotably-auth) s/Str
+                   (s/optional-key :shopper-id) s/Str
                    (s/optional-key :site-shopper-id) s/Uuid
                    :code s/Str})
 
@@ -94,10 +95,17 @@
   (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
         coercer (c/coercer query-schema matcher)
         {:keys [site-id code] :as coerced-params} (coercer params)
-        the-promo (promo/find-by-site-uuid-and-code
-                   site-id
-                   (clojure.string/upper-case code))]
-    (shape-promo {:promo the-promo})))
+        code (clojure.string/upper-case code)
+        the-promo (promo/find-by-site-uuid-and-code site-id code)
+        offer-event (event/find-outstanding-offer site-id code)
+        offer-promo (if offer-event
+                      (promo/find-by-uuid (-> offer-event
+                                              :data
+                                              :promo-id
+                                              java.util.UUID/fromString)))
+        offer-promo (cond-> offer-promo
+                            offer-promo (assoc :code code))]
+    (shape-promo {:promo (or the-promo offer-promo)})))
 
 (def coerce-site-id
   (make-trans #{:site-id}
