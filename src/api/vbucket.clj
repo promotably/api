@@ -1,21 +1,7 @@
 (ns api.vbucket
-  (:require [clojure.walk :refer [postwalk prewalk]]
-            [clojure.set :as set]
-            [clojure.tools.logging :as log]
-            [clj-time.format]
-            [clj-time.coerce :as t-coerce]
-            [clj-time.core :as t]
-            [api.config :as config]
-            [api.kinesis :as kinesis]
-            [api.models.helper :refer :all]
-            [api.models.site :as site]
+  (:require [api.kinesis :as kinesis]
             [api.system :refer [current-system]]
-            [api.lib.schema :refer :all]
-            [taoensso.carmine :as car :refer [wcar]]
-            [api.redis :as redis]
-            [api.cloudwatch :refer [put-metric] :as cw]
-            [schema.coerce :as sc]
-            [schema.core :as s]))
+            [api.cloudwatch :refer [put-metric] :as cw]))
 
 (def not-nil? (complement nil?))
 
