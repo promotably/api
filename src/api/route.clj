@@ -344,7 +344,6 @@
 (defn app
   [{:keys [config session-cache] :as options}]
   (-> all-routes
-      ;; wrap-sorting-hat
       wrap-vbucket
       wrap-detect-user-agent
       wrap-ensure-session
@@ -354,7 +353,6 @@
       (session/wrap-session {:store session-cache
                              :cookie-name promotably-session-cookie-name})
       (wrap-record-new-session {:cookie-name promotably-session-cookie-name})
-      ;; wrap-record-bucket-assignment
       wrap-record-vbucket-assignment
       wrap-record-rco-events
       wrap-cookies
