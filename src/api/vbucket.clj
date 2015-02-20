@@ -9,8 +9,8 @@
 
 (defn pick-vbucket
   "Do a modulus using vbucket-total to determine virtual bucket"
-  [id]
-  (mod (hash id) total-vbuckets))
+  [uuid]
+  (mod (hash uuid) total-vbuckets))
 
 (defn pick-bucket
   "Choose test or control sybmol based on a 50/50 split"
