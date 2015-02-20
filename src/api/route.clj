@@ -44,7 +44,6 @@
             [api.cloudwatch :as cw]
             [api.lib.detector :as detector]
             [api.system :refer [current-system]]
-            [api.sorting-hat :refer [wrap-sorting-hat wrap-record-bucket-assignment]]
             [api.vbucket :refer [wrap-vbucket wrap-record-vbucket-assignment]]
             [clj-time.core :refer [before? after? now] :as t]
             [clj-time.coerce :as t-coerce]
