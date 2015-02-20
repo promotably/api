@@ -2,10 +2,6 @@
 
 The Promotably API Server
 
-## CI Status
-
-[ ![Codeship Status for promotably/api](https://www.codeship.io/projects/379b8ea0-f26b-0131-b8b8-428432402276/status)](https://www.codeship.io/projects/27697) 
-
 ## Usage
 
 ### Cider
