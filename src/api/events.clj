@@ -149,10 +149,12 @@
        (put-metric "event-record-unknown-site")
        {:status 404 :session (:session request)})
 
-     (not (auth-valid? (-> parsed :site :site-id)
-                       (-> parsed :site :api-secret)
-                       (:auth parsed)
-                       request))
+     (and
+      (not (= (:event-name params) "_trackOfferShown"))
+      (not (auth-valid? (-> parsed :site :site-id)
+                        (-> parsed :site :api-secret)
+                        (:auth parsed)
+                        request)))
      (do
        (put-metric "event-record-auth-error")
        {:status 403 :session (:session request)})

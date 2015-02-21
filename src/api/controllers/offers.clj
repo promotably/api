@@ -125,6 +125,7 @@
 (defn create-response
   [promo offer is-dynamic? exploding-code expiry]
   (cond-> {:promo {:conditions (:conditions promo)}
+           :offer-id (:uuid offer)
            :presentation (:presentation offer)
            :is-limited-time is-dynamic?
            :code (if is-dynamic? exploding-code (:code promo))
