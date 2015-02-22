@@ -158,6 +158,7 @@
   (let [{:keys [google-code google-access-token google-id-token]} body-params
         {:keys [client-id client-secret]} social-token-map
         gplus-token-endpoint (get-google-token-endpoint)
+        gplus-tokeninfo-endpoint "https://www.googleapis.com/oauth2/v1/tokeninfo?id_token=%s"
         resp @(http/post gplus-token-endpoint
                          {:method :post
                           :headers {"Content-Type" "application/x-www-form-urlencoded"}
@@ -167,10 +168,13 @@
                                         "redirect_uri" "postmessage"
                                         "grant_type" "authorization_code"}})
         body (json/read-str (:body resp) :key-fn keyword)
-        {:keys [access_token id_token]} body]
+        {:keys [access_token id_token]} body
+        token-info-resp @(http/get (format gplus-tokeninfo-endpoint id_token))
+        token-info-body (json/read-str (:body token-info-resp) :key-fn keyword)
+        gplus-user-id (:user_id token-info-body)]
     (when (and (= 200 (:status resp))
                (= google-access-token access_token))
-      [:user-social-id google-id-token])))
+      [:user-social-id gplus-user-id])))
 
 (def provider-validators
   "A map of privder keys to their respective validation functions."
@@ -217,10 +221,6 @@
             api-secret (get-in auth-config [:api :api-secret])]
         (auth-response create-resp api-secret user-id))
       (do
-        ;; Colin here, and I have no idea why this would fail, but it does...?
-        ;; TODO: a useful error message needed
-        (log/logf :error "Error?  Logging in?  I think?")
-        ;; TODO: a more useful metric
         (cw/put-metric "login-error")
         {:status 401}))
     (let [create-resp (create-user-fn request)
