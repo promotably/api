@@ -52,8 +52,8 @@ Once you have an id and key you can save the credentials to `~/.aws/credentials`
 
 ```
 [promotably]
-aws_access_key_id = <ID>
-aws_secret_access_key = <KEY>
+aws_access_key_id=<ID>
+aws_secret_access_key=<KEY>
 ```
 
 ### Running the Server
