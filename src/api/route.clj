@@ -1,6 +1,7 @@
 (ns api.route
   (:import [java.io ByteArrayInputStream]
-           [java.util UUID])
+           [java.util UUID]
+           [com.amazonaws.auth.profile ProfileCredentialsProvider])
   (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
             [clojure.core.match :as match :refer (match)]
@@ -111,11 +112,11 @@
            (PUT ["/:promo-id", :promo-id promo-code-regex] [promo-id] update-promo!)))
 
 (defroutes metrics-secure-routes
-           (context "/:site-id/metrics" []
-                    (GET "/revenue" [] get-revenue)
-                    (GET "/lift" [] get-lift)
-                    (GET "/promos" [] get-promos)
-                    (GET "/rco" [] get-rco)))
+  (context "/:site-id/metrics" []
+           (GET "/revenue" [] get-revenue)
+           (GET "/lift" [] get-lift)
+           (GET "/promos" [] get-promos)
+           (GET "/rco" [] get-rco)))
 
 (defroutes secure-routes
   (context "/api/v1" []
@@ -138,17 +139,19 @@
         filename (-> config :dashboard :index-filename)]
     (try
       (cw/put-metric "index-fetch" {:config config})
-      (let [resp (amazonica.aws.s3/get-object {:profile "promotably"}
-                                              bucket
-                                              filename)
-            content (slurp (:object-content resp))]
-        (reset! cached-index {:index content :cached-at (now)}))
-      (catch Throwable t
-        (cw/put-metric "index-missing" {:config config})
-        (log/logf :error
-                  "Can't fetch index. Bucket %s, file '%s'."
+        (log/logf :info "Fetching s3://%s/%s."
                   bucket
-                  filename)))))
+                  filename)
+        (let [resp (amazonica.aws.s3/get-object bucket filename)
+              content (slurp (:object-content resp))]
+          (reset! cached-index {:index content :cached-at (now)}))
+    (catch Throwable t
+      (cw/put-metric "index-missing" {:config config})
+      (log/logf :error
+                "Can't fetch index. Bucket %s, file '%s' exception %s."
+                bucket
+                filename
+                t)))))
 
 (defn serve-cached-index
   [req]
