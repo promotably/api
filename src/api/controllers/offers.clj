@@ -194,15 +194,19 @@
   (fn [{:keys [session] :as request}]
     (let [k (:kinesis current-system)
           response (handler request)
-          sid (:session/key response)]
+          assignment-data (:new-bucket-assignment response)
+          sid (:session/key response)
+          qualified-event (:offer-qualification-event response)
+          assignment-event (:offer-assignment-event response)
+          ev-base {:session-id sid :control-group (= (:bucket assignment-data) :control)}]
       (if sid
         (do
-          (when-let [qualified-event (:offer-qualification-event response)]
+          (when qualified-event
             (cw/put-metric "rco-qualification")
-            (kinesis/record-event! k :shopper-qualified-offers (assoc qualified-event :session-id sid)))
-          (when-let [assignment-event (:offer-assignment-event response)]
+            (kinesis/record-event! k :shopper-qualified-offers (merge qualified-event ev-base)))
+          (when assignment-event
             (cw/put-metric "rco-assignment")
-            (kinesis/record-event! k :offer-made (assoc assignment-event :session-id sid))))
+            (kinesis/record-event! k :offer-made (merge assignment-event ev-base))))
         (do
           (log/logf :error "Error recording rco: missing session id.")
           (cw/put-metric "rco-session-id-error")))
