@@ -8,14 +8,14 @@
 (def uuid4 #uuid "f066ca15-a31b-4e15-935a-b759dda8f145")
 
 (fact "For a given uuid their vbucket remains constant"
-      (pick-vbucket uuid1) => 73
-      (pick-vbucket uuid2) => 66
-      (pick-vbucket uuid3) => 31
-      (pick-vbucket uuid4) => 4)
+      (pick-vbucket (str uuid1)) => 80
+      (pick-vbucket (str uuid2)) => 39
+      (pick-vbucket (str uuid3)) => 95
+      (pick-vbucket (str uuid4)) => 65)
 
 (fact "A user is either in :test or :control based off of their #uuid or override"
-      (pick-bucket uuid1 nil) => :test
-      (pick-bucket uuid2 "xyzzy") => :test
-      (pick-bucket uuid3 nil) => :control
-      (pick-bucket uuid4 true) => :test)
+      (pick-bucket (str uuid1) nil) => :test
+      (pick-bucket (str uuid2) nil) => :control
+      (pick-bucket (str uuid3) nil) => :test
+      (pick-bucket (str uuid4) true) => :test)
 
