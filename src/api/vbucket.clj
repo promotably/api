@@ -10,7 +10,8 @@
 (defn pick-vbucket
   "Do a modulus using vbucket-total to determine virtual bucket"
   [uuid]
-  (mod (hash uuid) total-vbuckets))
+  (let [suuid (str uuid)] ;; Make sure a #uuid isn't sent
+    (mod (hash suuid) total-vbuckets)))
 
 (defn pick-bucket
   "Choose test or control sybmol based on a 50/50 split"
@@ -27,8 +28,9 @@
     (let [response (handler request)]
       (when-let [assignment-data (:new-bucket-assignment response)]
         (cw/put-metric "bucket-assigned")
-        (kinesis/record-event! (:kinesis current-system) "bucket-assigned"
-                               (assoc assignment-data :session-id (:session/key response))))
+        (let [w-session-key (assoc assignment-data :session-id (:session/key response))
+              ev-payload (assoc w-session-key :control-group (= (:bucket assignment-data ) :control))]
+          (kinesis/record-event! (:kinesis current-system) "bucket-assigned" ev-payload)))
       response)))
 
 (defn wrap-vbucket
