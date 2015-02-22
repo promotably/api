@@ -12,7 +12,7 @@
 
 ;; Default build stuff
 (def default-build-bucket "promotably-build-artifacts")
-(def default-index-file "db/latest/index.html")
+(def default-index-file "jenkins/dashboard/latest/index.html")
 
 ;; Setup info for logging
 (def base-log-config
