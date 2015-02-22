@@ -14,7 +14,7 @@
             [cider/cider-nrepl "0.8.0"]]
   :dependencies [[compojure "1.1.9" :exclusions [joda-time]]
                  [org.clojure/tools.cli "0.3.1"]
-                 [amazonica "0.2.30" :exclusions [joda-time]]
+                 [amazonica "0.3.18" :exclusions [joda-time]]
                  [clj-http "0.9.2"
                   :exclusions [commons-logging
                                org.clojure/tools.reader

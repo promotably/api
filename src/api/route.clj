@@ -1,6 +1,7 @@
 (ns api.route
   (:import [java.io ByteArrayInputStream]
            [java.util UUID]
+           [com.amazonaws.auth DefaultAWSCredentialsProviderChain]
            [com.amazonaws.auth.profile ProfileCredentialsProvider])
   (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
@@ -139,19 +140,29 @@
         filename (-> config :dashboard :index-filename)]
     (try
       (cw/put-metric "index-fetch" {:config config})
-        (log/logf :info "Fetching s3://%s/%s."
+      (let [p-name (-> config :kinesis :aws-credential-profile)
+            ^com.amazonaws.auth.AWSCredentialsProvider cp
+            (if p-name
+              (ProfileCredentialsProvider. p-name)
+              (DefaultAWSCredentialsProviderChain.))
+            _ (log/logf :info "Fetching s3://%s/%s using credentials '%s'."
+                        bucket
+                        filename
+                        p-name)
+            resp (if p-name
+                   (amazonica.aws.s3/get-object cp
+                                                :bucket-name bucket
+                                                :key filename)
+                   (amazonica.aws.s3/get-object bucket filename))
+            content (slurp (:object-content resp))]
+        (reset! cached-index {:index content :cached-at (now)}))
+      (catch Throwable t
+        (cw/put-metric "index-missing" {:config config})
+        (log/logf :error
+                  "Can't fetch index. Bucket %s, file '%s' exception %s."
                   bucket
-                  filename)
-        (let [resp (amazonica.aws.s3/get-object bucket filename)
-              content (slurp (:object-content resp))]
-          (reset! cached-index {:index content :cached-at (now)}))
-    (catch Throwable t
-      (cw/put-metric "index-missing" {:config config})
-      (log/logf :error
-                "Can't fetch index. Bucket %s, file '%s' exception %s."
-                bucket
-                filename
-                t)))))
+                  filename
+                  t)))))
 
 (defn serve-cached-index
   [req]
