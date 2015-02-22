@@ -138,12 +138,17 @@
         filename (-> config :dashboard :index-filename)]
     (try
       (cw/put-metric "index-fetch" {:config config})
-      (let [resp (amazonica.aws.s3/get-object bucket filename)
+      (let [resp (amazonica.aws.s3/get-object {:profile "promotably"}
+                                              bucket
+                                              filename)
             content (slurp (:object-content resp))]
         (reset! cached-index {:index content :cached-at (now)}))
       (catch Throwable t
         (cw/put-metric "index-missing" {:config config})
-        (log/logf :error "Can't fetch index file '%s'." filename)))))
+        (log/logf :error
+                  "Can't fetch index. Bucket %s, file '%s'."
+                  bucket
+                  filename)))))
 
 (defn serve-cached-index
   [req]

@@ -1,6 +1,7 @@
 (ns api.authentication
   (:require [api.entities :refer [users accounts]]
             [api.lib.crypto :as cr]
+            [api.cloudwatch :as cw]
             [clj-time.core :as t]
             [clj-time.format :as tf]
             [clojure.data.json :as json]
@@ -215,7 +216,13 @@
             user-id (str (get-in create-resp [:body :user-id]))
             api-secret (get-in auth-config [:api :api-secret])]
         (auth-response create-resp api-secret user-id))
-      {:status 401})
+      (do
+        ;; Colin here, and I have no idea why this would fail, but it does...?
+        ;; TODO: a useful error message needed
+        (log/logf :error "Error?  Logging in?  I think?")
+        ;; TODO: a more useful metric
+        (cw/put-metric "login-error")
+        {:status 401}))
     (let [create-resp (create-user-fn request)
           user-id (str (get-in create-resp [:body :user-id]))
           api-secret (get-in auth-config [:api :api-secret])]
