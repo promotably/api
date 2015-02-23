@@ -640,7 +640,8 @@
    (s/optional-key :num-visits) (s/maybe s/Int)
    (s/optional-key :max-discount-per-day) (s/maybe s/Num)
    (s/optional-key :max-redemptions-per-day) (s/maybe s/Num)
-   (s/optional-key :num-cart-adds) (s/maybe s/Int)})
+   (s/optional-key :num-cart-adds) (s/maybe s/Int)
+   (s/optional-key :days-since-last-offer) (s/maybe s/Int)})
 
 (def BaseOffer
   {(s/required-key :site-id) s/Uuid
