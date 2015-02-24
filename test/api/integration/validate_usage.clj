@@ -22,8 +22,7 @@
 (against-background  [(before :contents
                              (do (when (nil? system/current-system)
                                    (core/go {:port 3000 :repl-port 55555}))
-                                 (migrate-down)
-                                 (migrate-up)
+                                 (migrate-or-truncate)
                                  (load-fixture-set api.fixtures.validate-usage/fixture-set)))
                      (after :contents
                             (comment migrate-down))]

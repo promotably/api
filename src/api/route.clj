@@ -390,7 +390,17 @@
       (session/wrap-session {:store session-cache
                              :cookie-name promotably-session-cookie-name})
       (wrap-record-new-session {:cookie-name promotably-session-cookie-name})
-      wrap-record-vbucket-assignment
+      (wrap-record-vbucket-assignment (GET "/api/v1/rco" [] "ok")
+                                      (GET "/api/v1/track" [] "ok")
+                                      (POST ["/validation/:code"
+                                             :code promo-code-regex]
+                                            [code] "ok")
+                                      (GET ["/query/:code"
+                                            :code promo-code-regex]
+                                           [code] "ok")
+                                      (POST ["/calculation/:code"
+                                             :code promo-code-regex]
+                                            [code] "ok"))
       wrap-record-rco-events
       wrap-cookies
       wrap-keyword-params
@@ -469,3 +479,4 @@
   (stop
    [component]
     component))
+

@@ -15,8 +15,7 @@
 (against-background [(before :contents
                              (do (when (nil? system/current-system)
                                    (core/go {:port 3000 :repl-port 55555}))
-                                 (migrate-down)
-                                 (migrate-up)
+                                 (migrate-or-truncate)
                                  (load-fixture-set fix/fixture-set)))
                      (after :contents
                             (comment migrate-down))]
@@ -41,7 +40,7 @@
                       e2 (event/last-event fix/dynamic-site-id-2 control-uuid "shopper-qualified-offers")]
                   (:control_group e1) => true
                   (:control_group e2) => true))
-              
+
               (facts "Check that ID is bucketed as test"
                 (get-rcos fix/dynamic-site-id-2 test-uuid)
                 (Thread/sleep 12000)

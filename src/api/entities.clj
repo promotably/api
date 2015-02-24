@@ -3,6 +3,20 @@
 
 (declare accounts users users-accounts sites offers promos redemptions promo-conditions offer-conditions linked-products)
 
+(def tables-to-truncate
+  ["email_subscribers"
+   "accounts"
+   "users"
+   "users_accounts"
+   "sites"
+   "promos"
+   "promo_conditions"
+   "promo_redemptions"
+   "linked_products"
+   "events"
+   "offers"
+   "offer_conditions"])
+
 (defentity email-subscribers
   (table "email_subscribers"))
 

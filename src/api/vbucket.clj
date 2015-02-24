@@ -23,14 +23,15 @@
 
 (defn wrap-record-vbucket-assignment
   "Record new bucket assignments."
-  [handler]
+  [handler & matching-routes]
   (fn [{:keys [session] :as request}]
     (let [response (handler request)]
       (when-let [assignment-data (:new-bucket-assignment response)]
-        (cw/put-metric "bucket-assigned")
-        (let [w-session-key (assoc assignment-data :session-id (:session/key response))
-              ev-payload (assoc w-session-key :control-group (= (:bucket assignment-data ) :control))]
-          (kinesis/record-event! (:kinesis current-system) "bucket-assigned" ev-payload)))
+        (when (some map? (map #(% request) matching-routes))
+          (cw/put-metric "bucket-assigned")
+          (let [w-session-key (assoc assignment-data :session-id (:session/key response))
+                ev-payload (assoc w-session-key :control-group (= (:bucket assignment-data ) :control))]
+            (kinesis/record-event! (:kinesis current-system) "bucket-assigned" ev-payload))))
       response)))
 
 (defn wrap-vbucket

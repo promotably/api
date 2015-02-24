@@ -12,8 +12,6 @@
     (jdbc/with-db-connection [db-con @$db-config]
       (jdbc/db-do-commands
        db-con
-       (format "INSERT INTO users (username, email, password, password_salt) VALUES
-             ('global@promotably.com', 'global@promotably.com', '%s', '%s')" pw salt)
        (jdbc/create-table-ddl :roles
                               [:role_id "serial8 primary key"]
                               [:role_name "text NOT NULL"])
@@ -27,6 +25,17 @@
                               [:users_id "INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE"]
                               [:sites_id "INTEGER NOT NULL REFERENCES sites (id) ON DELETE CASCADE"]
                               [:roles_id "INTEGER NOT NULL REFERENCES roles (role_id) ON DELETE CASCADE"])
+
+       (format "CREATE OR REPLACE FUNCTION add_superuser_to_users() RETURNS void AS $$
+                BEGIN
+                  INSERT INTO users (username, email, password, password_salt) VALUES
+                    ('global@promotably.com', 'global@promotably.com', '%s', '%s');
+                END;
+                $$ LANGUAGE plpgsql;" pw salt)
+
+       (format "INSERT INTO users (username, email, password, password_salt) VALUES
+             ('global@promotably.com', 'global@promotably.com', '%s', '%s')" pw salt)
+
        "ALTER TABLE user_site_role ADD CONSTRAINT uniqueusersiterole UNIQUE (users_id, sites_id, roles_id)"
        "INSERT INTO roles (role_name) VALUES
          ('su'), ('admin')"

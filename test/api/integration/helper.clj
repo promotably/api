@@ -22,12 +22,15 @@
    [clojure.data.json :as json]
    [ring.adapter.jetty :refer (run-jetty)]))
 
+(def expected-db-version 20150219061939)
+
 (defn truncate
   []
+  (doseq [t api.entities/tables-to-truncate]
+    (korma/exec-raw [(str "TRUNCATE " t " CASCADE")]))
   (jdbc/with-db-transaction [spec (kdb/postgres (get-in system/current-system [:config :database]))]
     (let [conn (jdbc/get-connection spec)]
-      (let [s (doto (.prepareCall conn "SELECT truncate_tables(?);")
-                (.setObject 1 (get-in system/current-system [:config :database :user])))]
+      (let [s (.prepareCall conn "SELECT add_superuser_to_users();")]
       (.execute s)))))
 
 (defn migrate-down
@@ -37,6 +40,14 @@
 (defn migrate-up
   []
   (with-out-str (drift.execute/migrate Long/MAX_VALUE [])))
+
+(defn migrate-or-truncate
+  []
+  (if-not (= expected-db-version (db/db-version))
+    (do
+      (migrate-down)
+      (migrate-up))
+    (truncate)))
 
 (defn load-fixture-set
   [fset]
