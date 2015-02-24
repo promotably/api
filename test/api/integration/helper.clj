@@ -7,6 +7,7 @@
    [api.system :as system]
    [api.lib.crypto :as cr]
    [korma.db :as kdb]
+   [korma.core :as korma]
    [api.q-fix :as qfix]
    [api.db :as db]
    [api.lib.seal :refer [hmac-sha1 url-encode]]
@@ -20,6 +21,14 @@
    [clj-http.client :as client]
    [clojure.data.json :as json]
    [ring.adapter.jetty :refer (run-jetty)]))
+
+(defn truncate
+  []
+  (jdbc/with-db-transaction [spec (kdb/postgres (get-in system/current-system [:config :database]))]
+    (let [conn (jdbc/get-connection spec)]
+      (let [s (doto (.prepareCall conn "SELECT truncate_tables(?);")
+                (.setObject 1 (get-in system/current-system [:config :database :user])))]
+      (.execute s)))))
 
 (defn migrate-down
   []

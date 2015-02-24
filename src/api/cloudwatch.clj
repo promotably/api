@@ -7,8 +7,9 @@
   [metric-name & [{:keys [value unit config]}]]
   (let [unit (or unit "Count")
         config (or config (-> current-system :config))
-        value (or value 1)]
-    (put-metric-data :namespace (str "api-" (name (:env config)))
+        value (or value 1)
+        e (or (:env config) "unknown")]
+    (put-metric-data :namespace (str "api-" (name e))
                      :metric-data [{:unit unit
                                     :value value
                                     :metric-name metric-name}])))

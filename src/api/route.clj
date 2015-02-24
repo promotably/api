@@ -53,7 +53,9 @@
             [amazonica.aws.s3transfer]
             [slingshot.slingshot :refer [try+]]))
 
-(defonce cached-index (atom {:cached-at nil :index nil}))
+(defonce cached-index (atom {:cached-at nil :content nil}))
+(defonce cached-register (atom {:cached-at nil :content nil}))
+(defonce cached-login (atom {:cached-at nil :content nil}))
 (def promotably-session-cookie-name "promotably-session")
 
 ;;;;;;;;;;;;;;;;;;;
@@ -134,46 +136,73 @@
            promo-secure-routes
            offer-routes))
 
-(defn- fetch-index
-  [config]
-  (let [bucket (-> config :dashboard :artifact-bucket)
-        filename (-> config :dashboard :index-filename)]
-    (try
-      (cw/put-metric "index-fetch" {:config config})
-      (let [p-name (-> config :kinesis :aws-credential-profile)
-            ^com.amazonaws.auth.AWSCredentialsProvider cp
-            (if p-name
-              (ProfileCredentialsProvider. p-name)
-              (DefaultAWSCredentialsProviderChain.))
-            _ (log/logf :info "Fetching s3://%s/%s using credentials '%s'."
-                        bucket
-                        filename
-                        p-name)
-            resp (if p-name
-                   (amazonica.aws.s3/get-object cp
-                                                :bucket-name bucket
-                                                :key filename)
-                   (amazonica.aws.s3/get-object bucket filename))
-            content (slurp (:object-content resp))]
-        (reset! cached-index {:index content :cached-at (now)}))
-      (catch Throwable t
-        (cw/put-metric "index-missing" {:config config})
-        (log/logf :error
-                  "Can't fetch index. Bucket %s, file '%s' exception %s."
-                  bucket
-                  filename
-                  t)))))
+(defn- fetch-static
+  [profile-name bucket filename cached]
+  (try
+    (cw/put-metric "static-fetch")
+    (let [^com.amazonaws.auth.AWSCredentialsProvider cp
+          (if profile-name
+            (ProfileCredentialsProvider. profile-name)
+            (DefaultAWSCredentialsProviderChain.))
+          _ (log/logf :info "Fetching s3://%s/%s using credentials '%s'."
+                      bucket
+                      filename
+                      profile-name)
+          resp (if profile-name
+                 (amazonica.aws.s3/get-object cp
+                                              :bucket-name bucket
+                                              :key filename)
+                 (amazonica.aws.s3/get-object bucket filename))
+          content (slurp (:object-content resp))]
+      (reset! cached {:content content :cached-at (now)}))
+    (catch Throwable t
+      (cw/put-metric "static-missing")
+      (log/logf :error
+                "Can't fetch static file. Bucket %s, file '%s' exception %s."
+                bucket
+                filename
+                t))))
+
+(defn serve-cached-static
+  [req profile-name bucket filename cached]
+  ;; if it's old, refresh it, but still return current copy
+  (let [expires (t/plus (now) (t/minutes 5))]
+    (if (or (nil? (:content @cached))
+            (after? (:cached-at @cached) expires))
+      (future (fetch-static profile-name bucket filename cached))))
+  (if (:content @cached)
+    (:content @cached)
+    {:status 404}))
 
 (defn serve-cached-index
   [req]
-  ;; if it's old, refresh it, but still return current copy
-  (let [expires (t/plus (now) (t/minutes 5))]
-    (if (or (nil? (:index @cached-index))
-            (after? (:cached-at @cached-index) expires))
-      (future (fetch-index (:artifact-bucket current-system)
-                           (:index-filename current-system)))))
-  (cw/put-metric "index-serve")
-  (:index @cached-index))
+  (cw/put-metric "serve-index")
+  (let [c (-> current-system :config)]
+    (serve-cached-static req
+                         (-> c :kinesis :aws-credential-profile)
+                         (-> c :dashboard :artifact-bucket)
+                         (-> c :dashboard :index-filename)
+                         cached-index)))
+
+(defn serve-cached-register
+  [req]
+  (cw/put-metric "serve-register")
+  (let [c (-> current-system :config)]
+    (serve-cached-static req
+                         (-> c :kinesis :aws-credential-profile)
+                         (-> c :dashboard :artifact-bucket)
+                         (-> c :dashboard :register-filename)
+                         cached-register)))
+
+(defn serve-cached-login
+  [req]
+  (cw/put-metric "serve-login")
+  (let [c (-> current-system :config)]
+    (serve-cached-static req
+                         (-> c :kinesis :aws-credential-profile)
+                         (-> c :dashboard :artifact-bucket)
+                         (-> c :dashboard :login-filename)
+                         cached-login)))
 
 (defn serve-404-page
   [req]
@@ -183,6 +212,8 @@
   (GET "/health-check" [] "<h1>I'm here</h1>")
   api-routes
   (GET "/" [] serve-cached-index)
+  (GET "/register" [] serve-cached-register)
+  (GET "/login" [] serve-cached-login)
   (auth/wrap-authorized secure-routes get-api-secret)
   (GET "*" [] (not-found serve-404-page)))
 
@@ -211,18 +242,6 @@
                         total))
       resp)))
 
-(defn wrap-exceptions
-  [handler]
-  (fn [req]
-    (try
-      (handler req)
-      (catch clojure.lang.ExceptionInfo ex
-        (cw/put-metric "exception")
-        (log/logf :error (println (ex-data ex)))
-        (when-let [exdata (ex-data ex)]
-          (assoc-in (assoc-in (:response exdata) [:body]
-                              (pprint (:error exdata)))
-                    [:headers "X-Error"] (.getMessage ex)))))))
 
 (defn wrap-argument-exception [handler]
   "Catch exceptions Schema throws when failing to validate passed parameters"
@@ -380,7 +399,6 @@
       wrap-nested-params
       wrap-token
       wrap-save-the-raw-body
-      ;; wrap-exceptions
       wrap-argument-exception
       wrap-stacktrace
       (wrap-if #((:env config) #{:dev :test :integration})
@@ -435,7 +453,18 @@
    (if (:stop! component)
      component
      (do
-       (fetch-index config)
+       (fetch-static (-> config :kinesis :aws-credential-profile)
+                     (-> config :dashboard :artifact-bucket)
+                     (-> config :dashboard :index-filename)
+                     cached-index)
+       (fetch-static (-> config :kinesis :aws-credential-profile)
+                     (-> config :dashboard :artifact-bucket)
+                     (-> config :dashboard :register-filename)
+                     cached-register)
+       (fetch-static (-> config :kinesis :aws-credential-profile)
+                     (-> config :dashboard :artifact-bucket)
+                     (-> config :dashboard :login-filename)
+                     cached-login)
        (assoc component :ring-routes (ring-routes config session-cache)))))
   (stop
    [component]
