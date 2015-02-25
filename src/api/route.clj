@@ -392,13 +392,13 @@
       (wrap-record-new-session {:cookie-name promotably-session-cookie-name})
       (wrap-record-vbucket-assignment (GET "/api/v1/rco" [] "ok")
                                       (GET "/api/v1/track" [] "ok")
-                                      (POST ["/validation/:code"
+                                      (POST ["/api/v1/validation/:code"
                                              :code promo-code-regex]
                                             [code] "ok")
-                                      (GET ["/query/:code"
+                                      (GET ["/api/v1/query/:code"
                                             :code promo-code-regex]
                                            [code] "ok")
-                                      (POST ["/calculation/:code"
+                                      (POST ["/api/v1/calculation/:code"
                                              :code promo-code-regex]
                                             [code] "ok"))
       wrap-record-rco-events
