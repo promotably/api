@@ -2,7 +2,6 @@
   (:import org.postgresql.util.PGobject)
   (:refer-clojure :exclude [set load])
   (:require
-   [clojure.data.json :as json]
    [clj-time.format :as f]
    [clj-time.core :refer [now minus days] :as t]
    [clj-time.coerce :refer [to-sql-date] :as c]

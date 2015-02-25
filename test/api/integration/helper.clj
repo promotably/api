@@ -2,6 +2,7 @@
   (:import org.postgresql.util.PGobject
            [java.net URLEncoder])
   (:require
+   [clojure.tools.logging :as log]
    [api.fixtures.basic :as base]
    [api.route :as route]
    [api.system :as system]
@@ -46,7 +47,10 @@
   (if-not (= expected-db-version (db/db-version))
     (do
       (migrate-down)
-      (migrate-up))
+      (migrate-up)
+      (when-not (= expected-db-version (db/db-version))
+        (log/logf :fatal "Expected db version %s" (str expected-db-version))
+        (System/exit 0)))
     (truncate)))
 
 (defn load-fixture-set
@@ -56,9 +60,9 @@
       (qfix/load fset
                  (fn [table-name val-map]
                    (let [xformed (postwalk #(if (fn? %) (% t-con) %)
-                                           val-map)]
-                   (let [result (jdbc/insert! t-con table-name xformed)]
-                     (-> result first :id))))))))
+                                           val-map)
+                         result (jdbc/insert! t-con table-name xformed)]
+                     (-> result first :id)))))))
 
 (def test-user-id "872d9a85-4c68-4cc0-ae5c-a24ed5ed8899")
 

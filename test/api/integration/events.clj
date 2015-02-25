@@ -94,7 +94,7 @@
                     "shipping" "0"
                     "total" "10"
                     "order-id" "9"
-                    "order-date" "2015-02-13%2017:00:40"
+                    "order-date" "2015-02-13 17:00:40"
                     "billing-address" "Colin,Steele,Suite%201450,3811%20Turtle%20Creek%20Blvd,Dallas,TX,75219,US,"
                     "shipping-address" "Colin,Steele,Suite%201450,3811%20Turtle%20Creek%20Blvd,Dallas,TX,75219,US"
                     :callback "jQuery1111034964492078870535_1423111893735"
