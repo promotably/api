@@ -26,7 +26,7 @@
             (aggregate (sum :number_of_orders) :number-of-orders)
             (aggregate (sum :discount) :discount)
             (aggregate (sum :promotably_commission) :promotably-commission)
-            (aggregate (sum :less_commission_and_discount) :less-discounts-and-commission) ;; XXX this should be resolved
+            (aggregate (sum :less_commission_and_discount) :less-commission-and-discounts)
             (aggregate (sum :revenue) :revenue)
             (where {:site_id site-uuid})
             (where {:measurement_hour [>= (to-sql-time start-day)]})
