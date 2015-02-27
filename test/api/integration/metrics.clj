@@ -3,18 +3,20 @@
     [clojure.data.json :as json]
     [clj-http.client :as client]
     [midje.sweet :refer :all]
-    [api.fixtures.event-data :as fix]
+    [api.fixtures.metrics :as fix]
     [api.integration.helper :refer :all]
     [api.system :refer [current-system] :as system]
     [api.core :as core]))
 
-(defn request-metrics [path site-id]
-  (client/get (str "http://localhost:3000/api/v1/sites/" site-id path)
-              {:body nil
-               :headers {"Cookie" (build-auth-cookie-string)}
-               :content-type :json
-               :accept :json
-               :throw-exceptions false}))
+(defn request-metrics [path site-id start end]
+  (let [start_param (str "?start=" start)
+        end_param (str "&end=" end)]
+        (client/get (str "http://localhost:3000/api/v1/sites/" site-id path start_param end_param)
+                    {:body nil
+                     :headers {"Cookie" (build-auth-cookie-string)}
+                     :content-type :json
+                     :accept :json
+                     :throw-exceptions false})))
 
 (against-background [(before :contents
                              (do (when (nil? system/current-system)
@@ -25,22 +27,19 @@
                      (after :contents
                             (comment migrate-down))]
 
-  (def site (api.models.site/find-by-name "site-1"))
-  (def site-id (:site-id site))
-
   (fact-group :integration
               (fact "Can route to controller.api.metrics.get-revenue"
-                    (let [r (request-metrics "/metrics/revenue" site-id)
+                    (let [r (request-metrics "/metrics/revenue" fix/site-id "20150220" "20150223")
                           b (json/read-str (:body r) :key-fn keyword)]
-                      b => {:number-of-orders 100000,
-                            :discount 25360,
-                            :promotably-commission 38030,
-                            :less-discounts-and-commission 190170,
-                            :revenue 253560}
+                      b => {:number-of-orders 3,
+                            :discount 7.5,
+                            :promotably-commission 1.5,
+                            :less-discounts-and-commission 21.0,
+                            :revenue 30.0}
                       (:status r) => 200))
 
               (fact "Can route to controller.api.metrics.get-lift"
-                    (let [r (request-metrics "/metrics/lift" site-id)
+                    (let [r (request-metrics "/metrics/lift" fix/site-id "20150220" "20150223")
                           b (json/read-str (:body r) :key-fn keyword)]
                       b => {:conversion {:daily {:promotably [3.1, 3.31, 3.42, 2.91, 3.09, 3.12, 3.23],
                                                  :control [2.95, 3.07, 3.11, 2.8, 2.85, 2.97, 3.03]},
@@ -61,7 +60,7 @@
                       (:status r) => 200))
 
               (fact "Can route to controller.api.metrics.get-promos"
-                    (let [r (request-metrics "/metrics/promos" site-id)
+                    (let [r (request-metrics "/metrics/promos" fix/site-id "20150220" "20150223")
                           b (json/read-str (:body r) :key-fn keyword)]
                       b => [{:id "ff926081-a97a-4065-abe0-7da32064c3d8",
                              :code "APRILSALE",
@@ -78,7 +77,7 @@
                       (:status r) => 200))
 
               (fact "Can route to controller.api.metrics.get-rco"
-                    (let [r (request-metrics "/metrics/rco" site-id)
+                    (let [r (request-metrics "/metrics/rco" fix/site-id "20150220" "20150223")
                           b (json/read-str (:body r) :key-fn keyword)]
                       b => [{:id "df8236081-a97a-4065-abe0-7da320643ce9",
                              :code "INDECISION",

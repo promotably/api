@@ -1,11 +1,24 @@
-(ns api.controllers.metrics)
+(ns api.controllers.metrics
+  (:require [api.models.metric :as metric]
+            [api.lib.coercion-helper :refer [transform-map
+                                             remove-nils
+                                             make-trans
+                                             custom-matcher
+                                             underscore-to-dash-keys]]
+            [schema.core :as s]
+            [schema.coerce :as c]
+            [clj-time.format :as f]))
 
-(defn get-revenue [request]
-  {:status 200 :body {"number-of-orders" 100000,
-                      "discount" 25360,
-                      "promotably-commission" 38030,
-                      "less-discounts-and-commission" 190170,
-                      "revenue" 253560}})
+(def custom-formatter (f/formatter "yyyyMMdd"))
+
+(defn get-revenue
+  [{:keys [params] :as request}]
+  (let [{:keys [site-id start end]} params
+        site-uuid (java.util.UUID/fromString site-id)
+        start-date (f/parse custom-formatter start)
+        end-date (f/parse custom-formatter end)
+        body (metric/site-revenue-by-days site-uuid start-date end-date)]
+    {:status 200 :body (first body)}))
 
 (defn get-lift [request]
   {:status 200

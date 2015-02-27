@@ -713,3 +713,15 @@
                                      (s/optional-key :line-subtotal-tax) s/Num}]
    (s/optional-key :product-ids-on-sale) [s/Str]
    (s/optional-key :selected-product-sku) s/Str})
+
+(def RevenueMetric
+  {(s/required-key :id) s/Num
+   (s/required-key :site-id) s/Uuid
+   (s/required-key :measurement-hour) (s/maybe org.joda.time.DateTime)
+   (s/required-key :number-of-hours) s/Num
+   (s/required-key :discount) s/Num
+   (s/required-key :promotably-commission) s/Num
+   (s/required-key :revenue) s/Num
+   (s/required-key :less-commission-and-discount) s/Num
+   (s/required-key :created-at) (s/maybe org.joda.time.DateTime)})
+
