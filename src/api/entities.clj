@@ -70,3 +70,6 @@
   (table "events")
   (belongs-to sites {:fk :site_id})
   (belongs-to promos {:fk :promo_id}))
+
+(defentity metrics-revenue
+  (table "metrics_revenue"))
