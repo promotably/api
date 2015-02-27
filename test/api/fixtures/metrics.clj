@@ -43,7 +43,7 @@
            (fixture :two
                     :id 2
                     :site_id site-id
-                    :measurement_hour (sql-time-day-hour 22 0)
+                    :measurement_hour (sql-time-day-hour 22 2)
                     :number_of_orders 1
                     :discount 2.50
                     :promotably_commission 0.50
