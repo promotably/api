@@ -61,18 +61,16 @@
               (fact "Can route to controller.api.metrics.get-promos"
                     (let [r (request-metrics "/metrics/promos" fix/site-id "20150220" "20150223")
                           b (json/read-str (:body r) :key-fn keyword)]
-                      b => [{:id "ff926081-a97a-4065-abe0-7da32064c3d8",
-                             :code "APRILSALE",
-                             :redemptions 159,
-                             :discount 622,
-                             :revenue 6223.23,
-                             :avg-revenue 39.14},
-                            {:id "gh926071-b97b-5055-bdf1-8dd22057h2a9",
-                             :code "SHIRTCLEARANCE",
-                             :redemptions 111,
-                             :discount 457,
-                             :revenue 4568.32,
-                             :avg-revenue 41.15}]
+                      b => [{:id (str fix/promo-id-uno),
+                             :redemptions 6,
+                             :discount 7.5,
+                             :revenue 30.0,
+                             :avg-revenue 5.0},
+                            {:id (str fix/promo-id-duo),
+                             :redemptions 20,
+                             :discount 20.0,
+                             :revenue 200.0,
+                             :avg-revenue 10.0}]
                       (:status r) => 200))
 
               (fact "Can route to controller.api.metrics.get-rco"
