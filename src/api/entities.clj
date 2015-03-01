@@ -17,7 +17,8 @@
    "offers"
    "offer_conditions"
    "metrics_revenue"
-   "metrics_promos"])
+   "metrics_promos"
+   "metrics_rcos"])
 
 (defentity email-subscribers
   (table "email_subscribers"))
@@ -78,3 +79,6 @@
 
 (defentity metrics-promos
   (table "metrics_promos"))
+
+(defentity metrics-rcos
+  (table "metrics_rcos"))

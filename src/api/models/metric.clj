@@ -45,3 +45,21 @@
             (where {:measurement_hour [>= (to-sql-time start-day)]})
             (where {:measurement_hour [<= (to-sql-time end-day)]}))]
     r))
+
+(defn site-rcos-by-days
+  [site-uuid start-day end-day]
+  (let [r (select metrics-rcos
+                  (fields :offer_id :code)
+                  (aggregate (sum :visits) :visits :offer_id)
+                  (aggregate (sum :qualified) :qualified :code) ;; Code can't be a field unless its included as an aggregate
+                  (aggregate (sum :offered) :offered)
+                  (aggregate (sum :orders) :orders)
+                  (aggregate (sum :redemptions) :redemptions)
+                  (aggregate (sum :total_items_in_carts) :total-items-in-cart)
+                  (aggregate (sum :revenue) :revenue)
+                  (aggregate (sum :discount) :discount)
+                  (order :revenue :ASC)
+                  (where {:site_id site-uuid})
+                  (where {:measurement_hour [>= (to-sql-time start-day)]})
+                  (where {:measurement_hour [<= (to-sql-time end-day)]}))]
+    r))
