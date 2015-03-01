@@ -65,11 +65,13 @@
                              :redemptions 6,
                              :discount 7.5,
                              :revenue 30.0,
+                             :code "C1",
                              :avg-revenue 5.0},
                             {:id (str fix/promo-id-duo),
                              :redemptions 20,
                              :discount 20.0,
                              :revenue 200.0,
+                             :code "C2",
                              :avg-revenue 10.0}]
                       (:status r) => 200))
 

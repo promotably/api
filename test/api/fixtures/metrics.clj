@@ -72,6 +72,7 @@
                     :redemptions 2
                     :discount 2.50
                     :revenue 10.0
+                    :code "C1"
                     :created_at (c/to-sql-time (t/now)))
            (fixture :mp-one
                     :id 1
@@ -81,6 +82,7 @@
                     :redemptions 10
                     :discount 10.0
                     :revenue 100.0
+                    :code "C2"
                     :created_at (c/to-sql-time (t/now)))
            (fixture :mp-two
                     :id 2
@@ -90,6 +92,7 @@
                     :redemptions 2
                     :discount 2.50
                     :revenue 10.0
+                    :code "C1"
                     :created_at (c/to-sql-time (t/now)))
            (fixture :mp-three
                     :id 3
@@ -99,6 +102,7 @@
                     :redemptions 10
                     :discount 10.0
                     :revenue 100.0
+                    :code "C2"
                     :created_at (c/to-sql-time (t/now)))
            (fixture :mp-four
                     :id 4
@@ -108,4 +112,5 @@
                     :redemptions 2
                     :discount 2.50
                     :revenue 10.0
+                    :code "C1"
                     :created_at (c/to-sql-time (t/now))))))
