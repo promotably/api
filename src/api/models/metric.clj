@@ -33,4 +33,15 @@
             (where {:measurement_hour [<= (to-sql-time end-day)]}))]
     r))
 
-
+(defn site-promos-by-days
+  [site-uuid start-day end-day]
+  (let [r (select metrics-promos
+            (fields :promo_id :code)
+            (aggregate (sum :redemptions) :redemptions :promo_id)
+            (aggregate (sum :discount) :discount :code) ;; Code can't be a field unless its included as an aggregate
+            (aggregate (sum :revenue) :revenue )
+            (order :revenue :ASC)
+            (where {:site_id site-uuid})
+            (where {:measurement_hour [>= (to-sql-time start-day)]})
+            (where {:measurement_hour [<= (to-sql-time end-day)]}))]
+    r))

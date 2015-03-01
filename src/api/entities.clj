@@ -15,7 +15,9 @@
    "linked_products"
    "events"
    "offers"
-   "offer_conditions"])
+   "offer_conditions"
+   "metrics_revenue"
+   "metrics_promos"])
 
 (defentity email-subscribers
   (table "email_subscribers"))
@@ -73,3 +75,6 @@
 
 (defentity metrics-revenue
   (table "metrics_revenue"))
+
+(defentity metrics-promos
+  (table "metrics_promos"))

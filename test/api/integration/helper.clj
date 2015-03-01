@@ -23,7 +23,7 @@
    [clojure.data.json :as json]
    [ring.adapter.jetty :refer (run-jetty)]))
 
-(def expected-db-version 20150227000508)
+(def expected-db-version 20150301051244)
 
 (defn truncate
   []

@@ -7,7 +7,8 @@
                                              underscore-to-dash-keys]]
             [schema.core :as s]
             [schema.coerce :as c]
-            [clj-time.format :as f]))
+            [clj-time.format :as f]
+            [clojure.set :refer [rename-keys]]))
 
 (def custom-formatter (f/formatter "yyyyMMdd"))
 
@@ -39,19 +40,16 @@
                                "average" {"promotably" 1.08,
                                           "control" 0.96}}}})
 
-(defn get-promos [request]
-  {:status 200 :body [{"id" "ff926081-a97a-4065-abe0-7da32064c3d8",
-                       "code" "APRILSALE",
-                       "redemptions" 159,
-                       "discount" 622
-                       "revenue" 6223.23,
-                       "avg-revenue" 39.14},
-                      {"id" "gh926071-b97b-5055-bdf1-8dd22057h2a9",
-                       "code" "SHIRTCLEARANCE",
-                       "redemptions" 111,
-                       "discount" 457,
-                       "revenue" 4568.32,
-                       "avg-revenue" 41.15}]})
+(defn get-promos
+  [{:keys [params] :as request}]
+  (let [{:keys [site-id start end]} params
+        site-uuid (java.util.UUID/fromString site-id)
+        start-date (f/parse custom-formatter start)
+        end-date (f/parse custom-formatter end)
+        body (metric/site-promos-by-days site-uuid start-date end-date)
+        body2 (map #(-> % (rename-keys {:promo_id :id})) body)
+        body3 (map #(-> % (assoc :avg-revenue (quot (:revenue %) (:redemptions %)))) body2)]
+    {:status 200 :body body3}))
 
 (defn get-rco [request]
   {:status 200 :body [{"id" "df8236081-a97a-4065-abe0-7da320643ce9",
