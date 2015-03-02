@@ -135,7 +135,7 @@
                                (assoc :promo-id id))
                           linked-products)))
        (to-kinesis! kinesis-comp :create id site-id)
-       {:success true}))))
+       {:success true :promo (db-to-promo raw)}))))
 
 ;; (sm/defn update-promo!
 (defn update-promo!

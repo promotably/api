@@ -40,6 +40,7 @@
                                                :start-date "2014-11-27T05:00:00Z"
                                                :end-date "2014-11-29T04:59:59Z"}]}
                       r (create-promo new-promo)]
+                  (json/read-str (:body r) :key-fn keyword) => (contains {:code "TWENTYOFF"})
                   (:status r) => 201))
 
               (tabular

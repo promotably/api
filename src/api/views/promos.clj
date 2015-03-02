@@ -1,8 +1,8 @@
 (ns api.views.promos
-  (:require
-   [schema.core :as s]
-   [schema.utils]
-   [api.views.helper :refer [view-value-helper]]))
+  (:require [api.views.helper :refer [view-value-helper]]
+            [clojure.data.json :refer [write-str]]
+            [schema.core :as s]
+            [schema.utils]))
 
 (defn- prep-single-promo
   [p]
@@ -38,9 +38,11 @@
                                          :body "That Site Doesn't Exist"}))
 
 (defn shape-new-promo
-  [{:keys [success error message] :as response}]
+  [{:keys [success error message promo] :as response}]
   (cond
-   (true? success) {:status 201}
+   (true? success) {:status 201 :body (write-str (-> promo
+                                                     (assoc :promo-id (:uuid promo))
+                                                     (dissoc :uuid)) :value-fn (fn [k v] (view-value-helper v)))}
    (and (false? success) (= error :already-exists)) {:status 409 :body message}
    (= (class response) schema.utils.ErrorContainer) {:status 400 :body error}
    :else {:status 500 :body error}))
