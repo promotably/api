@@ -87,10 +87,10 @@
                              :redemptions 6,
                              :redemption-rate 40.00,
                              :conversion-rate 60.00,
-                             :avg-items-in-cart 3,
+                             :avg-cart-size 3,
                              :avg-revenue 28.0,
                              :revenue 170.0,
-                             :avg-discount 4.0, ;;
+                             :avg-discount 4.0,
                              :discount 43.5},
                             {:id (str fix/offer-id-duo),
                              :code "C2",
@@ -101,10 +101,10 @@
                              :redemptions 4,
                              :redemption-rate 40.00,
                              :conversion-rate 60.00,
-                             :avg-items-in-cart 3,
+                             :avg-cart-size 3,
                              :avg-revenue 50.0,
                              :revenue 200.0,
-                             :avg-discount 6.0, ;;
+                             :avg-discount 6.0,
                              :discount 41.0}]
                       (:status r) => 200))))
 
