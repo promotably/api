@@ -1,5 +1,5 @@
 (ns migrations.20150226194830-add-metrics-db-schema
-  (:require [api.db :as db :refer [$db-config]] 
+  (:require [api.db :as db :refer [$db-config]]
             [clojure.java.jdbc :as jdbc]))
 
 (defn up
@@ -72,7 +72,7 @@
   (println "migrations.20150226194830-add-metrics-db-schema down...")
   (jdbc/with-db-connection [db-con @$db-config]
     (jdbc/db-do-commands db-con
-                       (jdbc/drop-table-ddl :metrics_revenue)
-                       (jdbc/drop-table-ddl :metrics_promos)
-                       (jdbc/drop-table-ddl :metrics_rcos)
-                       (jdbc/drop-table-ddl :metrics_lift))))
+                         "DROP TABLE IF EXISTS metrics_revenue"
+                         "DROP TABLE IF EXISTS metrics_promo"
+                         "DROP TABLE IF EXISTS metrics_rcos"
+                         "DROP TABLE IF EXISTS metrics_lift")))
