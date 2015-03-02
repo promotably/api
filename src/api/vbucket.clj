@@ -27,6 +27,7 @@
   (fn [{:keys [session] :as request}]
     (let [response (handler request)]
       (when-let [assignment-data (:new-bucket-assignment response)]
+        (prn "new bucket" (:new-bucket-assignment response))
         (when (some map? (map #(% request) matching-routes))
           (cw/put-metric "bucket-assigned")
           (let [w-session-key (assoc assignment-data :session-id (:session/key response))
@@ -64,6 +65,8 @@
                              :shopper-id sid}]
 
         (let [response (handler (assoc-in request [:session :test-bucket] bucket))]
-          (assoc response :new-bucket-assignment assignment-data)))
+          (-> response
+              (assoc-in [:session :test-bucket] bucket)
+              (assoc :new-bucket-assignment assignment-data))))
       (handler request))))
 
