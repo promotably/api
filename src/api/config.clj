@@ -12,9 +12,7 @@
 
 ;; Default build stuff
 (def default-build-bucket "promotably-build-artifacts")
-(def default-index-file "jenkins/dashboard/latest/index.html")
-(def default-login-file "jenkins/dashboard/latest/login.html")
-(def default-register-file "jenkins/dashboard/latest/register.html")
+(def default-html-path "jenkins/dashboard/latest")
 
 ;; Setup info for logging
 (def base-log-config
@@ -44,11 +42,11 @@
   should always be present on environments deployed to AWS"
   []
   (let [bucket (get-config-value "ARTIFACT_BUCKET")
-        path (get-config-value "DASHBOARD_INDEX_PATH")]
+        path (get-config-value "DASHBOARD_HTML_PATH")]
     {:artifact-bucket (or bucket default-build-bucket)
-     :index-filename (or path default-index-file)
-     :login-filename (or path default-login-file)
-     :register-filename (or path default-register-file)}))
+     :index-filename (str (or path default-html-path) "/index.html")
+     :login-filename (str (or path default-html-path) "/login.html")
+     :register-filename (str (or path default-html-path) "/register.html")}))
 
 (defn- get-kinesis-config
   "Checks environment variables for kinesis config settings. These
