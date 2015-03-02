@@ -82,8 +82,9 @@
                        (.contains (:body r) ":promo-id") => true))
 
               (facts "Offer Create with no html param"
-                     (let [r (create-offer (offers-f-hct/no-html-offer))]
-                       (:status r) => 201))
+                (let [r (create-offer (offers-f-hct/no-html-offer))]
+                  (:status r) => 201
+                  (json/read-str (:body r)) => (contains {"name" "No HTML Offer"})))
 
               (facts "List Offers"
                 (let [url (str "http://localhost:3000/api/v1/offers/?site-id="

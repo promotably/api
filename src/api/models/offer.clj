@@ -141,7 +141,7 @@
                                           (assoc :uuid (java.util.UUID/randomUUID))
                                           (assoc :offer-id (:id the-offer)))
                                      conditions)))
-        {:success true})))))
+        {:success true :offer the-offer})))))
 
 (defn update-offer!
   "Updates a offer in the database"

@@ -24,9 +24,13 @@
    :body (vec (map shape-one results))})
 
 (defn shape-new-offer
-  [{:keys [success error message] :as response}]
+  [{:keys [success error message offer] :as response}]
   (cond
-   (true? success) {:status 201}
+   (true? success) {:status 201
+                    :body (write-str (-> offer
+                                         (assoc :offer-id (:uuid offer))
+                                         (dissoc :uuid))
+                                     :value-fn (fn [k v] (view-value-helper v)))}
    (and (false? success) (= error :already-exists)) {:status 409 :body message}
    :else {:status 500}))
 
