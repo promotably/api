@@ -12,9 +12,15 @@
 
 (def custom-formatter (f/formatter "yyyyMMdd"))
 
+(defn round2
+  "Round a double to the given precision (number of significant digits)"
+  [precision d]
+  (let [factor (Math/pow 10 precision)]
+    (/ (Math/round (* d factor)) factor)))
+
 (defn percentage
   [a b]
-  (int (* 100 (float (/ a b)))))
+  (round2 2 (* 100 (float(/ a b)))))
 
 (defn get-revenue
   [{:keys [params] :as request}]
