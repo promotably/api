@@ -98,9 +98,14 @@
                            :port 5432
                            :make-pool? true}
                 :redis {:host "localhost" :port 6379}
-                :kinesis {:aws-credential-profile "promotably"
-                          :promo-stream-name "dev-PromoStream"
-                          :event-stream-name "dev-PromotablyAPIEvents"}
+                :kinesis (let [c (get-kinesis-config)]
+                           (cond-> {:aws-credential-profile "promotably"
+                                    :promo-stream-name "dev-PromoStream"
+                                    :event-stream-name "dev-PromotablyAPIEvents"}
+                                   (:promo-stream-name c)
+                                   (assoc :promo-stream-name (:promo-stream-name c))
+                                   (:event-stream-name c)
+                                   (assoc :event-stream-name (:event-stream-name c))))
                 :dashboard (get-dashboard-config)
                 :logging base-log-config
                 :session-length-in-seconds (* 60 60 2)
