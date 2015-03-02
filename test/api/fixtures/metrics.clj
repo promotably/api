@@ -19,6 +19,8 @@
 (def promo-id-uno #uuid "2ca6424e-d955-4bfe-be80-7937d5817ab1")
 (def promo-id-duo #uuid "2ca6424e-d955-4bfe-be80-7937d5817ab2")
 
+(def offer-id-uno #uuid "3ca6424e-d955-4bfe-be80-7937d5817ab1")
+(def offer-id-duo #uuid "3ca6424e-d955-4bfe-be80-7937d5817ab2")
 
 (def fixture-set
   (set
@@ -112,5 +114,81 @@
                     :redemptions 2
                     :discount 2.50
                     :revenue 10.0
+                    :code "C1"
+                    :created_at (c/to-sql-time (t/now))))
+    (table :metrics_rcos
+           (fixture :mrc-zero
+                    :id 0
+                    :site_id site-id
+                    :offer_id offer-id-uno
+                    :measurement_hour (sql-time-day-hour 22 0)
+                    :visits 100
+                    :qualified 10
+                    :offered 5
+                    :orders 3
+                    :redemptions 2
+                    :total_items_in_carts 10
+                    :revenue 10.0
+                    :discount 2.50
+                    :code "C1"
+                    :created_at (c/to-sql-time (t/now)))
+           (fixture :mrc-one
+                    :id 1
+                    :site_id site-id
+                    :offer_id offer-id-duo
+                    :measurement_hour (sql-time-day-hour 22 0)
+                    :visits 100
+                    :qualified 10
+                    :offered 5
+                    :orders 3
+                    :redemptions 2
+                    :total_items_in_carts 10
+                    :revenue 100.0
+                    :discount 20.50
+                    :code "C2"
+                    :created_at (c/to-sql-time (t/now)))
+           (fixture :mrc-two
+                    :id 2
+                    :site_id site-id
+                    :offer_id offer-id-uno
+                    :measurement_hour (sql-time-day-hour 22 1)
+                    :visits 100
+                    :qualified 10
+                    :offered 5
+                    :orders 3
+                    :redemptions 2
+                    :total_items_in_carts 10
+                    :revenue 80.0
+                    :discount 20.50
+                    :code "C1"
+                    :created_at (c/to-sql-time (t/now)))
+           (fixture :mrc-three
+                    :id 3
+                    :site_id site-id
+                    :offer_id offer-id-duo
+                    :measurement_hour (sql-time-day-hour 22 1)
+                    :visits 100
+                    :qualified 10
+                    :offered 5
+                    :orders 3
+                    :redemptions 2
+                    :total_items_in_carts 10
+                    :revenue 100.0
+                    :discount 20.50
+                    :code "C2"
+                    :created_at (c/to-sql-time (t/now)))
+           (fixture :mrc-four
+                    :id 4
+                    :site_id site-id
+                    :offer_id offer-id-uno
+                    :measurement_hour (sql-time-day-hour 22 2)
+                    :visits 100
+                    :qualified 10
+                    :offered 5
+                    :orders 3
+                    :redemptions 2
+                    :total_items_in_carts 10
+                    :revenue 80.0
+                    :discount 20.50
                     :code "C1"
                     :created_at (c/to-sql-time (t/now))))))

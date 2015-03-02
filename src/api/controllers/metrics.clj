@@ -12,6 +12,16 @@
 
 (def custom-formatter (f/formatter "yyyyMMdd"))
 
+(defn round2
+  "Round a double to the given precision (number of significant digits)"
+  [precision d]
+  (let [factor (Math/pow 10 precision)]
+    (/ (Math/round (* d factor)) factor)))
+
+(defn percentage
+  [a b]
+  (round2 2 (* 100 (float(/ a b)))))
+
 (defn get-revenue
   [{:keys [params] :as request}]
   (let [{:keys [site-id start end]} params
@@ -51,34 +61,20 @@
         body3 (map #(-> % (assoc :avg-revenue (quot (:revenue %) (:redemptions %)))) body2)]
     {:status 200 :body body3}))
 
-(defn get-rco [request]
-  {:status 200 :body [{"id" "df8236081-a97a-4065-abe0-7da320643ce9",
-                       "code" "INDECISION",
-                       "visits" 16546,
-                       "qualified" 9562,
-                       "offered" 8123,
-                       "orders" 1099,
-                       "redeemed" 1021,
-                       "redemption-rate" 41.11,
-                       "conversion-rate" 43.11,
-                       "avg-items-in-cart" 6.4,
-                       "avg-revenue" 122.05,
-                       "revenue" 125462.34,
-                       "avg-discount" 12.32,
-                       "discount" 12252},
-                      {"id" "eg9347081-a97a-4065-abe0-7da320612df8",
-                       "code" "NEW-CUSTOMER",
-                       "visits" 16546,
-                       "qualified" 9562,
-                       "offered" 8123,
-                       "orders" 1099,
-                       "redeemed" 1021,
-                       "redemption-rate" 41.11,
-                       "conversion-rate" 43.11,
-                       "avg-items-in-cart" 6.4,
-                       "avg-revenue" 122.05,
-                       "revenue" 125462.34,
-                       "avg-discount" 12.32,
-                       "discount" 12252}]})
+(defn get-rco
+  [{:keys [params] :as request}]
+  (let [{:keys [site-id start end]} params
+        site-uuid (java.util.UUID/fromString site-id)
+        start-date (f/parse custom-formatter start)
+        end-date (f/parse custom-formatter end)
+        body (metric/site-rcos-by-days site-uuid start-date end-date)
+        body2 (map #(-> % (rename-keys {:offer_id :id})) body)
+        body3 (map #(-> % (assoc :avg-revenue (quot (:revenue %) (:redemptions %)))) body2)
+        body4 (map #(-> % (assoc :redemption-rate (percentage (:redemptions %) (:offered %)))) body3)
+        body5 (map #(-> % (assoc :conversion-rate (percentage (:orders %) (:offered %)))) body4)
+        body6 (map #(-> % (assoc :avg-cart-size (quot (:total-items-in-cart %) (:orders %)))) body5)
+        body7 (map #(-> % (assoc :avg-discount (quot (:discount %) (:orders %)))) body6)
+        body8 (map #(-> % (dissoc :total-items-in-cart)) body7)]
+    {:status 200 :body body8}))
 
 
