@@ -64,6 +64,8 @@
                              :shopper-id sid}]
 
         (let [response (handler (assoc-in request [:session :test-bucket] bucket))]
-          (assoc response :new-bucket-assignment assignment-data)))
+          (-> response
+              (assoc-in [:session :test-bucket] bucket)
+              (assoc :new-bucket-assignment assignment-data))))
       (handler request))))
 
