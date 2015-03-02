@@ -181,6 +181,8 @@
                     (merge ~base-event
                            {(s/required-key :sku) s/Str
                             (s/optional-key :title) (s/maybe s/Str)
+                            (s/optional-key :offer-id) (s/maybe s/Str)
+                            (s/required-key :item-count) (s/maybe s/Str)
                             (s/optional-key :description) (s/maybe s/Str)
                             (s/optional-key :short-description) (s/maybe s/Str)
                             (s/optional-key :modified-at) (s/maybe s/Inst)
@@ -203,6 +205,8 @@
                     #(= (:event-name %) :productadd)
                     (merge ~base-event
                            {(s/required-key :sku) s/Str
+                            (s/required-key :item-count) (s/maybe s/Str)
+                            (s/optional-key :offer-id) (s/maybe s/Str)
                             (s/optional-key :category-id) (s/maybe s/Str)
                             (s/optional-key :quantity) s/Int
                             (s/optional-key :variation) (s/maybe s/Str)
@@ -224,6 +228,8 @@
                     #(= (:event-name %) :cartupdate)
                     (merge ~base-event
                            {(s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
+                            (s/required-key :item-count) (s/maybe s/Str)
+                            (s/optional-key :offer-id) (s/maybe s/Str)
                             (s/optional-key :shipping-methods) (s/maybe [ShippingMethod])
                             (s/optional-key :billing-address-1) (s/maybe s/Str)
                             (s/optional-key :billing-city) (s/maybe s/Str)
@@ -241,6 +247,8 @@
                     #(= (:event-name %) :cartview)
                     (merge ~base-event
                            {(s/optional-key :applied-coupons) (s/maybe [AppliedCoupon])
+                            (s/required-key :item-count) (s/maybe s/Str)
+                            (s/optional-key :offer-id) (s/maybe s/Str)
                             (s/optional-key :shipping-methods) (s/maybe [ShippingMethod])
                             (s/optional-key :billing-address-1) (s/maybe s/Str)
                             (s/optional-key :billing-city) (s/maybe s/Str)
@@ -258,6 +266,8 @@
                     #(= (:event-name %) :checkout)
                     (merge ~base-event
                            {(s/optional-key :billing-address-1) (s/maybe s/Str)
+                            (s/required-key :item-count) (s/maybe s/Str)
+                            (s/optional-key :offer-id) (s/maybe s/Str)
                             (s/optional-key :billing-city) (s/maybe s/Str)
                             (s/optional-key :billing-state) (s/maybe s/Str)
                             (s/optional-key :billing-country) (s/maybe s/Str)
@@ -275,7 +285,9 @@
                     #(= (:event-name %) :thankyou)
                     (merge ~base-event
                            {(s/required-key :order-id) (s/maybe s/Str)
+                            (s/optional-key :offer-id) (s/maybe s/Str)
                             (s/required-key :order-date) (s/maybe s/Str)
+                            (s/required-key :item-count) (s/maybe s/Str)
                             (s/optional-key :billing-address) (s/maybe s/Str)
                             (s/optional-key :billing-address-1) (s/maybe s/Str)
                             (s/optional-key :billing-city) (s/maybe s/Str)
