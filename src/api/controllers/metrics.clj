@@ -22,7 +22,7 @@
   [a b]
   (round2 2 (* 100 (float(/ a b)))))
 
-(defn get-revenue
+(defn get-additional-revenue
   [{:keys [params] :as request}]
   (let [{:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)

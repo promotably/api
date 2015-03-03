@@ -28,7 +28,7 @@
 
   (fact-group :integration
               (fact "Can route to controller.api.metrics.get-revenue"
-                    (let [r (request-metrics "/metrics/revenue" fix/site-id "20150220" "20150223")
+                    (let [r (request-metrics "/metrics/additional-revenue" fix/site-id "20150220" "20150223")
                           b (json/read-str (:body r) :key-fn keyword)]
                       b => {:number-of-orders 3,
                             :discount 7.5,
