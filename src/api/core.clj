@@ -70,6 +70,7 @@
 
 (comment
 
+  (System/setProperty "KINESIS_A" "dev-colinsteele-PromotablyAPIEvents")
   (System/setProperty "ENV" "dev")
   (System/getProperty "ENV")
 

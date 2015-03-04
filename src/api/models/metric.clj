@@ -25,9 +25,7 @@
   (let [r (select metrics-revenue
             (aggregate (sum :number_of_orders) :number-of-orders)
             (aggregate (sum :discount) :discount)
-            (aggregate (sum :promotably_commission) :promotably-commission)
-            (aggregate (sum :less_commission_and_discount) :less-commission-and-discounts)
-            (aggregate (sum :revenue) :revenue)
+            (aggregate (sum :total_revenue) :revenue)
             (where {:site_id site-uuid})
             (where {:measurement_hour [>= (to-sql-time start-day)]})
             (where {:measurement_hour [<= (to-sql-time end-day)]}))]
@@ -54,7 +52,7 @@
                   (aggregate (sum :qualified) :qualified :code) ;; Code can't be a field unless its included as an aggregate
                   (aggregate (sum :offered) :offered)
                   (aggregate (sum :orders) :orders)
-                  (aggregate (sum :redemptions) :redemptions)
+                  (aggregate (sum :redeemed) :redemptions)
                   (aggregate (sum :total_items_in_carts) :total-items-in-cart)
                   (aggregate (sum :revenue) :revenue)
                   (aggregate (sum :discount) :discount)

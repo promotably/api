@@ -31,9 +31,9 @@
                     :measurement_hour (sql-time-day-hour 22 0)
                     :number_of_orders 1
                     :discount 2.50
-                    :promotably_commission 0.50
-                    :revenue 10.0
-                    :less_commission_and_discount 7.0
+                    :total_revenue 10.0
+                    :avg_order_revenue 10.0
+                    :revenue_per_visit 10.0
                     :created_at (c/to-sql-time (t/now)))
            (fixture :mr-one
                     :id 1
@@ -41,9 +41,9 @@
                     :measurement_hour (sql-time-day-hour 22 1)
                     :number_of_orders 1
                     :discount 2.50
-                    :promotably_commission 0.50
-                    :revenue 10.0
-                    :less_commission_and_discount 7.0
+                    :total_revenue 10.0
+                    :avg_order_revenue 10.0
+                    :revenue_per_visit 10.0
                     :created_at (c/to-sql-time (t/now)))
            (fixture :mr-two
                     :id 2
@@ -51,9 +51,9 @@
                     :measurement_hour (sql-time-day-hour 22 2)
                     :number_of_orders 1
                     :discount 2.50
-                    :promotably_commission 0.50
-                    :revenue 10.0
-                    :less_commission_and_discount 7.0
+                    :total_revenue 10.0
+                    :avg_order_revenue 10.0
+                    :revenue_per_visit 10.0
                     :created_at (c/to-sql-time (t/now)))
            (fixture :mr-three
                     :id 3
@@ -61,9 +61,9 @@
                     :measurement_hour (sql-time-day-hour 24 0)
                     :number_of_orders 1
                     :discount 2.50
-                    :promotably_commission 0.50
-                    :revenue 10.0
-                    :less_commission_and_discount 7.0
+                    :total_revenue 10.0
+                    :avg_order_revenue 10.0
+                    :revenue_per_visit 10.0
                     :created_at (c/to-sql-time (t/now))))
     (table :metrics_promos
            (fixture :mp-zero
@@ -74,6 +74,7 @@
                     :redemptions 2
                     :discount 2.50
                     :revenue 10.0
+                    :revenue_per_order 5.0
                     :code "C1"
                     :created_at (c/to-sql-time (t/now)))
            (fixture :mp-one
@@ -84,6 +85,7 @@
                     :redemptions 10
                     :discount 10.0
                     :revenue 100.0
+                    :revenue_per_order 5.0
                     :code "C2"
                     :created_at (c/to-sql-time (t/now)))
            (fixture :mp-two
@@ -94,6 +96,7 @@
                     :redemptions 2
                     :discount 2.50
                     :revenue 10.0
+                    :revenue_per_order 5.0
                     :code "C1"
                     :created_at (c/to-sql-time (t/now)))
            (fixture :mp-three
@@ -104,6 +107,7 @@
                     :redemptions 10
                     :discount 10.0
                     :revenue 100.0
+                    :revenue_per_order 5.0
                     :code "C2"
                     :created_at (c/to-sql-time (t/now)))
            (fixture :mp-four
@@ -114,6 +118,7 @@
                     :redemptions 2
                     :discount 2.50
                     :revenue 10.0
+                    :revenue_per_order 5.0
                     :code "C1"
                     :created_at (c/to-sql-time (t/now))))
     (table :metrics_rcos
@@ -126,10 +131,15 @@
                     :qualified 10
                     :offered 5
                     :orders 3
-                    :redemptions 2
+                    :redeemed 2
+                    :redemption_rate 14.6
+                    :conversion_rate 14.6
                     :total_items_in_carts 10
+                    :avg_items_in_cart 1
                     :revenue 10.0
+                    :avg_revenue 1.0
                     :discount 2.50
+                    :avg_discount 0.50
                     :code "C1"
                     :created_at (c/to-sql-time (t/now)))
            (fixture :mrc-one
@@ -141,10 +151,15 @@
                     :qualified 10
                     :offered 5
                     :orders 3
-                    :redemptions 2
+                    :redeemed 2
+                    :redemption_rate 14.6
+                    :conversion_rate 14.6
                     :total_items_in_carts 10
+                    :avg_items_in_cart 1
                     :revenue 100.0
+                    :avg_revenue 1.0
                     :discount 20.50
+                    :avg_discount 0.50
                     :code "C2"
                     :created_at (c/to-sql-time (t/now)))
            (fixture :mrc-two
@@ -156,10 +171,15 @@
                     :qualified 10
                     :offered 5
                     :orders 3
-                    :redemptions 2
+                    :redeemed 2
+                    :redemption_rate 14.6
+                    :conversion_rate 14.6
                     :total_items_in_carts 10
+                    :avg_items_in_cart 1
                     :revenue 80.0
+                    :avg_revenue 1.0
                     :discount 20.50
+                    :avg_discount 0.50
                     :code "C1"
                     :created_at (c/to-sql-time (t/now)))
            (fixture :mrc-three
@@ -171,10 +191,15 @@
                     :qualified 10
                     :offered 5
                     :orders 3
-                    :redemptions 2
+                    :redeemed 2
+                    :redemption_rate 14.6
+                    :conversion_rate 14.6
                     :total_items_in_carts 10
+                    :avg_items_in_cart 1
                     :revenue 100.0
+                    :avg_revenue 1.0
                     :discount 20.50
+                    :avg_discount 0.50
                     :code "C2"
                     :created_at (c/to-sql-time (t/now)))
            (fixture :mrc-four
@@ -186,9 +211,14 @@
                     :qualified 10
                     :offered 5
                     :orders 3
-                    :redemptions 2
+                    :redeemed 2
+                    :redemption_rate 14.6
+                    :conversion_rate 14.6
                     :total_items_in_carts 10
+                    :avg_items_in_cart 1
                     :revenue 80.0
+                    :avg_revenue 1.0
                     :discount 20.50
+                    :avg_discount 0.50
                     :code "C1"
                     :created_at (c/to-sql-time (t/now))))))

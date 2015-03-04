@@ -32,8 +32,6 @@
                           b (json/read-str (:body r) :key-fn keyword)]
                       b => {:number-of-orders 3,
                             :discount 7.5,
-                            :promotably-commission 1.5,
-                            :less-commission-and-discounts 21.0,
                             :revenue 30.0}
                       (:status r) => 200))
 
