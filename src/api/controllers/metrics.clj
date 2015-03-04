@@ -33,11 +33,11 @@
   [{:keys [params] :as request}]
   (let [{:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)
-        s (site/find-by-site-uuid site-uuid)
+        the-site (site/find-by-site-uuid site-uuid)
         start-date (convert-date-to-site-tz
-                    (f/parse custom-formatter start) s)
+                    (f/parse custom-formatter start) the-site)
         end-date (convert-date-to-site-tz
-                  (f/parse custom-formatter end) s)
+                  (f/parse custom-formatter end) the-site)
         body (metric/site-revenue-by-days site-uuid start-date end-date)]
     {:status 200 :body (first body)}))
 
@@ -64,8 +64,11 @@
   [{:keys [params] :as request}]
   (let [{:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)
-        start-date (f/parse custom-formatter start)
-        end-date (f/parse custom-formatter end)
+        the-site (site/find-by-site-uuid site-uuid)
+        start-date (convert-date-to-site-tz
+                    (f/parse custom-formatter start) the-site)
+        end-date (convert-date-to-site-tz
+                  (f/parse custom-formatter end) the-site)
         body (metric/site-promos-by-days site-uuid start-date end-date)
         body2 (map #(-> % (rename-keys {:promo_id :id})) body)
         body3 (map #(-> % (assoc :avg-revenue (quot (:revenue %) (:redemptions %)))) body2)]
@@ -75,8 +78,11 @@
   [{:keys [params] :as request}]
   (let [{:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)
-        start-date (f/parse custom-formatter start)
-        end-date (f/parse custom-formatter end)
+        the-site (site/find-by-site-uuid site-uuid)
+        start-date (convert-date-to-site-tz
+                    (f/parse custom-formatter start) the-site)
+        end-date (convert-date-to-site-tz
+                  (f/parse custom-formatter end) the-site)
         body (metric/site-rcos-by-days site-uuid start-date end-date)
         body2 (map #(-> % (rename-keys {:offer_id :id})) body)
         body3 (map #(-> % (assoc :avg-revenue (quot (:revenue %) (:redemptions %)))) body2)
