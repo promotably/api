@@ -71,7 +71,7 @@
                   (f/parse custom-formatter end) the-site)
         body (metric/site-promos-by-days site-uuid start-date end-date)
         body2 (map #(-> % (rename-keys {:promo_id :id})) body)
-        body3 (map #(-> % (assoc :avg-revenue (quot (:revenue %) (:redemptions %)))) body2)]
+        body3 (map #(-> % (assoc :revenue-per-order (quot (:revenue %) (:redemptions %)))) body2)]
     {:status 200 :body body3}))
 
 (defn get-rco
