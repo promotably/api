@@ -10,6 +10,7 @@
             [schema.coerce :as c]
             [clj-time.format :as f]
             [clj-time.core :refer [to-time-zone time-zone-for-id]]
+            [clj-time.coerce :refer [to-long from-long]]
             [clojure.set :refer [rename-keys]]))
 
 (def custom-formatter (f/formatter "yyyyMMdd"))
@@ -26,8 +27,10 @@
 
 (defn- convert-date-to-site-tz
   [the-date the-site]
-  (let [tz (time-zone-for-id (:timezone the-site))]
-    (to-time-zone the-date tz)))
+  (let [tz (time-zone-for-id (:timezone the-site))
+        the-date-long (to-long the-date)
+        tz-offset (.getOffset tz the-date-long)]
+    (from-long (+ the-date-long tz-offset))))
 
 (defn get-additional-revenue
   [{:keys [params] :as request}]
