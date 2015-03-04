@@ -42,7 +42,7 @@
                                               update-account! create-site-for-account!
                                               update-site-for-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]
-            [api.controllers.metrics :refer [get-additional-revenue get-lift get-promos get-rco]]
+            [api.controllers.metrics :refer [get-revenue get-additional-revenue get-lift get-promos get-rco]]
             [api.cloudwatch :as cw]
             [api.lib.detector :as detector]
             [api.system :refer [current-system]]
@@ -116,6 +116,7 @@
 
 (defroutes metrics-secure-routes
   (context "/:site-id/metrics" []
+           (GET "/revenue" [] get-revenue)
            (GET "/additional-revenue" [] get-additional-revenue)
            (GET "/lift" [] get-lift)
            (GET "/promos" [] get-promos)
