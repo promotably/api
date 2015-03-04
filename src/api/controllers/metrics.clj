@@ -1,5 +1,6 @@
 (ns api.controllers.metrics
   (:require [api.models.metric :as metric]
+            [api.models.site :as site]
             [api.lib.coercion-helper :refer [transform-map
                                              remove-nils
                                              make-trans
@@ -8,6 +9,7 @@
             [schema.core :as s]
             [schema.coerce :as c]
             [clj-time.format :as f]
+            [clj-time.core :refer [to-time-zone time-zone-for-id]]
             [clojure.set :refer [rename-keys]]))
 
 (def custom-formatter (f/formatter "yyyyMMdd"))
@@ -22,12 +24,20 @@
   [a b]
   (round2 2 (* 100 (float(/ a b)))))
 
+(defn- convert-date-to-site-tz
+  [the-date the-site]
+  (let [tz (time-zone-for-id (:timezone the-site))]
+    (to-time-zone the-date tz)))
+
 (defn get-additional-revenue
   [{:keys [params] :as request}]
   (let [{:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)
-        start-date (f/parse custom-formatter start)
-        end-date (f/parse custom-formatter end)
+        s (site/find-by-site-uuid site-uuid)
+        start-date (convert-date-to-site-tz
+                    (f/parse custom-formatter start) s)
+        end-date (convert-date-to-site-tz
+                  (f/parse custom-formatter end) s)
         body (metric/site-revenue-by-days site-uuid start-date end-date)]
     {:status 200 :body (first body)}))
 
