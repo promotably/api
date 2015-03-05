@@ -20,7 +20,7 @@
   (let [ks (keys r)]
     (rename-keys r (zipmap ks (map hyphenify-key ks)))))
 
-(defn site-revenue-by-days
+(defn site-additional-revenue-by-days
   [site-uuid start-day end-day]
   (let [r (select metrics-revenue
             (aggregate (sum :number_of_orders) :number-of-orders)

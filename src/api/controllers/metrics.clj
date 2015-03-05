@@ -41,7 +41,7 @@
                     (f/parse custom-formatter start) the-site)
         end-date (convert-date-to-site-tz
                   (f/parse custom-formatter end) the-site)
-        body (metric/site-revenue-by-days site-uuid start-date end-date)]
+        body (metric/site-additional-revenue-by-days site-uuid start-date end-date)]
     {:status 200 :body (first body)}))
 
 (defn get-lift [request]
