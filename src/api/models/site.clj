@@ -1,5 +1,6 @@
 (ns api.models.site
   (:require [clojure.set :refer [rename-keys]]
+            [clojure.string :as s]
             [korma.core :refer :all]
             [api.entities :refer :all]
             [api.lib.coercion-helper :refer [underscore-to-dash-keys
@@ -49,7 +50,10 @@
                                   :site_url site-url
                                   :api_secret (UUID/randomUUID)
                                   :created_at (sqlfn now)
-                                  :site_code (last (re-find #".*(?://|www\.)(?:www.)?([^\/]+)" site-url))
+                                  :site_code (-> (re-find #".*(?://|www\.)(?:www.)?([^\/]+)" site-url)
+                                                 last
+                                                 (s/replace ".com" "")
+                                                 (s/replace "." "-"))
                                   :updated_at (sqlfn now)
                                   :country country
                                   :timezone timezone
