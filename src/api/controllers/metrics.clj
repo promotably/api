@@ -44,6 +44,15 @@
         body (metric/site-additional-revenue-by-days site-uuid start-date end-date)]
     {:status 200 :body (first body)}))
 
+(defn vector-of-days-from-rows
+  [column rows]
+  (prn rows)
+  [0 0 0 0 0])
+
+(defn average-from-rows
+  [column rows]
+  0)
+
 (defn get-revenue
   [{:keys [params] :as request}]
   (let [{:keys [site-id start end]} params
@@ -53,8 +62,20 @@
                      (f/parse custom-formatter start) the-site)
         end-date (convert-date-to-site-tz
                    (f/parse custom-formatter end) the-site)
-        body (metric/site-revenue-by-days site-uuid start-date end-date)]
-    {:status 200 :body (first body)}))
+        r (metric/site-revenue-by-days site-uuid start-date end-date)
+        body {:total-revenue {
+                :daily (vector-of-days-from-rows :total-revenue r)
+                :average (average-from-rows :total-revenue r)}
+              :discount {
+                :daily (vector-of-days-from-rows :discount r)
+                :average (average-from-rows :discount r)}
+              :avg-order-revenue {
+                :daily (vector-of-days-from-rows :avg-order-revenue r)
+                :average (average-from-rows :avg-order-revenue r)}
+              :revenue-per-visit {
+                :daily (vector-of-days-from-rows :revenue-per-visit r)
+                :average (average-from-rows :revenue-per-visit r)}}]
+    {:status 200 :body body}))
 
 (defn get-lift [request]
   {:status 200
