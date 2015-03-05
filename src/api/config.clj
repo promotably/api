@@ -53,9 +53,11 @@
   should always be present on environments deployed to AWS"
   []
   (let [event-stream-name (get-config-value "KINESIS_A")
-        promo-stream-name (get-config-value "KINESIS_B")]
+        promo-stream-name (get-config-value "KINESIS_B")
+        credential-profile (get-config-value "CRED_PROFILE" nil)]
     {:promo-stream-name promo-stream-name
-     :event-stream-name event-stream-name}))
+     :event-stream-name event-stream-name
+     :aws-credential-profile credential-profile}))
 
 (defn- get-database-config
   "Checks environment variables for database config settings. These
