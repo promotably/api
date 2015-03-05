@@ -41,6 +41,18 @@
                     (f/parse custom-formatter start) the-site)
         end-date (convert-date-to-site-tz
                   (f/parse custom-formatter end) the-site)
+        body (metric/site-additional-revenue-by-days site-uuid start-date end-date)]
+    {:status 200 :body (first body)}))
+
+(defn get-revenue
+  [{:keys [params] :as request}]
+  (let [{:keys [site-id start end]} params
+        site-uuid (java.util.UUID/fromString site-id)
+        the-site (site/find-by-site-uuid site-uuid)
+        start-date (convert-date-to-site-tz
+                     (f/parse custom-formatter start) the-site)
+        end-date (convert-date-to-site-tz
+                   (f/parse custom-formatter end) the-site)
         body (metric/site-revenue-by-days site-uuid start-date end-date)]
     {:status 200 :body (first body)}))
 

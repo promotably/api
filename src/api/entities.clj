@@ -17,6 +17,7 @@
    "offers"
    "offer_conditions"
    "metrics_revenue"
+   "metrics_additional_revenue"
    "metrics_promos"
    "metrics_rcos"])
 
@@ -76,6 +77,9 @@
 
 (defentity metrics-revenue
   (table "metrics_revenue"))
+
+(defentity metrics-additional-revenue
+  (table "metrics_additional_revenue"))
 
 (defentity metrics-promos
   (table "metrics_promos"))

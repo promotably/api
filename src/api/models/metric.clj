@@ -20,15 +20,28 @@
   (let [ks (keys r)]
     (rename-keys r (zipmap ks (map hyphenify-key ks)))))
 
-(defn site-revenue-by-days
+(defn site-additional-revenue-by-days
   [site-uuid start-day end-day]
-  (let [r (select metrics-revenue
+  (let [r (select metrics-additional-revenue
             (aggregate (sum :number_of_orders) :number-of-orders)
             (aggregate (sum :discount) :discount)
-            (aggregate (sum :total_revenue) :revenue)
+            (aggregate (sum :revenue) :revenue)
+            (aggregate (sum :promotably_commission) :promotably-commission)
+            (aggregate (sum :less_commission_and_discount) :less-commission-and-discount)
             (where {:site_id site-uuid})
             (where {:measurement_hour [>= (to-sql-time start-day)]})
             (where {:measurement_hour [<= (to-sql-time end-day)]}))]
+    r))
+
+(defn site-revenue-by-days
+  [site-uuid start-day end-day]
+  (let [r (select metrics-revenue
+                  (aggregate (sum :number_of_orders) :number-of-orders)
+                  (aggregate (sum :discount) :discount)
+                  (aggregate (sum :total_revenue) :revenue)
+                  (where {:site_id site-uuid})
+                  (where {:measurement_hour [>= (to-sql-time start-day)]})
+                  (where {:measurement_hour [<= (to-sql-time end-day)]}))]
     r))
 
 (defn site-promos-by-days
