@@ -178,32 +178,44 @@
 (defn serve-cached-index
   [req]
   (cw/put-metric "serve-index")
-  (let [c (-> current-system :config)]
-    (serve-cached-static req
-                         (-> c :kinesis :aws-credential-profile)
-                         (-> c :dashboard :artifact-bucket)
-                         (-> c :dashboard :index-filename)
-                         cached-index)))
+  (let [c (-> current-system :config)
+        api-secret (get-api-secret)]
+    (if (auth/authorized? req api-secret)
+      (serve-cached-static req
+                           (-> c :kinesis :aws-credential-profile)
+                           (-> c :dashboard :artifact-bucket)
+                           (-> c :dashboard :index-filename)
+                           cached-index)
+      {:status 303
+       :headers {"Location" "/login"}})))
 
 (defn serve-cached-register
   [req]
   (cw/put-metric "serve-register")
-  (let [c (-> current-system :config)]
-    (serve-cached-static req
-                         (-> c :kinesis :aws-credential-profile)
-                         (-> c :dashboard :artifact-bucket)
-                         (-> c :dashboard :register-filename)
-                         cached-register)))
+  (let [c (-> current-system :config)
+        api-secret (get-api-secret)]
+    (if-not (auth/authorized? req api-secret)
+      (serve-cached-static req
+                           (-> c :kinesis :aws-credential-profile)
+                           (-> c :dashboard :artifact-bucket)
+                           (-> c :dashboard :register-filename)
+                           cached-register)
+      {:status 303
+       :headers {"Location" "/"}})))
 
 (defn serve-cached-login
   [req]
   (cw/put-metric "serve-login")
-  (let [c (-> current-system :config)]
-    (serve-cached-static req
-                         (-> c :kinesis :aws-credential-profile)
-                         (-> c :dashboard :artifact-bucket)
-                         (-> c :dashboard :login-filename)
-                         cached-login)))
+  (let [c (-> current-system :config)
+        api-secret (get-api-secret)]
+    (if-not (auth/authorized? req api-secret)
+      (serve-cached-static req
+                           (-> c :kinesis :aws-credential-profile)
+                           (-> c :dashboard :artifact-bucket)
+                           (-> c :dashboard :login-filename)
+                           cached-login)
+      {:status 303
+       :headers {"Location" "/"}})))
 
 (defn serve-404-page
   [req]
@@ -480,4 +492,3 @@
   (stop
    [component]
     component))
-
