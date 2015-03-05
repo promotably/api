@@ -32,7 +32,9 @@
                           b (json/read-str (:body r) :key-fn keyword)]
                       b => {:number-of-orders 3,
                             :discount 7.5,
-                            :revenue 30.0}
+                            :revenue 30.0,
+                            :promotably-commission 3.0,
+                            :less-commission-and-discount 19.5}
                       (:status r) => 200))
 
               (fact "Can route to controller.api.metrics.get-lift"

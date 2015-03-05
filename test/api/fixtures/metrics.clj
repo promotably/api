@@ -65,6 +65,37 @@
                     :avg_order_revenue 10.0
                     :revenue_per_visit 10.0
                     :created_at (c/to-sql-time (t/now))))
+    (table :metrics_additional_revenue
+           (fixture :mar-zero
+                    :id 0
+                    :site_id site-id
+                    :measurement_hour (sql-time-day-hour 22 0)
+                    :number_of_orders 1
+                    :discount 2.50
+                    :promotably_commission 1.0
+                    :revenue 10.0
+                    :less_commission_and_discount 6.5
+                    :created_at (c/to-sql-time (t/now)))
+           (fixture :mar-one
+                    :id 1
+                    :site_id site-id
+                    :measurement_hour (sql-time-day-hour 22 1)
+                    :number_of_orders 1
+                    :discount 2.50
+                    :promotably_commission 1.0
+                    :revenue 10.0
+                    :less_commission_and_discount 6.5
+                    :created_at (c/to-sql-time (t/now)))
+           (fixture :mar-two
+                    :id 2
+                    :site_id site-id
+                    :measurement_hour (sql-time-day-hour 22 2)
+                    :number_of_orders 1
+                    :discount 2.50
+                    :promotably_commission 1.0
+                    :revenue 10.0
+                    :less_commission_and_discount 6.5
+                    :created_at (c/to-sql-time (t/now))))
     (table :metrics_promos
            (fixture :mp-zero
                     :id 0

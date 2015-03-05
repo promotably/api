@@ -44,6 +44,18 @@
         body (metric/site-additional-revenue-by-days site-uuid start-date end-date)]
     {:status 200 :body (first body)}))
 
+(defn get-revenue
+  [{:keys [params] :as request}]
+  (let [{:keys [site-id start end]} params
+        site-uuid (java.util.UUID/fromString site-id)
+        the-site (site/find-by-site-uuid site-uuid)
+        start-date (convert-date-to-site-tz
+                     (f/parse custom-formatter start) the-site)
+        end-date (convert-date-to-site-tz
+                   (f/parse custom-formatter end) the-site)
+        body (metric/site-revenue-by-days site-uuid start-date end-date)]
+    {:status 200 :body (first body)}))
+
 (defn get-lift [request]
   {:status 200
    :body {"conversion" {"daily" {"promotably" [3.1, 3.31, 3.42, 2.91, 3.09, 3.12, 3.23],
