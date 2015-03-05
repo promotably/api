@@ -20,7 +20,7 @@
   (let [ks (keys r)]
     (rename-keys r (zipmap ks (map hyphenify-key ks)))))
 
-(defn site-revenue-by-days
+(defn site-additional-revenue-by-days
   [site-uuid start-day end-day]
   (let [r (select metrics-revenue
             (aggregate (sum :number_of_orders) :number-of-orders)
@@ -30,6 +30,10 @@
             (where {:measurement_hour [>= (to-sql-time start-day)]})
             (where {:measurement_hour [<= (to-sql-time end-day)]}))]
     r))
+
+(defn site-revenue-by-days
+  [site-uuid start-day end-day]
+  [{}])
 
 (defn site-promos-by-days
   [site-uuid start-day end-day]
