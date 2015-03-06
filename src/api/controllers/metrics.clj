@@ -11,7 +11,8 @@
             [clj-time.format :as f]
             [clj-time.core :refer [to-time-zone time-zone-for-id]]
             [clj-time.coerce :refer [to-long from-long]]
-            [clojure.set :refer [rename-keys]]))
+            [clojure.set :refer [rename-keys]]
+            [clj-time.core :as t]))
 
 (def custom-formatter (f/formatter "yyyyMMdd"))
 
@@ -44,10 +45,25 @@
         body (metric/site-additional-revenue-by-days site-uuid start-date end-date)]
     {:status 200 :body (first body)}))
 
+(defn rows-by-day
+  [rows day]
+  (filter (fn [r]
+            (= (f/unparse custom-formatter (:measurement-hour r))
+               (f/unparse custom-formatter day)))
+          rows))
+
+(defn sum-column-from-rows
+  [column rows day]
+  (let [summed (merge-with + (rows-by-day rows day))]
+    (get summed column)))
+
 (defn vector-of-days-from-rows
   [column rows]
-  (prn rows)
-  [0 0 0 0 0])
+  (let [days (t/in-days
+               (t/interval (:measurement-hour (first rows)) (:measurement-hour (last rows))))
+        first-day (:measurement-hour (first rows))]
+    (for [d (range 0 days)]
+      (sum-column-from-rows column rows (t/plus first-day (t/days d))))))
 
 (defn average-from-rows
   [column rows]
