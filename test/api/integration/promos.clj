@@ -126,7 +126,8 @@
                       lookup-body (:body (lookup-promos site-id))
                       u (json/read-str lookup-body :key-fn keyword)
                       filtered (filter #(= (:promo-id %) promo-id) u)]
-                  (:status r) => 204
+                  (json/read-str (:body r) :key-fn keyword) => (contains {:code "EYECATCH"})
+                  (:status r) => 200
                   (first filtered) => (contains
                                        {:description "alsdkfjlaksdjf",
                                         :reward-applied-to "cart",

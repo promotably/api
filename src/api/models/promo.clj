@@ -175,7 +175,7 @@
                               (assoc :uuid (java.util.UUID/randomUUID))
                               (assoc :promo-id id))
                          linked-products))
-        {:success true}))))
+        {:success true :promo (find-by-site-and-uuid site-id promo-id)}))))
 
 (sm/defn find-by-site-uuid
   "Finds all promos for a given site id. Returns a collection (empty

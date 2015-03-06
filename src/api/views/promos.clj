@@ -48,9 +48,9 @@
    :else {:status 500 :body error}))
 
 (defn shape-update-promo
-  [{:keys [success error message] :as response}]
+  [{:keys [success error message promo] :as response}]
   (cond
-   (true? success) {:status 204}
+   (true? success) {:status 200 :body (write-str promo :value-fn (fn [k v] (view-value-helper v)))}
    (= (class response) schema.utils.ErrorContainer) {:status 400 :body error}
    :else {:status 500 :body error}))
 
