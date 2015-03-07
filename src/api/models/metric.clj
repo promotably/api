@@ -36,9 +36,12 @@
 (defn site-revenue-by-days
   [site-uuid start-day end-day]
   (let [r (select metrics-revenue
-                  (aggregate (sum :number_of_orders) :number-of-orders)
-                  (aggregate (sum :discount) :discount)
-                  (aggregate (sum :total_revenue) :revenue)
+                  (fields [:total_revenue :total-revenue]
+                          :discount
+                          [:avg_order_revenue :avg-order-revenue]
+                          [:revenue_per_visit :revenue-per-visit]
+                          [:measurement_hour :measurement-hour])
+                  (order :measurement_hour :ASC)
                   (where {:site_id site-uuid})
                   (where {:measurement_hour [>= (to-sql-time start-day)]})
                   (where {:measurement_hour [<= (to-sql-time end-day)]}))]

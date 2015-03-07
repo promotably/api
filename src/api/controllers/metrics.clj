@@ -10,8 +10,9 @@
             [schema.coerce :as c]
             [clj-time.format :as f]
             [clj-time.core :refer [to-time-zone time-zone-for-id]]
-            [clj-time.coerce :refer [to-long from-long]]
-            [clojure.set :refer [rename-keys]]))
+            [clj-time.coerce :refer [from-sql-time to-long from-long]]
+            [clojure.set :refer [rename-keys]]
+            [clj-time.core :as t]))
 
 (def custom-formatter (f/formatter "yyyyMMdd"))
 
@@ -44,6 +45,34 @@
         body (metric/site-additional-revenue-by-days site-uuid start-date end-date)]
     {:status 200 :body (first body)}))
 
+(defn day-count-from-rows
+  [rows]
+  (+ 1 (t/in-days ; think interral is not inclusive, hence the +1
+         (t/interval (from-sql-time (:measurement-hour (first rows)))
+                     (from-sql-time (:measurement-hour (last rows)))))))
+
+(defn rows-by-day
+  [rows day]
+  (filter (fn [r]
+            (= (f/unparse custom-formatter (from-sql-time (:measurement-hour r)))
+               (f/unparse custom-formatter day)))
+          rows))
+
+(defn sum-column-from-rows
+  [column rows day]
+  (reduce (fn [acc r] (+ acc (get r column))) 0 (rows-by-day rows day)))
+
+(defn list-of-days-from-rows
+  [column rows]
+  (let [days (day-count-from-rows rows)
+        first-day (from-sql-time (:measurement-hour (first rows)))]
+    (for [d (range 0 days)]
+      (sum-column-from-rows column rows (t/plus first-day (t/days d))))))
+
+(defn average-from-rows 
+  [column rows]
+  (/ (reduce + (list-of-days-from-rows column rows)) (day-count-from-rows rows)))
+
 (defn get-revenue
   [{:keys [params] :as request}]
   (let [{:keys [site-id start end]} params
@@ -53,8 +82,20 @@
                      (f/parse custom-formatter start) the-site)
         end-date (convert-date-to-site-tz
                    (f/parse custom-formatter end) the-site)
-        body (metric/site-revenue-by-days site-uuid start-date end-date)]
-    {:status 200 :body (first body)}))
+        r (metric/site-revenue-by-days site-uuid start-date end-date)
+        body {:total-revenue {
+                :daily (list-of-days-from-rows :total-revenue r)
+                :average (average-from-rows :total-revenue r)}
+              :discount {
+                :daily (list-of-days-from-rows :discount r)
+                :average (average-from-rows :discount r)}
+              :avg-order-revenue {
+                :daily (list-of-days-from-rows :avg-order-revenue r)
+                :average (average-from-rows :avg-order-revenue r)}
+              :revenue-per-visit {
+                :daily (list-of-days-from-rows :revenue-per-visit r)
+                :average (average-from-rows :revenue-per-visit r)}}]
+    {:status 200 :body body}))
 
 (defn get-lift [request]
   {:status 200

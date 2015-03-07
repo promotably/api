@@ -27,7 +27,7 @@
                             (comment migrate-down))]
 
   (fact-group :integration
-              (fact "Can route to controller.api.metrics.get-revenue"
+              (fact "Can route to controller.api.metrics.get-additional-revenue"
                     (let [r (request-metrics "/metrics/additional-revenue" fix/site-id "20150220" "20150223")
                           b (json/read-str (:body r) :key-fn keyword)]
                       b => {:number-of-orders 3,
@@ -35,6 +35,23 @@
                             :revenue 30.0,
                             :promotably-commission 3.0,
                             :less-commission-and-discount 19.5}
+                      (:status r) => 200))
+
+              (fact "Can route to controller.api.metrics.get-revenue"
+                    (let [r (request-metrics "/metrics/revenue" fix/site-id "20150220" "20150223")
+                          b (json/read-str (:body r) :key-fn keyword)]
+                      b => {:total-revenue {
+                              :daily [30.0]
+                              :average 30.0},
+                            :discount {
+                              :daily [7.5]
+                              :average 7.5},
+                            :avg-order-revenue {
+                              :daily [30.0]
+                              :average 30.00 },
+                            :revenue-per-visit {
+                              :daily [30.0]
+                              :average 30.0}}
                       (:status r) => 200))
 
               (fact "Can route to controller.api.metrics.get-lift"
