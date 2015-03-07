@@ -228,7 +228,7 @@
   (GET "/register" [] serve-cached-register)
   (GET "/login" [] serve-cached-login)
   (auth/wrap-authorized secure-routes get-api-secret)
-  (GET "*" [] (not-found serve-404-page)))
+  (GET "*" [] serve-cached-index))
 
 ;;;;;;;;;;;;;;;;;;
 ;;
