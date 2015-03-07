@@ -29,8 +29,11 @@
   (let [user (shape-to-spec body-params inbound-user-spec)]
     (if (or (:password user)
             (:user-social-id user))
-      (let [result (user/new-user! user)]
-        (build-response 201 :user result))
+      (cond
+        (seq (user/find-by-email (:email user))) (build-response 409 :error "A user with that email already exists")
+        (seq (user/find-by-username (:username user))) (build-response 409 :error "A user with that username already exists")
+        :else (let [result (user/new-user! user)]
+                (build-response 201 :user result)))
       (build-response 400 :error "New user must provide a password or use a social provider."))))
 
 (defn update-user!
