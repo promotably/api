@@ -10,7 +10,7 @@
             [schema.coerce :as c]
             [clj-time.format :as f]
             [clj-time.core :refer [to-time-zone time-zone-for-id]]
-            [clj-time.coerce :refer [to-long from-long]]
+            [clj-time.coerce :refer [from-sql-time to-long from-long]]
             [clojure.set :refer [rename-keys]]
             [clj-time.core :as t]))
 
@@ -48,12 +48,13 @@
 (defn day-count-from-rows
   [rows]
   (+ 1 (t/in-days ; think interral is not inclusive, hence the +1
-         (t/interval (:measurement-hour (first rows)) (:measurement-hour (last rows))))))
+         (t/interval (from-sql-time (:measurement-hour (first rows)))
+                     (from-sql-time (:measurement-hour (last rows)))))))
 
 (defn rows-by-day
   [rows day]
   (filter (fn [r]
-            (= (f/unparse custom-formatter (:measurement-hour r))
+            (= (f/unparse custom-formatter (from-sql-time (:measurement-hour r)))
                (f/unparse custom-formatter day)))
           rows))
 
@@ -64,7 +65,7 @@
 (defn list-of-days-from-rows
   [column rows]
   (let [days (day-count-from-rows rows)
-        first-day (:measurement-hour (first rows))]
+        first-day (from-sql-time (:measurement-hour (first rows)))]
     (for [d (range 0 days)]
       (sum-column-from-rows column rows (t/plus first-day (t/days d))))))
 
