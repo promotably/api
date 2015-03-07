@@ -22,5 +22,11 @@
                             (rows-by-day (get-rows) (t/date-time 2015 2 1 0))
                             (t/date-time 2015 2 1)) => 60.0)
 
+(fact "List of days from rows"
+      (list-of-days-from-rows :discount (get-rows)) => '(60.0 60.0 60.0 60.0))
+
+(fact "Average from rows"
+      (average-from-rows :discount (get-rows)) => 60.0)
+
 
 

@@ -45,6 +45,11 @@
         body (metric/site-additional-revenue-by-days site-uuid start-date end-date)]
     {:status 200 :body (first body)}))
 
+(defn day-count-from-rows
+  [rows]
+  (+ 1 (t/in-days ; think interral is not inclusive, hence the +1
+         (t/interval (:measurement-hour (first rows)) (:measurement-hour (last rows))))))
+
 (defn rows-by-day
   [rows day]
   (filter (fn [r]
@@ -54,20 +59,18 @@
 
 (defn sum-column-from-rows
   [column rows day]
-  (let [summed (merge-with + (rows-by-day rows day))]
-    (get summed column)))
+  (reduce (fn [acc r] (+ acc (get r column))) 0 (rows-by-day rows day)))
 
-(defn vector-of-days-from-rows
+(defn list-of-days-from-rows
   [column rows]
-  (let [days (t/in-days
-               (t/interval (:measurement-hour (first rows)) (:measurement-hour (last rows))))
+  (let [days (day-count-from-rows rows)
         first-day (:measurement-hour (first rows))]
     (for [d (range 0 days)]
       (sum-column-from-rows column rows (t/plus first-day (t/days d))))))
 
-(defn average-from-rows
+(defn average-from-rows 
   [column rows]
-  0)
+  (/ (reduce + (list-of-days-from-rows column rows)) (day-count-from-rows rows)))
 
 (defn get-revenue
   [{:keys [params] :as request}]
@@ -80,16 +83,16 @@
                    (f/parse custom-formatter end) the-site)
         r (metric/site-revenue-by-days site-uuid start-date end-date)
         body {:total-revenue {
-                :daily (vector-of-days-from-rows :total-revenue r)
+                :daily (list-of-days-from-rows :total-revenue r)
                 :average (average-from-rows :total-revenue r)}
               :discount {
-                :daily (vector-of-days-from-rows :discount r)
+                :daily (list-of-days-from-rows :discount r)
                 :average (average-from-rows :discount r)}
               :avg-order-revenue {
-                :daily (vector-of-days-from-rows :avg-order-revenue r)
+                :daily (list-of-days-from-rows :avg-order-revenue r)
                 :average (average-from-rows :avg-order-revenue r)}
               :revenue-per-visit {
-                :daily (vector-of-days-from-rows :revenue-per-visit r)
+                :daily (list-of-days-from-rows :revenue-per-visit r)
                 :average (average-from-rows :revenue-per-visit r)}}]
     {:status 200 :body body}))
 
