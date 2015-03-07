@@ -26,13 +26,23 @@
 (defn shape-new-offer
   [{:keys [success error message offer] :as response}]
   (cond
-   (true? success) {:status 201
-                    :body (write-str (-> offer
-                                         (assoc :offer-id (:uuid offer))
-                                         (dissoc :uuid))
-                                     :value-fn (fn [k v] (view-value-helper v)))}
-   (and (false? success) (= error :already-exists)) {:status 409 :body message}
-   :else {:status 500}))
+    (true? success) {:status 201
+                     :body (write-str (-> offer
+                                          (assoc :offer-id (:uuid offer))
+                                          (dissoc :uuid))
+                                      :value-fn (fn [k v] (view-value-helper v)))}
+    (and (false? success) (= error :already-exists)) {:status 409 :body message}
+    :else {:status 500}))
+
+(defn shape-update-offer
+  [{:keys [success error message offer] :as response}]
+  (cond
+    (true? success) {:status 200
+                     :body (write-str (-> offer
+                                          (assoc :offer-id (:uuid offer))
+                                          (dissoc :uuid))
+                                      :value-fn (fn [k v] (view-value-helper v)))}
+    :else {:status 500}))
 
 (defn shape-rcos
   [session offers]

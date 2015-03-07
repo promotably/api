@@ -199,7 +199,7 @@
                                        (assoc :uuid (java.util.UUID/randomUUID))
                                        (assoc :offer-id id))
                                   conditions))
-       {:success true}))))
+       {:success true :offer (first (by-offer-uuid site-id offer-uuid))}))))
 
 (sm/defn find-by-site-uuid
   "Finds all offers for a given site id. Returns a collection (empty

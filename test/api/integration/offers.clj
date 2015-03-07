@@ -150,6 +150,7 @@
                       r2 (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r2) keyword)]
                   (:status r) => 200
+                  (json/read-str (:body r1) :key-fn keyword) => (contains {:code "OLD-VISITOR"})
                   listed => (just [(contains
                                     {:display-text "display text again"
                                      :name "Old Visitor Offer"

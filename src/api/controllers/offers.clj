@@ -9,7 +9,8 @@
             [api.system :refer [current-system]]
             [api.views.offers :refer [shape-offer
                                       shape-lookup
-                                      shape-new-offer]]
+                                      shape-new-offer
+                                      shape-update-offer]]
             [api.cloudwatch :as cw]
             [clj-time.core :as t]
             [clj-time.coerce :as t-coerce]
@@ -94,7 +95,7 @@
         id (site/get-id-by-site-uuid site-uuid)]
     (when (= schema.utils.ErrorContainer (type coerced-params))
       (throw+ {:type :argument-error :body-params params :error coerced-params}))
-    (shape-new-offer
+    (shape-update-offer
      (offer/update-offer! offer-id (assoc coerced-params :site-id id)))))
 
 (defn query-offer
