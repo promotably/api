@@ -70,6 +70,23 @@
               withs (with withs))
       (select)))
 
+(sm/defn find-by-site-uuid
+  "Finds all offers for a given site id. Returns a collection (empty
+  array if no results found)"
+  [site-uuid :- s/Uuid]
+  (let [results (select offers
+                        (with offer-conditions)
+                        (join sites (= :sites.id :site_id))
+                        (where {:sites.site_id site-uuid}))]
+    (map db-to-offer results)))
+
+(sm/defn find-by-uuid
+  "Finds an offer by uuid."
+  [offer-uuid :- s/Uuid]
+  (let [results (lookup-by {:conditions {:offers.uuid offer-uuid}
+                            :withs offer-conditions})]
+    (db-to-offer (first results))))
+
 (defn exists?
   [site-id code]
   (not (empty? (lookup-by {:conditions {:site_id site-id :code code}}))))
@@ -199,24 +216,7 @@
                                        (assoc :uuid (java.util.UUID/randomUUID))
                                        (assoc :offer-id id))
                                   conditions))
-       {:success true :offer (db-to-offer (first (by-offer-uuid site-id offer-uuid)))}))))
-
-(sm/defn find-by-site-uuid
-  "Finds all offers for a given site id. Returns a collection (empty
-  array if no results found)"
-  [site-uuid :- s/Uuid]
-  (let [results (select offers
-                        (with offer-conditions)
-                        (join sites (= :sites.id :site_id))
-                        (where {:sites.site_id site-uuid}))]
-    (map db-to-offer results)))
-
-(sm/defn find-by-uuid
-  "Finds an offer by uuid."
-  [offer-uuid :- s/Uuid]
-  (let [results (lookup-by {:conditions {:offers.uuid offer-uuid}
-                            :withs offer-conditions})]
-    (db-to-offer (first results))))
+       {:success true :offer (find-by-uuid offer-uuid)}))))
 
 (sm/defn delete-by-uuid
   "Deletes a offer by uuid."
