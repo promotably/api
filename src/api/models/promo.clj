@@ -104,24 +104,24 @@
   [kinesis-comp
    {:keys [description seo-text code reward-type reward-applied-to
            reward-tax reward-amount site-id linked-products
-           conditions promo-id] :as params}]
+           conditions promo-id active] :as params}]
   (transaction
    (if (seq (exists? site-id code))
      {:success false
       :error :already-exists
       :message (format "A promo with code %s already exists" code)}
-     (let [new-values {:active true
-                       :site_id site-id
-                       :description description
-                       :seo_text seo-text
-                       :reward_applied_to (clojure.core/name reward-applied-to)
-                       :reward_tax (clojure.core/name reward-tax)
-                       :reward_type (clojure.core/name reward-type)
-                       :reward_amount reward-amount
-                       :code code
-                       :created_at (sqlfn now)
-                       :updated_at (sqlfn now)
-                       :uuid (java.util.UUID/randomUUID)}
+     (let [new-values (cond-> {:site_id site-id
+                               :description description
+                               :seo_text seo-text
+                               :reward_applied_to (clojure.core/name reward-applied-to)
+                               :reward_tax (clojure.core/name reward-tax)
+                               :reward_type (clojure.core/name reward-type)
+                               :reward_amount reward-amount
+                               :code code
+                               :created_at (sqlfn now)
+                               :updated_at (sqlfn now)
+                               :uuid (java.util.UUID/randomUUID)}
+                        (not (nil? active)) (assoc :active active))
            raw (insert promos (values new-values))
            id (:id raw)]
        (when (seq conditions)
@@ -150,18 +150,16 @@
       {:success false
        :error :not-found
        :message (format "Promo id %s does not exist." promo-id)}
-      (let [new-values {:site_id site-id
-                        :description description
-                        :seo_text seo-text
-                        :reward_applied_to (clojure.core/name reward-applied-to)
-                        :reward_tax (clojure.core/name reward-tax)
-                        :reward_type (clojure.core/name reward-type)
-                        :reward_amount reward-amount
-                        :code code
-                        :updated_at (sqlfn now)}
-            new-values (if-not (nil? active)
-                         (assoc new-values :active active)
-                         new-values)
+      (let [new-values (cond-> {:site_id site-id
+                                :description description
+                                :seo_text seo-text
+                                :reward_applied_to (clojure.core/name reward-applied-to)
+                                :reward_tax (clojure.core/name reward-tax)
+                                :reward_type (clojure.core/name reward-type)
+                                :reward_amount reward-amount
+                                :code code
+                                :updated_at (sqlfn now)}
+                         (not (nil? active)) (assoc :active active))
             result (update promos
                            (set-fields new-values)
                            (where {:id id}))]

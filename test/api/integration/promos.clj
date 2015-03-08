@@ -30,6 +30,7 @@
 
               (facts "Promo Create"
                 (let [new-promo {:site-id (str site-id)
+                                 :active true
                                  :code "TWENTYOFF"
                                  :description "You get 20% off. Bitches."
                                  :reward-amount 20.0
