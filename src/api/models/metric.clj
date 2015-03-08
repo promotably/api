@@ -77,3 +77,21 @@
                   (where {:measurement_hour [>= (to-sql-time start-day)]})
                   (where {:measurement_hour [<= (to-sql-time end-day)]}))]
     r))
+
+(defn site-lift-by-days
+  [site-uuid start-day end-day]
+  (let [r (select metrics-lift
+                  (fields [:total_revenue_inc :total-revenue-inc]
+                          [:total_revenue_exc :total-revenue-exc]
+                          [:avg_order_revenue_inc :avg-order-revenue-inc]
+                          [:avg_order_revenue_exc :avg-order-revenue-exc]
+                          [:revenue_per_visit_inc :revenue-per-visit-inc]
+                          [:revenue_per_visit_exc :revenue-per-visit-exc]
+                          [:order_count_inc :order-count-inc]
+                          [:order_count_exc :order-count-exc]
+                          [:measurement_hour :measurement-hour])
+                  (order :measurement_hour :ASC)
+                  (where {:site_id site-uuid})
+                  (where {:measurement_hour [>= (to-sql-time start-day)]})
+                  (where {:measurement_hour [<= (to-sql-time end-day)]}))]
+    r))
