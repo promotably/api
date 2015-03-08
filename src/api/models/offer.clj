@@ -238,7 +238,7 @@
                                                  offer-code)})))]
     (if row (db-to-offer row))))
 
-(defn valid?
+(defn valid?*
   [context {:keys [reward conditions] :as offer}]
   (let [{:keys [promo-id expiry-in-minutes]} reward
         promo (promo/find-by-uuid promo-id)
@@ -258,6 +258,16 @@
      true
      :else
      false)))
+
+(defn valid?
+  [context offer]
+  (try
+    (valid?* context offer)
+    (catch Throwable t
+      (log/error t "Exception while attempting to validate offer")
+      (log/errorf "Offer: %s" offer)
+      (log/errorf "Context: %s" context)
+      (throw t))))
 
 (defn generate-exploding-code
   [{:keys [reward] :as offer}]
