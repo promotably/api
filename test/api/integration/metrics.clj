@@ -54,6 +54,23 @@
                               :average 30.0}}
                       (:status r) => 200))
 
+              (fact "/metrics/*/revenue will produce empty results for queries with no data"
+                    (let [r (request-metrics "/metrics/revenue" fix/site-id "20150228" "20150306")
+                          b (json/read-str (:body r) :key-fn keyword)]
+                      b => {:total-revenue {
+                              :daily []
+                              :average 0},
+                            :discount {
+                              :daily []
+                              :average 0},
+                            :avg-order-revenue {
+                              :daily []
+                              :average 0 },
+                            :revenue-per-visit {
+                              :daily []
+                              :average 0}}
+                      (:status r) => 200))
+
               (fact "Can route to controller.api.metrics.get-lift"
                     (let [r (request-metrics "/metrics/lift" fix/site-id "20150220" "20150223")
                           b (json/read-str (:body r) :key-fn keyword)]
