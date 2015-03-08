@@ -216,9 +216,13 @@
   (if (is-social? request)
     (if-let [body-params-with-social (add-social-data request auth-config)]
       (let [create-resp (create-user-fn (assoc request :body-params body-params-with-social))
+            create-status (:status create-resp)
             user-id (str (get-in create-resp [:body :user-id]))
             api-secret (get-in auth-config [:api :api-secret])]
-        (auth-response create-resp api-secret user-id))
+        (if (or (= create-status 200)
+                (= create-status 201))
+          (auth-response create-resp api-secret user-id)
+          create-resp))
       (do
         (cw/put-metric "login-error")
         {:status 401}))
