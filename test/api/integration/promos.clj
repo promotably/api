@@ -39,8 +39,9 @@
                                  :conditions [{:type "dates"
                                                :start-date "2014-11-27T05:00:00Z"
                                                :end-date "2014-11-29T04:59:59Z"}]}
-                      r (create-promo new-promo)]
-                  (json/read-str (:body r) :key-fn keyword) => (contains {:code "TWENTYOFF"})
+                      r (create-promo new-promo)
+                      b (json/read-str (:body r) :key-fn keyword)]
+                  b => (contains {:code "TWENTYOFF"})
                   (:status r) => 201))
 
               (tabular
@@ -125,8 +126,9 @@
                                                               :start-time "00:00"}]})
                       lookup-body (:body (lookup-promos site-id))
                       u (json/read-str lookup-body :key-fn keyword)
-                      filtered (filter #(= (:promo-id %) promo-id) u)]
-                  (json/read-str (:body r) :key-fn keyword) => (contains {:code "EYECATCH"})
+                      filtered (filter #(= (:promo-id %) promo-id) u)
+                      b (json/read-str (:body r) :key-fn keyword)]
+                  b => (contains {:code "EYECATCH"})
                   (:status r) => 200
                   (first filtered) => (contains
                                        {:description "alsdkfjlaksdjf",
