@@ -64,12 +64,14 @@
 
 (defn list-of-days-from-rows
   [column rows]
-  (let [days (day-count-from-rows rows)
-        first-day (from-sql-time (:measurement-hour (first rows)))]
-    (for [d (range 0 days)]
-      (sum-column-from-rows column rows (t/plus first-day (t/days d))))))
+  (if (= (count rows) 0)
+    '()
+    (let [days (day-count-from-rows rows)
+          first-day (from-sql-time (:measurement-hour (first rows)))]
+      (for [d (range 0 days)]
+       (sum-column-from-rows column rows (t/plus first-day (t/days d)))))))
 
-(defn average-from-rows 
+(defn average-from-rows
   [column rows]
   (/ (reduce + (list-of-days-from-rows column rows)) (day-count-from-rows rows)))
 
