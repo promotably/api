@@ -19,7 +19,8 @@
    "metrics_revenue"
    "metrics_additional_revenue"
    "metrics_promos"
-   "metrics_rcos"])
+   "metrics_rcos"
+   "metrics_lift"])
 
 (defentity email-subscribers
   (table "email_subscribers"))
@@ -86,3 +87,6 @@
 
 (defentity metrics-rcos
   (table "metrics_rcos"))
+
+(defentity metrics-lift
+  (table "metrics_lift"))

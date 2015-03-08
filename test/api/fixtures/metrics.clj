@@ -252,4 +252,70 @@
                     :discount 20.50
                     :avg_discount 0.50
                     :code "C1"
+                    :created_at (c/to-sql-time (t/now))))
+    (table :metrics_lift
+           (fixture :ml-zero
+                    :id 0
+                    :site_id site-id
+                    :measurement_hour (sql-time-day-hour 22 0)
+                    :total_revenue_inc 1.0
+                    :total_revenue_exc 1.0
+                    :avg_order_revenue_inc 1.0
+                    :avg_order_revenue_exc 1.0
+                    :revenue_per_visit_inc 1.0
+                    :revenue_per_visit_exc 1.0
+                    :order_count_inc 1
+                    :order_count_exc 1
+                    :created_at (c/to-sql-time (t/now)))
+           (fixture :ml-one
+                    :id 1
+                    :site_id site-id
+                    :measurement_hour (sql-time-day-hour 22 1)
+                    :total_revenue_inc 1.0
+                    :total_revenue_exc 1.0
+                    :avg_order_revenue_inc 1.0
+                    :avg_order_revenue_exc 1.0
+                    :revenue_per_visit_inc 1.0
+                    :revenue_per_visit_exc 1.0
+                    :order_count_inc 1
+                    :order_count_exc 1
+                    :created_at (c/to-sql-time (t/now)))
+           (fixture :ml-two
+                    :id 2
+                    :site_id site-id
+                    :measurement_hour (sql-time-day-hour 22 2)
+                    :total_revenue_inc 1.0
+                    :total_revenue_exc 1.0
+                    :avg_order_revenue_inc 1.0
+                    :avg_order_revenue_exc 1.0
+                    :revenue_per_visit_inc 1.0
+                    :revenue_per_visit_exc 1.0
+                    :order_count_inc 1
+                    :order_count_exc 1
+                    :created_at (c/to-sql-time (t/now)))
+           (fixture :ml-three
+                    :id 3
+                    :site_id site-id
+                    :measurement_hour (sql-time-day-hour 22 3)
+                    :total_revenue_inc 1.0
+                    :total_revenue_exc 1.0
+                    :avg_order_revenue_inc 1.0
+                    :avg_order_revenue_exc 1.0
+                    :revenue_per_visit_inc 1.0
+                    :revenue_per_visit_exc 1.0
+                    :order_count_inc 1
+                    :order_count_exc 1
+                    :created_at (c/to-sql-time (t/now)))
+           (fixture :ml-four
+                    :id 4
+                    :site_id site-id
+                    :measurement_hour (sql-time-day-hour 23 0)
+                    :total_revenue_inc 1.0
+                    :total_revenue_exc 1.0
+                    :avg_order_revenue_inc 1.0
+                    :avg_order_revenue_exc 1.0
+                    :revenue_per_visit_inc 1.0
+                    :revenue_per_visit_exc 1.0
+                    :order_count_inc 1
+                    :order_count_exc 1
                     :created_at (c/to-sql-time (t/now))))))
