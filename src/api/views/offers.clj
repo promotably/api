@@ -29,7 +29,8 @@
     (true? success) {:status 201
                      :body (write-str (-> offer
                                           (assoc :offer-id (:uuid offer))
-                                          (dissoc :uuid))
+                                          (dissoc :uuid)
+                                          (dissoc :id))
                                       :value-fn (fn [k v] (view-value-helper v)))}
     (and (false? success) (= error :already-exists)) {:status 409 :body message}
     :else {:status 500}))
@@ -40,7 +41,8 @@
     (true? success) {:status 200
                      :body (write-str (-> offer
                                           (assoc :offer-id (:uuid offer))
-                                          (dissoc :uuid))
+                                          (dissoc :uuid)
+                                          (dissoc :id))
                                       :value-fn (fn [k v] (view-value-helper v)))}
     :else {:status 500}))
 

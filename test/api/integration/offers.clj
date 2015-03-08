@@ -73,7 +73,9 @@
   (fact-group :integration
 
               (facts "Offer Create"
-                     (:status (create-offer (default-offer))) => 201)
+                (let [r (create-offer (default-offer))]
+                  (:status r) => 201
+                  (json/read-str (:body r) :key-fn keyword) => (contains {:code "NEW-VISITOR"})))
 
               (facts "Offer Create Fails with Bad Param"
                      (let [r (create-offer (assoc-in (default-offer) [:reward :promo-id] "invalid-id"))]
