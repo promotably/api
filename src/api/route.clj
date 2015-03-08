@@ -8,6 +8,7 @@
             [clojure.core.match :as match :refer (match)]
             [clojure.repl :refer [pst]]
             [clojure.pprint :refer [pprint]]
+            [clojure.string :as strng]
             [compojure.core :refer [routes GET PUT HEAD POST DELETE ANY context defroutes]
              :as compojure]
             [compojure.route :refer [not-found]]
@@ -155,7 +156,9 @@
                                               :key filename)
                  (amazonica.aws.s3/get-object bucket filename))
           content (slurp (:object-content resp))]
-      (reset! cached {:content content :cached-at (now)}))
+      (if cached
+        (reset! cached {:content content :cached-at (now)})
+        content))
     (catch Throwable t
       (cw/put-metric "static-missing")
       (log/logf :error
@@ -221,6 +224,12 @@
   [req]
   {:status 404 :body "<h1>Not Found</h1>"})
 
+(defn serve-404-or-index
+  [req]
+  (if (.contains (:uri req) ".")
+    (serve-404-page req)
+    (serve-cached-index req)))
+
 (defroutes all-routes
   (GET "/health-check" [] "<h1>I'm here</h1>")
   api-routes
@@ -228,7 +237,7 @@
   (GET "/register" [] serve-cached-register)
   (GET "/login" [] serve-cached-login)
   (auth/wrap-authorized secure-routes get-api-secret)
-  (GET "*" [] serve-cached-index))
+  (GET "*" [] serve-404-or-index))
 
 ;;;;;;;;;;;;;;;;;;
 ;;

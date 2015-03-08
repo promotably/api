@@ -66,9 +66,8 @@
   [handler api-secret-fn]
   ;; TODO: add role based authorization
   (fn [request]
-    (if (authorized? request (api-secret-fn))
-      (handler (add-user-id-to-request request))
-      {:status 401})))
+    (when (authorized? request (api-secret-fn))
+      (handler (add-user-id-to-request request)))))
 
 (defn- auth-response
   "Given a response, the api-secret key, the user-id, and (optional)
