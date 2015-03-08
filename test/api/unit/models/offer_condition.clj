@@ -47,7 +47,8 @@
  ?rpv ?pid ?result ?events
  1    1    true    [{:data {:sku "1234"}}]
  1    1    false   []
- 2    1    false   [{:data {:sku "1234"}} {:data {:sku "5678"}}])
+ 2    1    false   [{:data {:sku "1234"}} {:data {:sku "5678"}}]
+ 2    nil  true    [{:data {:sku "1234"}} {:data {:sku "1234"}} {:data {:sku "5678"}}])
 
 
 (tabular
