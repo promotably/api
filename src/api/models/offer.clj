@@ -95,7 +95,8 @@
            offer-id
            html
            css
-           theme] :as params}]
+           theme
+           active] :as params}]
   (let [{p-type :type p-display-text :display-text p-page :page} presentation
         {:keys [promo-id expiry-in-minutes type]} reward
         p (promo/find-by-site-and-uuid site-id promo-id true)]
@@ -114,26 +115,25 @@
 
      :else
      (transaction
-      (let [new-values {;; TODO: should probably have this flag.
-                        ;; :active true
-                        :site_id site-id
-                        :code code
-                        :name name
-                        :display_text display-text
-                        :promo_id (:id p)
-                        :dynamic (if (= :dynamic-promo type)
-                                   true
-                                   false)
-                        :expiry_in_minutes expiry-in-minutes
-                        :presentation_type (clojure.core/name p-type)
-                        :presentation_page (clojure.core/name p-page)
-                        :presentation_display_text p-display-text
-                        :created_at (sqlfn now)
-                        :updated_at (sqlfn now)
-                        :uuid (java.util.UUID/randomUUID)
-                        :html html
-                        :css css
-                        :theme theme}
+      (let [new-values (cond-> {:site_id site-id
+                                :code code
+                                :name name
+                                :display_text display-text
+                                :promo_id (:id p)
+                                :dynamic (if (= :dynamic-promo type)
+                                           true
+                                           false)
+                                :expiry_in_minutes expiry-in-minutes
+                                :presentation_type (clojure.core/name p-type)
+                                :presentation_page (clojure.core/name p-page)
+                                :presentation_display_text p-display-text
+                                :created_at (sqlfn now)
+                                :updated_at (sqlfn now)
+                                :uuid (java.util.UUID/randomUUID)
+                                :html html
+                                :css css
+                                :theme theme}
+                         (not (nil? active)) (assoc :active active))
             result (insert offers (values new-values))
             the-offer (db-to-offer result)]
         (when (seq conditions)
