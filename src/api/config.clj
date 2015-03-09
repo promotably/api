@@ -1,5 +1,6 @@
 (ns api.config
-  (:require [com.stuartsierra.component :as component]))
+  (:require [com.stuartsierra.component :as component])
+  (:import [org.apache.log4j Level]))
 
 ;; File-based config data
 (def configfile-data {})
@@ -14,28 +15,31 @@
 (def default-build-bucket "promotably-build-artifacts")
 (def default-html-path "jenkins/dashboard/latest")
 
+(defn- get-config-value
+  [key & [default]]
+  (or (System/getenv key)
+      (System/getProperty key)
+      (get configfile-data key default)))
+
 ;; Setup info for logging
 (def base-log-config
-  (if-not (empty? (System/getProperty "catalina.base"))
-    {:name "catalina"
+  (if-let [log-dir (get-config-value "LOG_DIR")]
+    {:name "file"
      :level :info
-     :out (org.apache.log4j.FileAppender.
+     :out (org.apache.log4j.DailyRollingFileAppender.
            (org.apache.log4j.PatternLayout.
             "%d{HH:mm:ss} %-5p %22.22t %-22.22c{2} %m%n")
-           (str (. System getProperty "catalina.base")
-                "/logs/tail_catalina.log")
-           true)}
+           (str log-dir "/pr-api.log")
+           "'.'yyyy-MM-dd-HH")}
     {:name "console"
      :level :info
      :out (org.apache.log4j.ConsoleAppender.
            (org.apache.log4j.PatternLayout.
             "%d{HH:mm:ss} %-5p %22.22t %-22.22c{2} %m%n"))}))
 
-(defn- get-config-value
-  [key & [default]]
-  (or (System/getenv key)
-      (System/getProperty key)
-      (get configfile-data key default)))
+(def loggly-url
+  (or (get-config-value "LOGGLY_URL")
+      "http://logs-01.loggly.com/inputs/2032adee-6213-469d-ba58-74993611570a/tag/http/"))
 
 (defn- get-dashboard-config
   "Checks environment variables for dashboard config settings. These
@@ -109,7 +113,8 @@
                                    (:event-stream-name c)
                                    (assoc :event-stream-name (:event-stream-name c))))
                 :dashboard (get-dashboard-config)
-                :logging base-log-config
+                :logging {:base base-log-config
+                          :loggly-url loggly-url}
                 :session-length-in-seconds (* 60 60 2)
                 :bucket-assignment-length-in-seconds (* 60 60 24 120)
                 :auth-token-config (auth-token-config)
@@ -125,7 +130,8 @@
                            :promo-stream-name "dev-PromoStream"
                            :event-stream-name "dev-PromotablyAPIEvents"}
                 :dashboard (get-dashboard-config)
-                :logging base-log-config
+                :logging {:base base-log-config
+                          :loggly-url loggly-url}
                 :session-length-in-seconds (* 60 60 2)
                 :bucket-assignment-length-in-seconds (* 60 60 24 120)
                 :auth-token-config (auth-token-config)
@@ -134,7 +140,8 @@
                 :kinesis (get-kinesis-config)
                 :redis (get-redis-config)
                 :dashboard (get-dashboard-config)
-                :logging base-log-config
+                :logging {:base base-log-config
+                          :loggly-url loggly-url}
                 :session-length-in-seconds (* 60 60 2)
                 :bucket-assignment-length-in-seconds (* 60 60 24 120)
                 :auth-token-config (auth-token-config)
@@ -145,7 +152,8 @@
                  :redis (get-redis-config)
                  :kinesis (get-kinesis-config)
                  :dashboard (get-dashboard-config)
-                 :logging base-log-config
+                 :logging {:base base-log-config
+                           :loggly-url loggly-url}
                  :session-length-in-seconds (* 60 60 2)
                 :bucket-assignment-length-in-seconds (* 60 60 24 120)
                  :auth-token-config (auth-token-config)
@@ -154,7 +162,8 @@
                 :redis (get-redis-config)
                 :kinesis (get-kinesis-config)
                 :dashboard (get-dashboard-config)
-                :logging base-log-config
+                :logging {:base base-log-config
+                          :loggly-url loggly-url}
                 :session-length-in-seconds (* 60 60 2)
                 :bucket-assignment-length-in-seconds (* 60 60 24 120)
                 :auth-token-config (auth-token-config)

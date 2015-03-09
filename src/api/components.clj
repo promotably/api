@@ -24,7 +24,8 @@
            [java.util UUID]
            [com.amazonaws.services.kinesis AmazonKinesisClient]
            [com.amazonaws.auth.profile ProfileCredentialsProvider]
-           [com.amazonaws.auth DefaultAWSCredentialsProviderChain]))
+           [com.amazonaws.auth DefaultAWSCredentialsProviderChain]
+           [org.apache.log4j Logger Level]))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -35,11 +36,28 @@
 (defrecord LoggingComponent [config]
   component/Lifecycle
   (start [this]
-    (log-config/set-logger!
-     "api"
-     :name (-> config :logging :name)
-     :level (-> config :logging :level)
-     :out (-> config :logging :out))
+    (if-let [loggly-url (-> config :logging :loggly-url)]
+      (do (log-config/set-loggers!
+           "api"
+           (-> config :logging :base))
+          (let [^Logger api-logger (log-config/as-logger "api")
+                loggly-appender (doto (org.apache.log4j.AsyncAppender.)
+                                  (.setName "async")
+                                  (.setLayout (doto (org.apache.log4j.PatternLayout.)
+                                                (.setConversionPattern "%d{HH:mm:ss} %-5p %22.22t %-22.22c{2} %m%n")))
+                                  (.setBlocking false)
+                                  (.setBufferSize (int 500))
+                                  (.addAppender (doto (com.promotably.proggly.LogglyAppender.)
+                                                  (.setName "loggly")
+                                                  (.setLayout (doto (org.apache.log4j.PatternLayout.)
+                                                                (.setConversionPattern "%d{HH:mm:ss} %-5p %22.22t %-22.22c{2} %m%n")))
+                                                  (.logglyURL loggly-url))))]
+            (doto api-logger
+              (.addAppender loggly-appender))
+            (log/info "Loggly appender is attached?" (.isAttached api-logger loggly-appender))))
+      (log-config/set-loggers!
+       "api"
+       (-> config :logging :base)))
     (log/logf :info "Environment is %s" (-> config :env))
     this)
   (stop [this]
@@ -214,5 +232,3 @@
    :session-cache (component/using (map->SessionCacheComponent {}) [:config :logging :redis :kinesis])
    :router        (component/using (route/map->Router {}) [:config :logging :session-cache])
    :server        (component/using (map->Server {:port (java.lang.Integer. port)}) [:config :logging :router])))
-
-

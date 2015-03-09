@@ -38,6 +38,7 @@
                  [org.clojure/tools.logging "0.3.0"]
                  [org.clojure/tools.nrepl "0.2.6"]
                  [org.postgresql/postgresql "9.3-1100-jdbc4"]
+                 [org.clojars.promotably/proggly "0.1.8"]
                  [com.cognitect/transit-clj "0.8.259"
                   :exclusions [com.fasterxml.jackson.core/jackson-databind
                                com.fasterxml.jackson.core/jackson-core]]
