@@ -40,7 +40,10 @@
                     (assoc :presentation
                       {:page (keyword (:presentation-page cleaned))
                        :display-text (:presentation-display-text cleaned)
-                       :type (keyword (:presentation-type cleaned))})
+                       :type (keyword (:presentation-type cleaned))
+                       :html (:html cleaned)
+                       :css (:css cleaned)
+                       :theme (:theme cleaned)})
                     (assoc :reward {:type (if (:dynamic cleaned)
                                             :dynamic-promo
                                             :promo)
@@ -51,6 +54,9 @@
                                o)))
                     (dissoc :promo-id :dynamic :expiry-in-minutes)
                     (dissoc :presentation-type
+                            :html
+                            :css
+                            :theme
                             :presentation-page
                             :presentation-display-text))
         conditions (map

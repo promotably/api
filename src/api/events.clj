@@ -78,7 +78,7 @@
 (def fix-cart-items
   (comp
    (fn [m]
-     (if (and (not (#{:productview :productadd} (:event-name m)))
+     (if (and (not (#{:productview :productadd :offershown} (:event-name m)))
               (not (contains? m :cart-items)))
        (assoc m :cart-items [])
        m))
@@ -140,7 +140,7 @@
     (cond
      (= schema.utils.ErrorContainer (type parsed))
      (do
-       (log/logf :error "Event parse error: %s, for event-name %s" (pr-str parsed) (:event-name params))
+       (log/logf :error "Event parse error: %s, params: %s" (pr-str parsed) params)
        (put-metric "event-record-parse-error")
        {:status 400 :session (:session request)})
 

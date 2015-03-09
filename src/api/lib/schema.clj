@@ -129,6 +129,7 @@
                        :cartview
                        :checkout
                        :thankyou
+                       :offershown
                        :shopper-qualified-offers
                        :offer-made))
 
@@ -177,7 +178,13 @@
 (defmacro def-event
   [the-event base-event & body]
   `(def ~the-event
-     (s/conditional #(= (:event-name %) :productview)
+     (s/conditional #(= (:event-name %) :offershown)
+                    (-> ~base-event
+                        (dissoc (s/required-key :auth))
+                        (merge
+                         {(s/optional-key :seconds-remaining) (s/maybe s/Num)
+                          (s/required-key :offer-id) (s/maybe s/Str)}))
+                    #(= (:event-name %) :productview)
                     (merge ~base-event
                            {(s/required-key :sku) s/Str
                             (s/optional-key :title) (s/maybe s/Str)
@@ -489,6 +496,9 @@
 (def BasePresentation
   {(s/required-key :type) (apply s/enum (vec valid-presentation-types))
    (s/required-key :page) (apply s/enum (vec valid-presentation-page-types))
+   (s/required-key :html) (s/maybe s/Str)
+   (s/required-key :css) (s/maybe s/Str)
+   (s/required-key :theme) (s/maybe s/Str)
    (s/required-key :display-text) (s/maybe s/Str)})
 (def Presentation
   (s/conditional #(= (:type %) :lightbox)
