@@ -179,8 +179,7 @@
                                    (assoc :offer-id (:uuid the-offer)))
               now (t-coerce/to-string (t/now))]
           (cond-> {:offer-qualification-event qualified-event
-                   :body (write-str response-data
-                                    :value-fn (fn [k v] (view-value-helper v)))}
+                   :body response-data}
                   the-offer (assoc-in [:session :active-offer] the-offer)
                   is-dynamic? (assoc-in [:session :active-offer :code] exploding-code)
                   is-dynamic? (assoc-in [:session :active-offer :expires] expiry)
