@@ -11,7 +11,7 @@
 
   :global-vars {*warn-on-reflection* false}
   :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.2"]
-            [cider/cider-nrepl "0.8.0"]]
+            [cider/cider-nrepl "0.8.2"]]
   :dependencies [[compojure "1.1.9" :exclusions [joda-time]]
                  [org.clojure/tools.cli "0.3.1"]
                  [amazonica "0.3.18" :exclusions [joda-time]]

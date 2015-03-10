@@ -35,9 +35,9 @@
               :expiry-in-minutes 10}
      :presentation {:type :lightbox
                     :page :any
-                    :html nil
-                    :css nil
-                    :theme nil
+                    :html "<html></html>"
+                    :css "body {}"
+                    :theme "theme"
                     :display-text "presentation text"}
      :conditions [{:type "dates"
                    :start-date "2014-11-27T05:00:00Z"
@@ -93,11 +93,11 @@
                       listed (parse-string (:body r) keyword)]
                   listed => (just [(contains
                                     {:name "New Visitor Offer"
-                                     :presentation {:css nil
+                                     :presentation {:css "body {}"
                                                     :display-text "presentation text"
-                                                    :html nil
+                                                    :html "<html></html>"
                                                     :page "any"
-                                                    :theme nil
+                                                    :theme "theme"
                                                     :type "lightbox"}
                                      :active true
                                      :reward {:type "dynamic-promo"
@@ -275,11 +275,11 @@
                   (:status r) => 200
                   pr => (contains {:expires string?
                                    :promo {:conditions []},
-                                   :presentation {:css nil,
-                                                  :display-text nil,
-                                                  :html nil,
-                                                  :page "product-detail",
-                                                  :theme nil,
+                                   :presentation {:css nil
+                                                  :display-text nil
+                                                  :html nil
+                                                  :page "product-detail"
+                                                  :theme nil
                                                   :type "lightbox"},
                                    :is-limited-time true,
                                    :code string?,

@@ -198,19 +198,38 @@
                       r (show-promo site-id promo-id)
                       promo (json/read-str (:body r) :key-fn keyword)]
                   (:status r) => 200
-                  promo => (contains
-                            {:description "You get 20% off. Bitches.",
-                             :reward-applied-to "cart",
-                             :reward-tax "after-tax",
-                             :reward-amount 20.0,
-                             :linked-products [],
-                             :active true,
-                             :code "TWENTYOFF",
-                             :reward-type "percent",
-                             :promo-id string?})
-                  (-> promo :conditions first) =>
-                  (contains
-                   {:start-date "2014-11-27T05:00:00Z",
-                    :type "dates",
-                    :end-date "2014-11-29T04:59:59Z"}
-                   :in-any-order)))))
+                  promos => (contains
+                             #{(contains
+                                {:description "You get 20% off. Bitches.",
+                                 :reward-applied-to "cart",
+                                 :reward-tax "after-tax",
+                                 :reward-amount 20.0,
+                                 :linked-products [],
+                                 :active true,
+                                 :code "TWENTYOFF",
+                                 :conditions [{:start-date "2014-11-27T05:00:00Z",
+                                              :type "dates",
+                                               :end-date "2014-11-29T04:59:59Z"}]
+                                 :reward-type "percent",
+                                 :promo-id string?})
+                               (contains
+                                {:active true,
+                                 :code "EYECATCH",
+                                 :conditions [{:type "no-sale-items"}
+                                              {:not-category-ids ["1"],
+                                               :type "not-category-ids"}
+                                              {:end-time "24:00"
+                                               :start-time "00:00",
+                                               :type "times"}],
+                                 :created-at string?
+                                 :description "alsdkfjlaksdjf",
+                                 :linked-products [],
+                                 :promo-id string?
+                                 :reward-amount 10.0,
+                                 :reward-applied-to "cart",
+                                 :reward-tax "after-tax",
+                                 :reward-type "percent",
+                                 :seo-text "duckah p duckah",
+                                 :updated-at string?})
+                               }
+                             :in-any-order)))))

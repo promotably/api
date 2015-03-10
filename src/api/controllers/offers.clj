@@ -69,6 +69,12 @@
                         (update-in [:presentation :type] #(keyword %1))
                         (assoc :display-text
                           (-> body-params :presentation :display-text))
+                        (assoc :html
+                          (-> body-params :presentation :html))
+                        (assoc :css
+                          (-> body-params :presentation :css))
+                        (assoc :theme
+                          (-> body-params :presentation :theme))
                         (assoc :conditions conditions))
         coerced-params ((c/coercer NewOffer
                                    (c/first-matcher [custom-matcher
@@ -90,6 +96,12 @@
                         (update-in [:presentation :type] #(keyword %1))
                         (assoc :display-text
                           (-> body-params :presentation :display-text))
+                        (assoc :html
+                          (-> body-params :presentation :html))
+                        (assoc :css
+                          (-> body-params :presentation :css))
+                        (assoc :theme
+                          (-> body-params :presentation :theme))
                         (assoc :conditions conditions))
         coerced-params ((c/coercer NewOffer
                                    (c/first-matcher [custom-matcher

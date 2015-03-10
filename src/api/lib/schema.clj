@@ -689,7 +689,8 @@
                              (s/required-key :conditions)
                              (s/required-key :active))
                      {(s/required-key :site-id) s/Uuid
-                      (s/required-key :display-text) s/Str
+                      ;; :display-text needs to go away from here
+                      (s/optional-key :display-text) (s/maybe s/Str)
                       (s/optional-key :uuid) s/Uuid
                       (s/optional-key :active) s/Bool
                       (s/optional-key :created-at) s/Inst
