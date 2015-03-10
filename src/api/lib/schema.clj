@@ -670,7 +670,6 @@
    (s/required-key :code) s/Str
    (s/required-key :name) s/Str
    (s/required-key :active) s/Bool
-   (s/required-key :display-text) (s/maybe s/Str)
    (s/required-key :reward) Reward
    (s/required-key :conditions) [OfferCondition]
    (s/required-key :presentation) Presentation
@@ -690,6 +689,7 @@
                              (s/required-key :conditions)
                              (s/required-key :active))
                      {(s/required-key :site-id) s/Uuid
+                      (s/required-key :display-text) s/Str
                       (s/optional-key :uuid) s/Uuid
                       (s/optional-key :active) s/Bool
                       (s/optional-key :created-at) s/Inst

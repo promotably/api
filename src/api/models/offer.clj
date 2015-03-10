@@ -54,6 +54,7 @@
                                o)))
                     (dissoc :promo-id :dynamic :expiry-in-minutes)
                     (dissoc :presentation-type
+                            :display-text
                             :html
                             :css
                             :theme

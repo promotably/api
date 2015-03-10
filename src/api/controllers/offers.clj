@@ -67,6 +67,8 @@
         body-params (-> body-params
                         (update-in [:reward :type] #(keyword %1))
                         (update-in [:presentation :type] #(keyword %1))
+                        (assoc :display-text
+                          (-> body-params :presentation :display-text))
                         (assoc :conditions conditions))
         coerced-params ((c/coercer NewOffer
                                    (c/first-matcher [custom-matcher
@@ -86,6 +88,8 @@
         body-params (-> body-params
                         (update-in [:reward :type] #(keyword %1))
                         (update-in [:presentation :type] #(keyword %1))
+                        (assoc :display-text
+                          (-> body-params :presentation :display-text))
                         (assoc :conditions conditions))
         coerced-params ((c/coercer NewOffer
                                    (c/first-matcher [custom-matcher

@@ -30,12 +30,14 @@
     {:site-id (str site-id)
      :name "New Visitor Offer"
      :code "NEW-VISITOR"
-     :display-text "display text"
      :reward {:promo-id (-> promos first :uuid str)
               :type :dynamic-promo
               :expiry-in-minutes 10}
      :presentation {:type :lightbox
                     :page :any
+                    :html nil
+                    :css nil
+                    :theme nil
                     :display-text "presentation text"}
      :conditions [{:type "dates"
                    :start-date "2014-11-27T05:00:00Z"
@@ -85,8 +87,7 @@
 
               (facts "Offer Create with no html param"
                 (let [r (create-offer (offers-f-hct/no-html-offer))]
-                  (:status r) => 201
-                  (json/read-str (:body r) :key-fn keyword) => (contains {:name "No HTML Offer"})))
+                  (:status r) => 400))
 
               (facts "List Offers"
                 (let [url (str "http://localhost:3000/api/v1/offers/?site-id="
@@ -94,11 +95,13 @@
                       r (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r) keyword)]
                   listed => (just [(contains
-                                    {:display-text "display text"
-                                     :name "New Visitor Offer"
-                                     :presentation {:display-text "presentation text"
-                                                     :page "any"
-                                                     :type "lightbox"}
+                                    {:name "New Visitor Offer"
+                                     :presentation {:css "body {}"
+                                                    :display-text "presentation text"
+                                                    :html "<html></html>"
+                                                    :page "any"
+                                                    :theme "theme"
+                                                    :type "lightbox"}
                                      :active true
                                      :reward {:type "dynamic-promo"
                                               :promo-id (-> promos first :uuid str)
@@ -106,17 +109,16 @@
                                      :code "NEW-VISITOR"
                                      :conditions (contains
                                                   [{:type "dates"
-                                                   :start-date "2014-11-27T05:00:00Z"
-                                                   :end-date "2014-11-29T04:59:59Z"}]
-                                                  :in-any-order)
-                                     :html "<html></html>"
-                                     :css "body {}"
-                                     :theme "theme"})
+                                                    :start-date "2014-11-27T05:00:00Z"
+                                                    :end-date "2014-11-29T04:59:59Z"}]
+                                                  :in-any-order)})
                                    (contains
-                                    {:display-text "display text"
-                                     :name "Easter Offer"
-                                     :presentation {:display-text "presentation text"
-                                                    :page "any"
+                                    {:name "Easter Offer"
+                                     :presentation {:css "body {}",
+                                                    :display-text "presentation text",
+                                                    :html "<html></html>",
+                                                    :page "any",
+                                                    :theme "theme",
                                                     :type "lightbox"}
                                      :active true
                                      :reward {:type "dynamic-promo"
@@ -136,12 +138,14 @@
                                      :active false
                                      :name "Old Visitor Offer"
                                      :code "OLD-VISITOR"
-                                     :display-text "display text again"
                                      :reward {:promo-id (-> promos first :uuid str)
                                               :type :dynamic-promo
                                               :expiry-in-minutes 10}
                                      :presentation {:type :fixed-div
                                                     :page :search-results
+                                                    :css "body {}",
+                                                    :html "<html></html>",
+                                                    :theme "theme",
                                                     :display-text "foo"}
                                      :conditions [{:type :product-views
                                                    :product-views 3}]
@@ -154,10 +158,12 @@
                   (:status r) => 200
                   (json/read-str (:body r1) :key-fn keyword) => (contains {:code "OLD-VISITOR" :conditions (just [(contains {:type "product-views"})])})
                   listed => (just [(contains
-                                    {:display-text "display text again"
-                                     :name "Old Visitor Offer"
-                                     :presentation {:display-text "foo"
+                                    {:name "Old Visitor Offer"
+                                     :presentation {:css "body {}"
+                                                    :display-text "foo"
+                                                    :html "<html></html>"
                                                     :page "search-results"
+                                                    :theme "theme"
                                                     :type "fixed-div"}
                                      :active false
                                      :reward {:type "dynamic-promo"
@@ -165,25 +171,21 @@
                                               :expiry-in-minutes 10}
                                      :code "OLD-VISITOR"
                                      :conditions [{:product-views 3
-                                                   :type "product-views"}]
-                                     :html "<html></html>"
-                                     :css "body {}"
-                                     :theme "theme"})
+                                                   :type "product-views"}]})
                                    (contains
-                                    {:display-text "display text"
-                                     :name "Easter Offer"
-                                     :presentation {:display-text "presentation text"
+                                    {:name "Easter Offer"
+                                     :presentation {:css "body {}"
+                                                    :display-text "presentation text"
+                                                    :html "<html></html>"
                                                     :page "any"
+                                                    :theme "theme"
                                                     :type "lightbox"}
                                      :active true
                                      :reward {:type "dynamic-promo"
                                               :promo-id (-> promos first :uuid str)
                                               :expiry-in-minutes 20}
                                      :code "E1"
-                                     :conditions []
-                                     :html "<html></html>"
-                                     :css "body {}"
-                                     :theme "theme"})])))
+                                     :conditions []})])))
 
               (facts "Offer with dates condition"
 
@@ -200,8 +202,11 @@
                   pr => (contains {:code "EASTER PROMO FOR SITE 2"
                                    :active true
                                    :promo {:conditions []}
-                                   :presentation {:display-text nil
-                                                  :page "product-detail"
+                                   :presentation {:css "body {}",
+                                                  :display-text nil,
+                                                  :html "<html></html>",
+                                                  :page "product-detail",
+                                                  :theme "theme",
                                                   :type "lightbox"}})))
 
               (facts "Offer with number of cart adds condition"
@@ -273,8 +278,11 @@
                   (:status r) => 200
                   pr => (contains {:expires string?
                                    :promo {:conditions []},
-                                   :presentation {:display-text nil,
+                                   :presentation {:css nil,
+                                                  :display-text nil,
+                                                  :html nil,
                                                   :page "product-detail",
+                                                  :theme nil,
                                                   :type "lightbox"},
                                    :is-limited-time true,
                                    :code string?,
