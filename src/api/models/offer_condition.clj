@@ -123,7 +123,9 @@
   [{:keys [site-id site-shopper-id] :as context}
    {:keys [repeat-product-views period-in-days] :as condition}]
   (let [pv-events (group-by #(get-in % [:data :sku])
-                            (event/shopper-events site-id site-shopper-id "productview" (or period-in-days 365)))]
+                            (event/shopper-events site-id site-shopper-id
+                                                  "productview"
+                                                  (or period-in-days 30)))]
     (if-not (nil? (some #(>= (count %) repeat-product-views)
                         (vals pv-events)))
       true
