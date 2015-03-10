@@ -41,10 +41,7 @@
                     :display-text "presentation text"}
      :conditions [{:type "dates"
                    :start-date "2014-11-27T05:00:00Z"
-                   :end-date "2014-11-29T04:59:59Z"}]
-     :html "<html></html>"
-     :css "body {}"
-     :theme "theme"})
+                   :end-date "2014-11-29T04:59:59Z"}]})
 
   (defn- create-offer
     [new-offer]
@@ -96,11 +93,11 @@
                       listed (parse-string (:body r) keyword)]
                   listed => (just [(contains
                                     {:name "New Visitor Offer"
-                                     :presentation {:css "body {}"
+                                     :presentation {:css nil
                                                     :display-text "presentation text"
-                                                    :html "<html></html>"
+                                                    :html nil
                                                     :page "any"
-                                                    :theme "theme"
+                                                    :theme nil
                                                     :type "lightbox"}
                                      :active true
                                      :reward {:type "dynamic-promo"
