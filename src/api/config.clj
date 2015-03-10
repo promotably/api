@@ -39,7 +39,7 @@
 
 (def loggly-url
   (or (get-config-value "LOGGLY_URL")
-      "http://logs-01.loggly.com/inputs/2032adee-6213-469d-ba58-74993611570a/tag/http/"))
+      "http://logs-01.loggly.com/inputs/2032adee-6213-469d-ba58-74993611570a/tag/dev,api/"))
 
 (defn- get-dashboard-config
   "Checks environment variables for dashboard config settings. These
