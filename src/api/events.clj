@@ -129,7 +129,7 @@
         coercer)))
 
 (defn record-event
-  [kinesis-comp {:keys [params cookies] :as request}]
+  [kinesis-comp {:keys [session params cookies] :as request}]
   (put-metric "event-record")
   ;; for debug
   ;; (prn "PARAMS" params)
@@ -169,7 +169,8 @@
                      (assoc :shopper-id (:shopper-id request))
                      (assoc :site-id (-> parsed :site :site-id))
                      (assoc :session-id (get-in cookies [config/session-cookie-name :value]))
-                     (assoc :control-group (= (:test-bucket (:session request)) :control))
+                     (assoc :control-group (= (:test-bucket session)
+                                              :control))
                      coercer
                      (assoc :event-format-version "1"))]
          ;; For debugging

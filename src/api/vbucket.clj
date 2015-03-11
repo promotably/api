@@ -65,7 +65,9 @@
 
         (let [response (handler (assoc-in request [:session :test-bucket] bucket))]
           (-> response
+              (assoc :test-bucket bucket)
               (assoc-in [:session :test-bucket] bucket)
               (assoc :new-bucket-assignment assignment-data))))
-      (handler request))))
+      (-> (handler request)
+          (assoc :test-bucket (get-in request [:session :test-bucket]))))))
 

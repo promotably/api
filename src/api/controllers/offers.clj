@@ -214,7 +214,8 @@
           sid (:session/key response)
           qualified-event (:offer-qualification-event response)
           assignment-event (:offer-assignment-event response)
-          ev-base {:session-id sid :control-group (= (:bucket assignment-data) :control)}]
+          ev-base {:session-id sid
+                   :control-group (= (:test-bucket response) :control)}]
       (if sid
         (do
           (when qualified-event
