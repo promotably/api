@@ -43,14 +43,12 @@
           (let [^Logger api-logger (log-config/as-logger "api")
                 loggly-appender (doto (org.apache.log4j.AsyncAppender.)
                                   (.setName "async")
-                                  (.setLayout (doto (org.apache.log4j.PatternLayout.)
-                                                (.setConversionPattern "%d{HH:mm:ss} %-5p %22.22t %-22.22c{2} %m%n")))
+                                  (.setLayout (net.logstash.log4j.JSONEventLayoutV1.))
                                   (.setBlocking false)
                                   (.setBufferSize (int 500))
                                   (.addAppender (doto (com.promotably.proggly.LogglyAppender.)
                                                   (.setName "loggly")
-                                                  (.setLayout (doto (org.apache.log4j.PatternLayout.)
-                                                                (.setConversionPattern "%d{HH:mm:ss} %-5p %22.22t %-22.22c{2} %m%n")))
+                                                  (.setLayout (net.logstash.log4j.JSONEventLayoutV1.))
                                                   (.logglyURL loggly-url))))]
             (doto api-logger
               (.addAppender loggly-appender))

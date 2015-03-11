@@ -50,7 +50,6 @@
                  [drift "1.5.2"]
                  [http-kit "2.1.18"]
                  [com.taoensso/sente "0.14.1"]
-                 [compojure "1.1.9"]
                  [ring/ring-core "1.3.1" :exclusions [joda-time]]
                  [org.clojars.cvillecsteele/ring-permacookie-middleware "1.4.0"]
                  [bk/ring-gzip "0.1.1"]
@@ -68,6 +67,7 @@
                  [org.apache.commons/commons-daemon "1.0.9"]
                  [commons-codec "1.10"]
                  [net.sf.uadetector/uadetector-resources "2014.10"]
+                 [net.logstash.log4j/jsonevent-layout "1.7"]
                  [crypto-random "1.2.0"]]
   :resource-paths ["resources"]
   :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC" "-XX:MaxPermSize=256m"
