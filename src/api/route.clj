@@ -257,11 +257,13 @@
           resp   (handler req)
           finish (System/currentTimeMillis)
           total  (- finish start)]
-      (log/info (format "%-6s %-4d %s (%dms)"
-                        request-method
-                        (:status resp)
-                        uri
-                        total))
+      (when #((get-in current-system [:config :env]) #{:dev :test :integration})
+        (log/info (format "%-6s %-4d %s (%dms)"
+                          request-method
+                          (:status resp)
+                          uri
+                          total)))
+      (cw/put-metric "ResponseTime" :value total :unit "Milliseconds" :dimensions [{:name "URI" :value uri}])
       resp)))
 
 
@@ -433,8 +435,7 @@
       wrap-save-the-raw-body
       wrap-argument-exception
       wrap-stacktrace
-      (wrap-if #((:env config) #{:dev :test :integration})
-               wrap-request-logging)
+      wrap-request-logging
       wrap-gzip
       wrap-content-type))
 
