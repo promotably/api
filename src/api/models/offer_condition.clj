@@ -116,7 +116,7 @@
    {:keys [product-views period-in-days] :as condition}]
   (let [pv-count (event/count-shopper-events-by-days site-shopper-id
                                                      "productview"
-                                                     period-in-days)]
+                                                     (or period-in-days 30))]
     (>= pv-count product-views)))
 
 (defmethod validate :repeat-product-views
