@@ -263,7 +263,7 @@
                           (:status resp)
                           uri
                           total)))
-      (cw/put-metric "ResponseTime" :value total :unit "Milliseconds" :dimensions [{:name "URI" :value uri}])
+      (cw/put-metric "ResponseTime" {:value total :unit "Milliseconds" :dimensions [{:name "URI" :value uri}]})
       resp)))
 
 
