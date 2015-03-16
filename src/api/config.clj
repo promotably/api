@@ -22,7 +22,7 @@
       (get configfile-data key default)))
 
 ;; Setup info for logging
-(def base-log-config
+(defn- base-log-config []
   (if-let [log-dir (get-config-value "LOG_DIR")]
     {:name "file"
      :level :info
@@ -37,7 +37,7 @@
            (org.apache.log4j.PatternLayout.
             "%d{HH:mm:ss} %-5p %22.22t %-22.22c{2} %m%n"))}))
 
-(def loggly-url
+(defn- loggly-url []
   (or (get-config-value "LOGGLY_URL")
       "http://logs-01.loggly.com/inputs/2032adee-6213-469d-ba58-74993611570a/tag/dev,api/"))
 
@@ -113,8 +113,8 @@
                                    (:event-stream-name c)
                                    (assoc :event-stream-name (:event-stream-name c))))
                 :dashboard (get-dashboard-config)
-                :logging {:base base-log-config
-                          :loggly-url loggly-url}
+                :logging {:base (base-log-config)
+                          :loggly-url (loggly-url)}
                 :session-length-in-seconds (* 60 60 2)
                 :bucket-assignment-length-in-seconds (* 60 60 24 120)
                 :auth-token-config (auth-token-config)
@@ -130,8 +130,8 @@
                            :promo-stream-name "dev-PromoStream"
                            :event-stream-name "dev-PromotablyAPIEvents"}
                 :dashboard (get-dashboard-config)
-                :logging {:base base-log-config
-                          :loggly-url loggly-url}
+                :logging {:base (base-log-config)
+                          :loggly-url (loggly-url)}
                 :session-length-in-seconds (* 60 60 2)
                 :bucket-assignment-length-in-seconds (* 60 60 24 120)
                 :auth-token-config (auth-token-config)
@@ -140,8 +140,8 @@
                 :kinesis (get-kinesis-config)
                 :redis (get-redis-config)
                 :dashboard (get-dashboard-config)
-                :logging {:base base-log-config
-                          :loggly-url loggly-url}
+                :logging {:base (base-log-config)
+                          :loggly-url (loggly-url)}
                 :session-length-in-seconds (* 60 60 2)
                 :bucket-assignment-length-in-seconds (* 60 60 24 120)
                 :auth-token-config (auth-token-config)
@@ -152,8 +152,8 @@
                  :redis (get-redis-config)
                  :kinesis (get-kinesis-config)
                  :dashboard (get-dashboard-config)
-                 :logging {:base base-log-config
-                           :loggly-url loggly-url}
+                 :logging {:base (base-log-config)
+                           :loggly-url (loggly-url)}
                  :session-length-in-seconds (* 60 60 2)
                 :bucket-assignment-length-in-seconds (* 60 60 24 120)
                  :auth-token-config (auth-token-config)
@@ -162,8 +162,8 @@
                 :redis (get-redis-config)
                 :kinesis (get-kinesis-config)
                 :dashboard (get-dashboard-config)
-                :logging {:base base-log-config
-                          :loggly-url loggly-url}
+                :logging {:base (base-log-config)
+                          :loggly-url (loggly-url)}
                 :session-length-in-seconds (* 60 60 2)
                 :bucket-assignment-length-in-seconds (* 60 60 24 120)
                 :auth-token-config (auth-token-config)
