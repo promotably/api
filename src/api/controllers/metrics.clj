@@ -24,7 +24,7 @@
 
 (defn percentage
   [a b]
-  (round2 2 (* 100 (float(/ a b)))))
+  (round2 2 (* 100 (float (/ a (float b))))))
 
 (defn- convert-date-to-site-tz
   [the-date the-site]
@@ -73,7 +73,8 @@
 
 (defn average-from-rows
   [column rows]
-  (/ (reduce + (list-of-days-from-rows column rows)) (day-count-from-rows rows)))
+  (/ (reduce + (list-of-days-from-rows column rows))
+     (float (day-count-from-rows rows))))
 
 (defn get-revenue
   [{:keys [params] :as request}]
