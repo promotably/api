@@ -90,17 +90,26 @@
       (add-user-to-account! (:id a) (:id user)))
     (find-by-user-id (:user_id user))))
 
+
 (let [allowed-keys [:first-name :last-name
                     :email :username :phone :job-title
                     :user-social-id :password]]
+  (defn- build-update-params
+    [params]
+    (let [staged-params (into {} (remove (fn [[k v]] (nil? v))
+                                         (select-keys params allowed-keys)))
+          staged-with-pw (if-let [new-pw (:password staged-params)]
+                           (let [[encrypted-pw salt] (crypto/encrypt-password new-pw)]
+                             (assoc staged-params :password encrypted-pw :password_salt salt))
+                           staged-params)
+          staged-with-email (if-let [new-email (:email staged-with-pw)]
+                              (assoc staged-with-pw :username new-email)
+                              staged-with-pw)]
+      staged-with-email)))
+
   (defn update-user!
     [{:keys [user-id] :as params}]
-    (let [update-params (dash-to-underscore-keys
-                         (select-keys params allowed-keys))
-          params-for-update (if (:password update-params)
-                              (let [[encrypted-pw salt] (crypto/encrypt-password (:password update-params))]
-                                (assoc update-params :password encrypted-pw :password_salt salt))
-                              update-params)]
+    (let [update-params (build-update-params (dash-to-underscore-keys params))]
       (update users
-              (set-fields params-for-update)
-              (where {:user_id user-id})))))
+              (set-fields update-params)
+              (where {:user_id user-id}))))
