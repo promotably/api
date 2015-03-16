@@ -74,7 +74,7 @@
               (facts "Offer Create"
                 (let [r (create-offer (default-offer))]
                   (:status r) => 201
-                  (json/read-str (:body r) :key-fn keyword) => (contains {:code "NEW-VISITOR"})))
+                  (json/read-str (:body r) :key-fn keyword) => (contains {:code "NEW-VISITOR" :conditions (just [(contains {:type "dates"})])})))
 
               (facts "Offer Create Fails with Bad Param"
                      (let [r (create-offer (assoc-in (default-offer) [:reward :promo-id] "invalid-id"))]
