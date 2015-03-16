@@ -59,16 +59,16 @@
                           b (json/read-str (:body r) :key-fn keyword)]
                       b => {:total-revenue {
                               :daily []
-                              :average 0},
+                              :average 0.0},
                             :discount {
                               :daily []
-                              :average 0},
+                              :average 0.0},
                             :avg-order-revenue {
                               :daily []
-                              :average 0 },
+                              :average 0.0 },
                             :revenue-per-visit {
                               :daily []
-                              :average 0}}
+                              :average 0.0}}
                       (:status r) => 200))
 
               (fact "Can route to controller.api.metrics.get-lift"
