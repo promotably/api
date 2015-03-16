@@ -27,8 +27,7 @@
     {:name "file"
      :level :info
      :out (org.apache.log4j.DailyRollingFileAppender.
-           (org.apache.log4j.PatternLayout.
-            "%d{HH:mm:ss} %-5p %22.22t %-22.22c{2} %m%n")
+           (net.logstash.log4j.JSONEventLayoutV1.)
            (str log-dir "/api.log")
            "'.'yyyy-MM-dd-HH")}
     {:name "console"
