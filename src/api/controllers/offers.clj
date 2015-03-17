@@ -180,22 +180,40 @@
                            :site-id site-id
                            :shopper-id shopper-id
                            :site-shopper-id site-shopper-id}
-          response-data (create-response promo
-                                         the-offer
-                                         is-dynamic?
-                                         exploding-code
-                                         expiry)]
+          response-data (if the-offer (create-response promo
+                                                       the-offer
+                                                       is-dynamic?
+                                                       exploding-code
+                                                       expiry))]
       (if (empty? valid-offers)
-        {:body nil :offer-qualification-event qualified-event}
-        (let [qualified-event (assoc qualified-event :offer-ids (mapv :uuid valid-offers))
+        (cond-> {:body nil}
+                ;; remember what was qualified
+                true (assoc-in [:session :qualified-offer-ids]
+                               (set (:offer-ids qualified-event)))
+
+                ;; if what's qualified differs from previous, record it
+                (not= (set (:offer-ids qualified-event))
+                      (:qualified-offer-ids session))
+                (assoc :offer-qualification-event qualified-event))
+        (let [qualified-event (assoc qualified-event
+                                :offer-ids
+                                (mapv :uuid valid-offers))
               assignment-event (-> qualified-event
                                    (assoc :event-name :offer-made)
                                    (dissoc :offer-ids)
                                    (assoc :promo-id (:uuid promo))
                                    (assoc :offer-id (:uuid the-offer)))
               now (t-coerce/to-string (t/now))]
-          (cond-> {:offer-qualification-event qualified-event
-                   :body response-data}
+          (cond-> {:body response-data}
+                  ;; remember what was qualified
+                  true (assoc-in [:session :qualified-offer-ids]
+                                 (set (:offer-ids qualified-event)))
+
+                  ;; if what's qualified differs from previous, record it
+                  (not= (set (:offer-ids qualified-event))
+                        (:qualified-offer-ids session))
+                  (assoc :offer-qualification-event qualified-event)
+
                   the-offer (assoc-in [:session :active-offer] the-offer)
                   is-dynamic? (assoc-in [:session :active-offer :code] exploding-code)
                   is-dynamic? (assoc-in [:session :active-offer :expires] expiry)
