@@ -24,11 +24,12 @@
    :body (vec (map shape-one results))})
 
 (defn shape-new-offer
-  [{:keys [success error message offer] :as response}]
+  [site-uuid {:keys [success error message offer] :as response}]
   (cond
     (true? success) {:status 201
                      :body (write-str (-> offer
                                           (assoc :offer-id (:uuid offer))
+                                          (assoc :site-id site-uuid)
                                           (dissoc :uuid)
                                           (dissoc :id))
                                       :value-fn (fn [k v] (view-value-helper v)))}
@@ -36,11 +37,12 @@
     :else {:status 500}))
 
 (defn shape-update-offer
-  [{:keys [success error message offer] :as response}]
+  [site-uuid {:keys [success error message offer] :as response}]
   (cond
     (true? success) {:status 200
                      :body (write-str (-> offer
                                           (assoc :offer-id (:uuid offer))
+                                          (assoc :site-id site-uuid)
                                           (dissoc :uuid)
                                           (dissoc :id))
                                       :value-fn (fn [k v] (view-value-helper v)))}

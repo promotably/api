@@ -83,7 +83,7 @@
     (when (= schema.utils.ErrorContainer (type coerced-params))
       (throw+ {:type :argument-error :body-params params :error coerced-params}))
     (let [result (offer/new-offer! (assoc coerced-params :site-id id))]
-      (shape-new-offer result))))
+      (shape-new-offer site-uuid result))))
 
 (defn update-offer!
   [{:keys [params body-params] :as request}]
@@ -111,8 +111,8 @@
         id (site/get-id-by-site-uuid site-uuid)]
     (when (= schema.utils.ErrorContainer (type coerced-params))
       (throw+ {:type :argument-error :body-params params :error coerced-params}))
-    (shape-update-offer
-     (offer/update-offer! offer-id (assoc coerced-params :site-id id)))))
+    (shape-update-offer site-uuid
+                        (offer/update-offer! offer-id (assoc coerced-params :site-id id)))))
 
 (defn query-offer
   [{:keys [params] :as request}]

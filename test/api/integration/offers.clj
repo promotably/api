@@ -74,7 +74,9 @@
               (facts "Offer Create"
                 (let [r (create-offer (default-offer))]
                   (:status r) => 201
-                  (json/read-str (:body r) :key-fn keyword) => (contains {:code "NEW-VISITOR" :conditions (just [(contains {:type "dates"})])})))
+                  (json/read-str (:body r) :key-fn keyword) => (contains {:code "NEW-VISITOR"
+                                                                          :conditions (just [(contains {:type "dates"})])
+                                                                          :site-id string?})))
 
               (facts "Offer Create Fails with Bad Param"
                      (let [r (create-offer (assoc-in (default-offer) [:reward :promo-id] "invalid-id"))]
@@ -153,7 +155,9 @@
                       r2 (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r2) keyword)]
                   (:status r) => 200
-                  (json/read-str (:body r1) :key-fn keyword) => (contains {:code "OLD-VISITOR" :conditions (just [(contains {:type "product-views"})])})
+                  (json/read-str (:body r1) :key-fn keyword) => (contains {:code "OLD-VISITOR"
+                                                                           :conditions (just [(contains {:type "product-views"})])
+                                                                           :site-id string?})
                   listed => (just [(contains
                                     {:name "Old Visitor Offer"
                                      :presentation {:css "body {}"
