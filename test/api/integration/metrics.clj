@@ -16,7 +16,7 @@
                      :headers {"Cookie" (build-auth-cookie-string)}
                      :content-type :json
                      :accept :json
-                     :throw-exceptions false})))
+                     :throw-exceptions true})))
 
 (against-background [(before :contents
                              (do (when (nil? system/current-system)
@@ -130,10 +130,10 @@
                              :qualified 30,
                              :offered 15,
                              :orders 9,
-                             :redemptions 6,
+                             :redeemed 6,
                              :redemption-rate 40.00,
                              :conversion-rate 60.00,
-                             :avg-cart-size 3,
+                             :avg-items-in-cart 3,
                              :avg-revenue 28.0,
                              :revenue 170.0,
                              :avg-discount 4.0,
@@ -144,10 +144,10 @@
                              :qualified 20,
                              :offered 10,
                              :orders 6,
-                             :redemptions 4,
+                             :redeemed 4,
                              :redemption-rate 40.00,
                              :conversion-rate 60.00,
-                             :avg-cart-size 3,
+                             :avg-items-in-cart 3,
                              :avg-revenue 50.0,
                              :revenue 200.0,
                              :avg-discount 6.0,

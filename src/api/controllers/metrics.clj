@@ -165,10 +165,10 @@
                   (f/parse custom-formatter end) the-site)
         body (metric/site-rcos-by-days site-uuid start-date end-date)
         body2 (map #(-> % (rename-keys {:offer_id :id})) body)
-        body3 (map #(-> % (assoc :avg-revenue (quot (:revenue %) (:redemptions %)))) body2)
-        body4 (map #(-> % (assoc :redemption-rate (percentage (:redemptions %) (:offered %)))) body3)
+        body3 (map #(-> % (assoc :avg-revenue (quot (:revenue %) (:redeemed %)))) body2)
+        body4 (map #(-> % (assoc :redemption-rate (percentage (:redeemed %) (:offered %)))) body3)
         body5 (map #(-> % (assoc :conversion-rate (percentage (:orders %) (:offered %)))) body4)
-        body6 (map #(-> % (assoc :avg-cart-size (quot (:total-items-in-cart %) (:orders %)))) body5)
+        body6 (map #(-> % (assoc :avg-items-in-cart (quot (:total-items-in-cart %) (:orders %)))) body5)
         body7 (map #(-> % (assoc :avg-discount (quot (:discount %) (:orders %)))) body6)
         body8 (map #(-> % (dissoc :total-items-in-cart)) body7)]
     {:status 200 :body body8}))

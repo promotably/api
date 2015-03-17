@@ -68,7 +68,7 @@
                   (aggregate (sum :qualified) :qualified :code) ;; Code can't be a field unless its included as an aggregate
                   (aggregate (sum :offered) :offered)
                   (aggregate (sum :orders) :orders)
-                  (aggregate (sum :redeemed) :redemptions)
+                  (aggregate (sum :redeemed) :redeemed)
                   (aggregate (sum :total_items_in_carts) :total-items-in-cart)
                   (aggregate (sum :revenue) :revenue)
                   (aggregate (sum :discount) :discount)
