@@ -23,6 +23,10 @@
                                   :expires expiry
                                   :path "/"}}}))
 
+(defn- user-exists?
+  [user-id]
+  (not (nil? (first (select users (where {:user_id (UUID/fromString user-id)}))))))
+
 (defn- generate-user-auth-token
   "Generates an AES encrypted json object containing the user-id using
   the api-secret key."
@@ -47,7 +51,8 @@
     (when (and cookie-auth-token user-data-cookie)
       (let [current-user-id (:user-id (json/read-str user-data-cookie :key-fn keyword))
             auth-cookie-user-id (get-user-id-from-auth-token cookie-auth-token api-secret)]
-        (= current-user-id auth-cookie-user-id)))))
+        (and (= current-user-id auth-cookie-user-id)
+             (user-exists? current-user-id))))))
 
 (defn- add-user-id-to-request
   [request]
