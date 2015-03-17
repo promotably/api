@@ -64,14 +64,14 @@
                          result (jdbc/insert! t-con table-name xformed)]
                      (-> result first :id)))))))
 
-(def test-user-id "872d9a85-4c68-4cc0-ae5c-a24ed5ed8899")
+(defn test-user-id [] (str (:user_id (first (korma/exec-raw ["SELECT user_id from users WHERE email = 'global@promotably.com'"] :results)))))
 
 (defn auth-cookie-token []
-  (cr/aes-encrypt (json/write-str {:user-id test-user-id})
-                  (get-in system/current-system [:config :auth-token-config :api :api-secret])))
+  (URLEncoder/encode (cr/aes-encrypt (json/write-str {:user-id (test-user-id)})
+                                     (get-in system/current-system [:config :auth-token-config :api :api-secret]))))
 
 (defn promotably-user-cookie []
-  (URLEncoder/encode (json/write-str {:user-id test-user-id}) "utf8"))
+  (URLEncoder/encode (json/write-str {:user-id (test-user-id)}) "utf8"))
 
 (defn build-auth-cookie-string []
   (format "__apiauth=%s; promotably-user=%s;" (auth-cookie-token) (promotably-user-cookie)))
@@ -160,4 +160,3 @@
                                              "" "\n"
                                              "" "\n")))]
     (str "hmac-sha1///" time-val "/" sig-str)))
-
