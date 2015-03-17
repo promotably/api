@@ -1,6 +1,7 @@
 (ns api.controllers.accounts
   (:require [clojure.data.json :as json]
             [clojure.tools.logging :as log]
+            [clojure.string :as s]
             [api.lib.coercion-helper :refer [custom-matcher]]
             [api.lib.schema :refer [shape-to-spec
                                     inbound-account-spec
@@ -67,10 +68,16 @@
                             inbound-site-spec)
         id (:id (account/find-by-account-id (:account-id site)))]
     (if (user-access-to-account? (:user-id site) (:account-id site))
-      (if-let [result (site/create-site-for-account! id site)]
-        (let [account-with-sites (account/find-by-account-id (:account-id site))]
-          (build-response 201 :account account-with-sites))
-        (build-response 400 :error "Unable to create site, invalid or missing parameters."))
+      (let [new-site-code (-> (re-find #".*(?://|www\.)(?:www.)?([^\/]+)" (:site-url site))
+                              last
+                              (s/replace ".com" "")
+                              (s/replace "." "-"))]
+        (if-not (site/find-by-site-code new-site-code)
+          (if-let [result (site/create-site-for-account! id (assoc site :site-code new-site-code))]
+            (let [account-with-sites (account/find-by-account-id (:account-id site))]
+              (build-response 201 :account account-with-sites))
+            (build-response 400 :error "Unable to create site, invalid or missing parameters."))
+          (build-response 409 :error "Site with this URL already exists.")))
       (build-response 403 :error "User does not have access to this account."))))
 
 (defn update-site-for-account!

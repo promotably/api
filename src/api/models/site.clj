@@ -40,20 +40,21 @@
   (underscore-to-dash-keys (first (select sites
                                           (where {:name name})))))
 
+(defn find-by-site-code
+  [site-code]
+  (underscore-to-dash-keys (first (select sites
+                                          (where {:site_code site-code})))))
+
 (defn create-site-for-account!
   [account-id site]
-  (let [{:keys [name site-url country
-                timezone currency language]} site
+  (let [{:keys [name site-url site-code country timezone currency language]} site
         new-site (insert sites
                          (values {:account_id account-id
                                   :name name
                                   :site_url site-url
                                   :api_secret (UUID/randomUUID)
                                   :created_at (sqlfn now)
-                                  :site_code (-> (re-find #".*(?://|www\.)(?:www.)?([^\/]+)" site-url)
-                                                 last
-                                                 (s/replace ".com" "")
-                                                 (s/replace "." "-"))
+                                  :site_code site-code
                                   :updated_at (sqlfn now)
                                   :country country
                                   :timezone timezone
