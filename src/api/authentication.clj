@@ -79,18 +79,22 @@
   present, the cookies, and the auth-token to the session component of
   the response."
   [response api-secret user-id & {:keys [remember?]}]
-  (let [expiry (if remember?
-                 (t/plus (t/now) (t/years 10))
-                 "Session")
-        auth-token (generate-user-auth-token user-id api-secret)]
+  (let [expiry (when remember?
+                 (t/plus (t/now) (t/years 10)))
+        auth-token (generate-user-auth-token user-id api-secret)
+        auth-cookie-map {:value auth-token
+                         :http-only true
+                         :path "/"}
+        user-cookie-map {:value (json/write-str {:user-id user-id})
+                         :path "/"}
+        auth-cookies {"__apiauth" (if expiry
+                                    (assoc auth-cookie-map :expires expiry)
+                                    auth-cookie-map)
+                      "promotably-user" (if expiry
+                                          (assoc user-cookie-map :expires expiry)
+                                          user-cookie-map)}]
     {:status (or (:status response) 200)
-     :cookies (merge (:cookies response) {"__apiauth" {:value auth-token
-                                                       :http-only true
-                                                       :expires expiry
-                                                       :path "/"}
-                                          "promotably-user" {:value (json/write-str {:user-id user-id})
-                                                             :expires expiry
-                                                             :path "/"}})
+     :cookies (merge (:cookies response) auth-cookies)
      :session (assoc (:session response) :auth-token auth-token)
      :body (:body response)}))
 
