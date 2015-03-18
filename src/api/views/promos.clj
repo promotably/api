@@ -38,19 +38,21 @@
                                          :body "That Site Doesn't Exist"}))
 
 (defn shape-new-promo
-  [{:keys [success error message promo] :as response}]
+  [site-id {:keys [success error message promo] :as response}]
   (cond
    (true? success) {:status 201 :body (write-str (-> promo
                                                      (assoc :promo-id (:uuid promo))
+                                                     (assoc :site-id site-id)
                                                      (dissoc :uuid)) :value-fn (fn [k v] (view-value-helper v)))}
    (and (false? success) (= error :already-exists)) {:status 409 :body message}
    (= (class response) schema.utils.ErrorContainer) {:status 400 :body error}
    :else {:status 500 :body error}))
 
 (defn shape-update-promo
-  [{:keys [success error message promo] :as response}]
+  [site-id {:keys [success error message promo] :as response}]
   (cond
-   (true? success) {:status 200 :body (write-str promo :value-fn (fn [k v] (view-value-helper v)))}
+    (true? success) {:status 200 :body (write-str (-> promo
+                                                      (assoc :site-id site-id)) :value-fn (fn [k v] (view-value-helper v)))}
    (= (class response) schema.utils.ErrorContainer) {:status 400 :body error}
    :else {:status 500 :body error}))
 

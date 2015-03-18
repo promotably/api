@@ -65,7 +65,7 @@
                               (assoc coerced-params
                                 :site-id (site/get-id-by-site-uuid
                                           (:site-id coerced-params)))))]
-    (shape-new-promo p)))
+    (shape-new-promo (:site-id coerced-params) p)))
 
 (defn update-promo!
   [{:keys [params body-params] :as request}]
@@ -79,7 +79,7 @@
             (promo/update-promo! promo-id (assoc coerced-params
                                             :site-id (site/get-id-by-site-uuid
                                                       (:site-id coerced-params)))))]
-    (shape-update-promo p)))
+    (shape-update-promo (:site-id coerced-params) p)))
 
 (defn show-promo
   [{:keys [params body] :as request}]

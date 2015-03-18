@@ -110,7 +110,8 @@
      {:success false
       :error :already-exists
       :message (format "A promo with code %s already exists" code)}
-     (let [new-values (cond-> {:site_id site-id
+     (let [promo-uuid (java.util.UUID/randomUUID)
+           new-values (cond-> {:site_id site-id
                                :description description
                                :seo_text seo-text
                                :reward_applied_to (clojure.core/name reward-applied-to)
@@ -120,7 +121,7 @@
                                :code code
                                :created_at (sqlfn now)
                                :updated_at (sqlfn now)
-                               :uuid (java.util.UUID/randomUUID)}
+                               :uuid promo-uuid}
                         (not (nil? active)) (assoc :active active))
            raw (insert promos (values new-values))
            id (:id raw)]
@@ -135,7 +136,7 @@
                                (assoc :promo-id id))
                           linked-products)))
        (to-kinesis! kinesis-comp :create id site-id)
-       {:success true :promo (db-to-promo raw)}))))
+       {:success true :promo (find-by-uuid promo-uuid)}))))
 
 ;; (sm/defn update-promo!
 (defn update-promo!
