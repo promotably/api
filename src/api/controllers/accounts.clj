@@ -18,6 +18,7 @@
                         (shape-response-body account)
                         {:error-message (or error "")})]
     (cond-> {:status status
+             :headers {"Cache-Control" "max-age=0, no-cache"}
              :body response-body}
             cookies (assoc :cookies cookies)
             session (assoc :session session))))
