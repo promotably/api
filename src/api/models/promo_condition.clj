@@ -10,6 +10,7 @@
    [korma.core :refer :all]
    [korma.db :refer [transaction]]
    [clojure.set :refer [rename-keys intersection]]
+   [clojure.tools.logging :as log]
    [clj-time.coerce :refer [from-sql-date from-sql-time
                             from-date to-sql-date to-sql-time
                             to-date]]
