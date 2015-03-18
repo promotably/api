@@ -17,7 +17,7 @@
                             [:promo_id "uuid"]
                             [:shopper_id "uuid"]
                             [:session_id "uuid NOT NULL"]
-                            [:created_at "timestamp DEFAULT current_timestamp"]
+                            [:created_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"]
                             [:data "JSON"])
      "CREATE INDEX events_site_id_shopper_id_idx ON events(site_id, shopper_id)"
      "CREATE INDEX events_site_id_type_idx ON events(site_id, type)"

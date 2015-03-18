@@ -13,8 +13,8 @@
                             [:user_id "int8 NOT NULL"]
                             [:name "varchar(255) NOT NULL"]
                             [:code "varchar(255) NOT NULL"]
-                            [:created_at "timestamp"]
-                            [:updated_at "timestamp"])
+                            [:created_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"]
+                            [:updated_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"])
      "CREATE UNIQUE INDEX user_code_idx ON promos ( user_id, code )"
      "CREATE INDEX code_idx ON promos ( code )")))
 

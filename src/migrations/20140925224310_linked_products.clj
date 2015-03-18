@@ -17,7 +17,7 @@
                             [:name "varchar(255) NOT NULL"]
                             [:original_price "NUMERIC(16,4) DEFAULT 0"]
                             [:seo_copy "varchar(1024) NOT NULL"]
-                            [:created_at "timestamp"])
+                            [:created_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"])
      "CREATE UNIQUE INDEX lp_uuid_idx ON linked_products ( uuid )"
      "CREATE INDEX lp_promo_idx ON linked_products ( promo_id )"
      ))

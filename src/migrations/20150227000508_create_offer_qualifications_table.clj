@@ -17,7 +17,7 @@
                             [:shopper_id "uuid"]
                             [:session_id "uuid"]
                             [:offer_id "uuid not null"]
-                            [:created_at "timestamp default current_timestamp"])
+                            [:created_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"])
      "CREATE INDEX offer_qualifications_search_idx ON offer_qualifications (site_id, site_shopper_id)"
      "CREATE INDEX offer_qualifications_event_id_idx ON offer_qualifications (event_id)")))
 

@@ -11,9 +11,7 @@
      db-con
      "ALTER TABLE users DROP COLUMN crypted_password"
      "ALTER TABLE users DROP COLUMN company_name"
-     "ALTER TABLE users ALTER COLUMN username DROP NOT NULL"
-     "ALTER TABLE accounts ALTER COLUMN created_at SET DEFAULT now()"
-     "ALTER TABLE accounts ALTER COLUMN updated_at SET DEFAULT now()")))
+     "ALTER TABLE users ALTER COLUMN username DROP NOT NULL")))
 
 (defn down
   "Migrates the database down from version 20140722190707."

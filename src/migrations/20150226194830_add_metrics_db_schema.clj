@@ -17,7 +17,7 @@
         PROMOTABLY_COMMISSION numeric(17,2) NOT NULL,
         REVENUE numeric(17,2) NOT NULL,
         LESS_COMMISSION_AND_DISCOUNT numeric(17,2) NOT NULL,
-        CREATED_AT timestamp NOT NULL DEFAULT now()
+        CREATED_AT timestamptz DEFAULT (now() at time zone 'utc') NOT NULL
       );"
       "CREATE INDEX metrics_additional_revenue_site_idx ON metrics_additional_revenue(site_id);"
 
@@ -30,7 +30,7 @@
         NUMBER_OF_ORDERS int8 NOT NULL,
         AVG_ORDER_REVENUE numeric(17,2) NOT NULL,
         REVENUE_PER_VISIT numeric(17,2) NOT NULL,
-        CREATED_AT timestamp NOT NULL DEFAULT now()
+        CREATED_AT timestamptz DEFAULT (now() at time zone 'utc') NOT NULL
       );"
       "CREATE INDEX metrics_revenue_site_idx ON metrics_revenue(site_id);"
 
@@ -44,7 +44,7 @@
         DISCOUNT numeric(17,2) NOT NULL,
         REVENUE numeric(17,2) NOT NULL,
         REVENUE_PER_ORDER numeric(17,2) NOT NULL,
-        CREATED_AT timestamp NOT NULL DEFAULT now()
+        CREATED_AT timestamptz DEFAULT (now() at time zone 'utc') NOT NULL
       );"
       "CREATE INDEX metrics_promos_site_idx ON metrics_promos(site_id);"
       "CREATE INDEX metrics_promos_site_promo_idx ON metrics_promos(site_id,promo_id);"
@@ -68,7 +68,7 @@
         REVENUE numeric(17,2) NOT NULL,
         AVG_DISCOUNT numeric(17,2) NOT NULL,
         DISCOUNT numeric(17,2) NOT NULL,
-        CREATED_AT timestamp NOT NULL DEFAULT now()
+        CREATED_AT timestamptz DEFAULT (now() at time zone 'utc') NOT NULL
       );"
       "CREATE INDEX metrics_rcos_site_idx ON metrics_rcos(site_id);"
       "CREATE INDEX metrics_rcos_site_offer_idx ON metrics_rcos(site_id,offer_id);"
@@ -85,7 +85,7 @@
         REVENUE_PER_VISIT_EXC numeric(17,2) NOT NULL,
         ORDER_COUNT_INC int8 NOT NULL,
         ORDER_COUNT_EXC int8 NOT NULL,
-        CREATED_AT timestamp NOT NULL DEFAULT now()
+        CREATED_AT timestamptz DEFAULT (now() at time zone 'utc') NOT NULL
       );"
       "CREATE INDEX metrics_lift_site_idx ON metrics_lift(site_id);")))
 
@@ -95,7 +95,8 @@
   (println "migrations.20150226194830-add-metrics-db-schema down...")
   (jdbc/with-db-connection [db-con @$db-config]
     (jdbc/db-do-commands db-con
+                         "DROP TABLE IF EXISTS metrics_additional_revenue"
                          "DROP TABLE IF EXISTS metrics_revenue"
-                         "DROP TABLE IF EXISTS metrics_promo"
+                         "DROP TABLE IF EXISTS metrics_promos"
                          "DROP TABLE IF EXISTS metrics_rcos"
                          "DROP TABLE IF EXISTS metrics_lift")))

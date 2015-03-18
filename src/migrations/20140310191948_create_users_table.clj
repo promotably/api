@@ -16,7 +16,7 @@
                             [:phone "varchar(255)"]
                             [:company_name "varchar(255)"]
                             [:job_title "varchar(255)"]
-                            [:created_at "timestamp"]
+                            [:created_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"]
                             [:last_logged_in_at "timestamp"])
      "CREATE UNIQUE INDEX username_idx ON users ( username )"
      "CREATE UNIQUE INDEX email_idx ON users ( email )")))

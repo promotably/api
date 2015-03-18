@@ -12,7 +12,7 @@
      (jdbc/create-table-ddl :email_subscribers
                             [:browser_id "uuid NOT NULL PRIMARY KEY"]
                             [:email "varchar(255) NOT NULL"]
-                            [:created_at "timestamp NOT NULL DEFAULT now()"]))))
+                            [:created_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"]))))
 
 (defn down
   "Migrates the database down from version 20140717175515."

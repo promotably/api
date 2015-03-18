@@ -16,8 +16,8 @@
      (jdbc/create-table-ddl :accounts
                             [:id "serial8 primary key"]
                             [:company_name "varchar(255)"]
-                            [:created_at "timestamp"]
-                            [:updated_at "timestamp"])
+                            [:created_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"]
+                            [:updated_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"])
      "ALTER TABLE users ADD COLUMN account_id int8"
      "CREATE INDEX users_account_id_idx ON users ( account_id )"
      "ALTER TABLE promos RENAME COLUMN user_id TO account_id")))

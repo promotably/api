@@ -19,7 +19,7 @@
                             [:discount "numeric(16,8)"]
                             [:shopper_id "uuid not null"]
                             [:session_id "uuid not null"]
-                            [:created_at "timestamp default current_timestamp"])
+                            [:created_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"])
      "CREATE INDEX promo_redemptions_upsert_idx ON promo_redemptions(site_id, order_id, promo_code);"
      "CREATE INDEX promo_redemptions_event_id_idx ON promo_redemptions(event_id);"
      "CREATE OR REPLACE FUNCTION upsertPromoRedemption (eventId uuid, siteId uuid,

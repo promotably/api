@@ -17,8 +17,8 @@
                             [:id "serial8 primary key"]
                             [:account_id "int8 NOT NULL"]
                             [:name "varchar(255) NOT NULL"]
-                            [:created_at "timestamp NOT NULL"]
-                            [:updated_at "timestamp NOT NULL"])
+                            [:created_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"]
+                            [:updated_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"])
      "DROP INDEX user_code_idx"
      "ALTER TABLE promos RENAME COLUMN account_id TO site_id"
      "CREATE UNIQUE INDEX promos_code_site_id_idx ON promos ( site_id, code)"

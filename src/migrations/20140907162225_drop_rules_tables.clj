@@ -22,12 +22,12 @@
      (jdbc/create-table-ddl :time_frame_rules
                             [:id "serial8 primary key"]
                             [:promo_id "int8 NOT NULL"]
-                            [:created_at "timestamp NOT NULL"]
-                            [:updated_at "timestamp NOT NULL"])
+                            [:created_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"]
+                            [:updated_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"])
      (jdbc/create-table-ddl :time_frames
                             [:id "serial8 primary key"]
                             [:time_frame_rule_id "int8 NOT NULL"]
                             [:start_date "timestamp NOT NULL"]
                             [:end_date "timestamp NOT NULL"]
-                            [:created_at "timestamp NOT NULL"]
-                            [:updated_at "timestamp NOT NULL"]))))
+                            [:created_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"]
+                            [:updated_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"]))))

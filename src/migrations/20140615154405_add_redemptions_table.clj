@@ -14,7 +14,7 @@
                             [:promo_id "int8 not null"]
                             [:shopper_id "varchar(255) not null"]
                             [:shopper_email "varchar(255)"]
-                            [:created_at "timestamp"])
+                            [:created_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"])
      "CREATE INDEX idx_redemptions_promoId_shopperId ON redemptions ( promo_id, shopper_id )"
      "CREATE INDEX idx_redemptions_promoId_shopperEmail ON redemptions ( promo_id, shopper_email )"
      "CREATE INDEX idx_redemptions_promoId ON redemptions ( promo_id )"

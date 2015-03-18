@@ -22,8 +22,8 @@
                             [:presentation_type "TEXT NOT NULL"]
                             [:presentation_page "TEXT NOT NULL"]
                             [:presentation_display_text "TEXT"]
-                            [:updated_at "timestamp NOT NULL"]
-                            [:created_at "timestamp NOT NULL"])
+                            [:updated_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"]
+                            [:created_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"])
      "CREATE UNIQUE INDEX offers_uuid_idx ON offers ( uuid )"
      "CREATE INDEX offers_site_idx ON offers ( site_id )"
      (jdbc/create-table-ddl :offer_conditions
@@ -51,7 +51,7 @@
                             [:last_order_total "NUMERIC(16,4)"]
                             [:last_order_item_count "INTEGER"]
                             [:last_order_includes_item_id "TEXT[]"]
-                            [:created_at "timestamp"])
+                            [:created_at "timestamptz DEFAULT (now() at time zone 'utc') NOT NULL"])
      "CREATE UNIQUE INDEX offer_conditions_uuid_idx ON offer_conditions ( uuid )"
      "CREATE INDEX offer_conditions_offer_idx ON offer_conditions ( offer_id )"
      ))

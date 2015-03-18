@@ -29,7 +29,7 @@
         remove-nils (fn [x] (apply dissoc x (for [[k v] x :when (nil? v)] k)))]
     (-> (rename-keys r (zipmap ks (map hyphenify-key ks)))
         remove-nils
-        (dissoc :uuid :offer-id :id)
+        (dissoc :uuid :offer-id :id :created-at)
         base
         final)))
 
