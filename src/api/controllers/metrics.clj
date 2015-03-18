@@ -43,7 +43,9 @@
         end-date (convert-date-to-site-tz
                   (f/parse custom-formatter end) the-site)
         body (metric/site-additional-revenue-by-days site-uuid start-date end-date)]
-    {:status 200 :body (first body)}))
+    {:status 200
+     :headers {"Cache-Control" "max-age=0, no-cache"}
+     :body (first body)}))
 
 (defn day-count-from-rows
   [rows]
@@ -98,7 +100,9 @@
               :revenue-per-visit {
                 :daily (list-of-days-from-rows :revenue-per-visit r)
                 :average (average-from-rows :revenue-per-visit r)}}]
-    {:status 200 :body body}))
+    {:status 200
+     :headers {"Cache-Control" "max-age=0, no-cache"}
+     :body body}))
 
 (defn get-lift
   [{:keys [params] :as request}]
@@ -138,7 +142,9 @@
                 :average {
                   :inc (average-from-rows :order-count-inc r)
                   :exc (average-from-rows :order-count-exc r)}}}]
-    {:status 200 :body body}))
+    {:status 200
+     :headers {"Cache-Control" "max-age=0, no-cache"}
+     :body body}))
 
 (defn get-promos
   [{:keys [params] :as request}]
@@ -152,7 +158,9 @@
         body (metric/site-promos-by-days site-uuid start-date end-date)
         body2 (map #(-> % (rename-keys {:promo_id :id})) body)
         body3 (map #(-> % (assoc :revenue-per-order (quot (:revenue %) (:redemptions %)))) body2)]
-    {:status 200 :body body3}))
+    {:status 200
+     :headers {"Cache-Control" "max-age=0, no-cache"}
+     :body body3}))
 
 (defn get-rco
   [{:keys [params] :as request}]
@@ -171,6 +179,6 @@
         body6 (map #(-> % (assoc :avg-items-in-cart (quot (:total-items-in-cart %) (:orders %)))) body5)
         body7 (map #(-> % (assoc :avg-discount (quot (:discount %) (:orders %)))) body6)
         body8 (map #(-> % (dissoc :total-items-in-cart)) body7)]
-    {:status 200 :body body8}))
-
-
+    {:status 200
+     :headers {"Cache-Control" "max-age=0, no-cache"}
+     :body body8}))
