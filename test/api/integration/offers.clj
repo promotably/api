@@ -138,8 +138,7 @@
                                      :name "Old Visitor Offer"
                                      :code "OLD-VISITOR"
                                      :reward {:promo-id (-> promos first :uuid str)
-                                              :type :dynamic-promo
-                                              :expiry-in-minutes 10}
+                                              :type :promo}
                                      :presentation {:type :fixed-div
                                                     :page :search-results
                                                     :css "body {}",
@@ -167,9 +166,8 @@
                                                     :theme "theme"
                                                     :type "fixed-div"}
                                      :active false
-                                     :reward {:type "dynamic-promo"
-                                              :promo-id (-> promos first :uuid str)
-                                              :expiry-in-minutes 10}
+                                     :reward {:type "promo"
+                                              :promo-id (-> promos first :uuid str)}
                                      :code "OLD-VISITOR"
                                      :conditions [{:product-views 3
                                                    :type "product-views"}]})
