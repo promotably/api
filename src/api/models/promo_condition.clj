@@ -204,6 +204,7 @@
 (defmethod validate :item-value
   [{:keys [matching-products cart-contents] :as context}
    {:keys [item-value] :as condition}]
+  (log/debug "item-value validate context " context)
   (let [amounts (map :line-subtotal (or matching-products cart-contents))
         total (or (apply + amounts) 0)]
     (cond
