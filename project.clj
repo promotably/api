@@ -8,7 +8,7 @@
                    :plugins [[drift "1.5.2"]
                              [lein-midje "3.0.0"]]}}
   :main api.core
-
+  :aot [api.connection-customizer]
   :global-vars {*warn-on-reflection* false}
   :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.2"]
             [cider/cider-nrepl "0.8.2"]]

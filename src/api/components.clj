@@ -2,7 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [org.httpkit.server :as http-kit]
             [korma.core :refer :all]
-            [korma.db :refer [defdb postgres]]
+            [korma.db :refer [default-connection]]
             [clojure.java.jdbc :as jdbc]
             [clojure.core.reducers :as r]
             [clojure.tools.logging :as log]
@@ -22,6 +22,7 @@
   (:import (java.util.concurrent Executors TimeUnit
                                  ScheduledExecutorService)
            [java.util UUID]
+           [com.mchange.v2.c3p0 ComboPooledDataSource]
            [com.amazonaws.services.kinesis AmazonKinesisClient]
            [com.amazonaws.auth.profile ProfileCredentialsProvider]
            [com.amazonaws.auth DefaultAWSCredentialsProviderChain]
@@ -89,17 +90,27 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Database component, just initializes the connection pool for Korma.
-(defrecord DatabaseComponent [config logging]
+(defrecord DatabaseComponent [config logging connection-pool]
   component/Lifecycle
   (start [this]
     ;; Initialize Korma db connection pool.
-    (log/logf :info
-              "Connecting to DB at %s:%s"
-              (-> config :database :host)
-              (pr-str (-> config :database :port)))
-    (assoc this :db (defdb $the-db (postgres (:database config)))))
+    (let [{{:keys [db user password host port]} :database} config
+          cpds (doto (ComboPooledDataSource.)
+                 (.setDriverClass "org.postgresql.Driver")
+                 (.setJdbcUrl (str "jdbc:postgresql://" host ":" port "/" db))
+                 (.setUser user)
+                 (.setPassword password)
+                 ;; expire excess connections after 30 minutes of inactivity:
+                 (.setMaxIdleTimeExcessConnections (* 30 60))
+                 ;; expire connections after 3 hours of inactivity:
+                 (.setMaxIdleTime (* 3 60 60))
+                 (.setConnectionCustomizerClassName "com.promotably.api.ConnectionCustomizer"))]
+      (log/logf :info "Connecting to DB at %s:%s" host port)
+      (assoc this :connection-pool {:datasource cpds})
+      (default-connection {:datasource cpds})))
   (stop [this]
-    (dissoc this :db)))
+    (.close (-> this :connection-pool :datasource))
+    (dissoc this :connection-pool)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
