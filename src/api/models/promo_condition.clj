@@ -164,6 +164,7 @@
 (defmethod validate :category-ids
   [{:keys [matching-products cart-contents] :as context}
    {:keys [category-ids] :as condition}]
+  (log/info "category-ids validate context: " context)
   (let [keepers (filter #(let [i (clojure.set/intersection
                                   (set category-ids)
                                   (set (:product-categories %)))]
@@ -205,7 +206,7 @@
 (defmethod validate :item-value
   [{:keys [matching-products cart-contents] :as context}
    {:keys [item-value] :as condition}]
-  (log/debug "item-value validate context " context)
+  (log/info "item-value validate context " context)
   (let [amounts (map :line-subtotal (or matching-products cart-contents))
         total (or (apply + amounts) 0)]
     (cond

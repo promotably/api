@@ -128,6 +128,7 @@
 
 (defn validate-promo
   [{:keys [params body-params headers] :as request}]
+  (log/info "Validate promo body-params" body-params)
   (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
         coercer (c/coercer PromoValidionRequest matcher)
         coerced-params (-> body-params
@@ -144,6 +145,7 @@
     ;; For debugging
     ;; (clojure.pprint/pprint the-promo)
     ;; (clojure.pprint/pprint coerced-params)
+    (log/info "Validate promo coerced params: " coerced-params)
 
     (cond
      (not the-promo)
