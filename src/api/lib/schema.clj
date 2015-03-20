@@ -701,7 +701,7 @@
 
 ;; Requests ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def PromoValidionRequest
+(def PromoValidationRequest
   {(s/required-key :site) s/Any
    (s/required-key :code) s/Str
    (s/optional-key :auth) Auth
@@ -734,7 +734,7 @@
                                      (s/optional-key :line-subtotal) s/Num
                                      (s/optional-key :line-tax) s/Num
                                      (s/optional-key :line-subtotal-tax) s/Num}]
-   (s/optional-key :product-ids-on-sale) [s/Str]
+   (s/optional-key :product-ids-on-sale) [s/Int]
    (s/optional-key :selected-product-sku) s/Str})
 
 (def RevenueMetric

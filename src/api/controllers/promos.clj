@@ -16,7 +16,7 @@
                                       shape-validate
                                       shape-calculate]]
             [api.lib.auth :refer [parse-auth-string auth-valid? transform-auth]]
-            [clojure.data.json :refer [read-str]]
+            [clojure.data.json :refer [read-str write-str]]
             [clojure.tools.logging :as log]
             [schema.coerce :as c]
             [schema.core :as s]))
@@ -130,7 +130,7 @@
   [{:keys [params body-params headers] :as request}]
   (log/info "Validate promo body-params" body-params)
   (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
-        coercer (c/coercer PromoValidionRequest matcher)
+        coercer (c/coercer PromoValidationRequest matcher)
         coerced-params (-> body-params
                            (assoc :promotably-auth
                              (or (:promotably-auth params)
@@ -161,6 +161,9 @@
      {:status 403
       :session (:session request)}
 
+     (= (class coerced-params) schema.utils.ErrorContainer)
+     {:status 400 :body (write-str (:error coerced-params))}
+
      :else
      (let [[v errors] (promo/valid? the-promo coerced-params)
            resp (merge {:uuid (:uuid the-promo) :code code}
@@ -174,7 +177,7 @@
 (defn calculate-promo
   [{:keys [params body-params] :as request}]
   (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
-        coercer (c/coercer PromoValidionRequest matcher)
+        coercer (c/coercer PromoValidationRequest matcher)
         coerced-params (-> body-params
                            (assoc :promotably-auth (:promotably-auth params))
                            prep-incoming
