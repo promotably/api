@@ -78,6 +78,12 @@
   (/ (reduce + (list-of-days-from-rows column rows))
      (float (day-count-from-rows rows))))
 
+(defn safe-quot
+  [num denom]
+  (try (quot num denom)
+       (catch ArithmeticException _
+         0.0)))
+
 (defn get-revenue
   [{:keys [params] :as request}]
   (let [{:keys [site-id start end]} params
@@ -157,7 +163,7 @@
                   (f/parse custom-formatter end) the-site)
         body (metric/site-promos-by-days site-uuid start-date end-date)
         body2 (map #(-> % (rename-keys {:promo_id :id})) body)
-        body3 (map #(-> % (assoc :revenue-per-order (quot (:revenue %) (:redemptions %)))) body2)]
+        body3 (map #(-> % (assoc :revenue-per-order (safe-quot (:revenue %) (:redemptions %)))) body2)]
     {:status 200
      :headers {"Cache-Control" "max-age=0, no-cache"}
      :body body3}))
@@ -173,11 +179,11 @@
                   (f/parse custom-formatter end) the-site)
         body (metric/site-rcos-by-days site-uuid start-date end-date)
         body2 (map #(-> % (rename-keys {:offer_id :id})) body)
-        body3 (map #(-> % (assoc :avg-revenue (quot (:revenue %) (:redeemed %)))) body2)
+        body3 (map #(-> % (assoc :avg-revenue (safe-quot (:revenue %) (:redeemed %)))) body2)
         body4 (map #(-> % (assoc :redemption-rate (percentage (:redeemed %) (:offered %)))) body3)
         body5 (map #(-> % (assoc :conversion-rate (percentage (:orders %) (:offered %)))) body4)
-        body6 (map #(-> % (assoc :avg-items-in-cart (quot (:total-items-in-cart %) (:orders %)))) body5)
-        body7 (map #(-> % (assoc :avg-discount (quot (:discount %) (:orders %)))) body6)
+        body6 (map #(-> % (assoc :avg-items-in-cart (safe-quot (:total-items-in-cart %) (:orders %)))) body5)
+        body7 (map #(-> % (assoc :avg-discount (safe-quot (:discount %) (:orders %)))) body6)
         body8 (map #(-> % (dissoc :total-items-in-cart)) body7)]
     {:status 200
      :headers {"Cache-Control" "max-age=0, no-cache"}
