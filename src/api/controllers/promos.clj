@@ -137,9 +137,12 @@
                                  (get headers "promotably-auth")))
                            prep-incoming
                            coercer)
+        _ (log/info "Shiggity: " coerced-params)
         site-id (-> coerced-params :site :site-id)
         code (-> coerced-params :code clojure.string/upper-case)
-        the-promo (or (promo/find-by-site-uuid-and-code site-id code)
+        found-promo (promo/find-by-site-uuid-and-code site-id code)
+        _ (log/info "Found Promo: " found-promo)
+        the-promo (or found-promo
                       (fallback-to-exploding site-id code))]
 
     ;; For debugging
