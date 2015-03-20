@@ -205,7 +205,7 @@
                        :site_id site-id
                        :code code
                        :name name
-                       :dynamic (= "dynamic-promo" (:type reward))
+                       :dynamic (= :dynamic-promo (keyword (:type reward)))
                        :display_text display-text
                        :promo_id (:id promo)
                        :expiry_in_minutes expiry-in-minutes
