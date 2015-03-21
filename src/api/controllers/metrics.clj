@@ -87,8 +87,6 @@
                      (f/parse custom-formatter start) the-site)
         end-date (convert-date-to-site-tz
                    (f/parse custom-formatter end) the-site)
-        _ (prn "REV START" start-date)
-        _ (prn "REV STOP" end-date)
         r (metric/site-revenue-by-days site-uuid start-date end-date)
         body {:total-revenue {
                 :daily (list-of-days-from-rows :total-revenue r start-date end-date)
