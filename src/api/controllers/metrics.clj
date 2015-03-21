@@ -82,11 +82,8 @@
   [{:keys [params] :as request}]
   (let [{:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)
-        the-site (site/find-by-site-uuid site-uuid)
-        start-date (convert-date-to-site-tz
-                     (f/parse custom-formatter start) the-site)
-        end-date (convert-date-to-site-tz
-                   (f/parse custom-formatter end) the-site)
+        start-date (f/parse custom-formatter start)
+        end-date (f/parse custom-formatter end)
         r (metric/site-revenue-by-days site-uuid start-date end-date)
         body {:total-revenue {
                 :daily (list-of-days-from-rows :total-revenue r start-date end-date)
@@ -108,11 +105,8 @@
   [{:keys [params] :as request}]
   (let [{:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)
-        the-site (site/find-by-site-uuid site-uuid)
-        start-date (convert-date-to-site-tz
-                     (f/parse custom-formatter start) the-site)
-        end-date (convert-date-to-site-tz
-                   (f/parse custom-formatter end) the-site)
+        start-date (f/parse custom-formatter start)
+        end-date  (f/parse custom-formatter end)
         r (metric/site-lift-by-days site-uuid start-date end-date)
         body {:total-revenue {
                 :daily {

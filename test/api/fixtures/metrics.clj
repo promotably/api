@@ -16,8 +16,7 @@
 
 (defn sql-time-day-hour
   [day hour]
-  (c/to-sql-time (convert-date-to-site-tz (t/date-time 2015 2 day hour)
-                                          {:timezone "America/New_York"})))
+  (c/to-sql-time (t/date-time 2015 2 day hour)))
 
 (def promo-id-uno #uuid "2ca6424e-d955-4bfe-be80-7937d5817ab1")
 (def promo-id-duo #uuid "2ca6424e-d955-4bfe-be80-7937d5817ab2")
