@@ -62,7 +62,7 @@
                   :billing-postcode "75219",
                   :shopper-email "colin@promotably.com",
                   :applied-coupons ["p4"],
-                  :product-ids-on-sale [],
+                  :product-skus-on-sale [],
                   :shipping-state "VA",
                   :billing-email "colin@promotably.com",
                   :billing-city "Dallas",

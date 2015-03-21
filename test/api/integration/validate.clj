@@ -55,7 +55,7 @@
      :shipping_country "US",
      :shipping_postcode "",
      :shipping_email "",
-     :product-ids-on-sale []})
+     :product-skus-on-sale []})
 
   (fact-group :integration
 
