@@ -7,14 +7,17 @@
     [clj-time.core :as t]
     [clj-time.coerce :as c]
     [api.fixtures.basic :as base]
+    [api.controllers.metrics :refer [convert-date-to-site-tz]]
+    [api.models.site :as site]
     [api.q-fix :refer :all]))
+
+
+(def site-id #uuid "1ca6424e-d955-4bfe-be80-7937d5817ab0")
+(def the-site (site/find-by-site-uuid site-id))
 
 (defn sql-time-day-hour
   [day hour]
-  (c/to-sql-time (t/date-time 2015 2 day hour)))
-
-(def site-id #uuid "1ca6424e-d955-4bfe-be80-7937d5817ab0")
-(def site-id2 #uuid "2ca6424e-d955-4bfe-be80-7937d5817ab0")
+  (c/to-sql-time (convert-date-to-site-tz (t/date-time 2015 2 day hour) the-site)))
 
 (def promo-id-uno #uuid "2ca6424e-d955-4bfe-be80-7937d5817ab1")
 (def promo-id-duo #uuid "2ca6424e-d955-4bfe-be80-7937d5817ab2")
