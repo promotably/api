@@ -11,7 +11,7 @@
 
 (defn get-rows
   []
-  (for [day (range 1 5)
+  (for [day '(1 3 5 7 9)
         hour (range 0 24)]
     (assoc row :measurement-hour (to-sql-time (t/date-time 2015 2 day hour)))))
 
@@ -24,10 +24,16 @@
                             (t/date-time 2015 2 1)) => 60.0)
 
 (fact "List of days from rows"
-      (list-of-days-from-rows :discount (get-rows)) => '(60.0 60.0 60.0 60.0))
+      (list-of-days-from-rows :discount
+                              (get-rows)
+                              (t/date-time 2015 2 1 0)
+                              (t/date-time 2015 2 10 0)) => '(60.0 0 60.0 0 60.0 0 60.0 0 60.0))
 
 (fact "Average from rows"
-      (average-from-rows :discount (get-rows)) => 60.0)
+      (average-from-rows :discount
+                         (get-rows)
+                         (t/date-time 2015 2 1 0)
+                         (t/date-time 2015 2 10 0)) => 33.33)
 
 
 

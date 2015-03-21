@@ -26,7 +26,7 @@
   [a b]
   (round2 2 (* 100 (float (/ a (float b))))))
 
-(defn- convert-date-to-site-tz
+(defn convert-date-to-site-tz
   [the-date the-site]
   (let [tz (time-zone-for-id (:timezone the-site))
         the-date-long (to-long the-date)
@@ -47,12 +47,6 @@
      :headers {"Cache-Control" "max-age=0, no-cache"}
      :body (first body)}))
 
-(defn day-count-from-rows
-  [rows]
-  (+ 1 (t/in-days ; think interral is not inclusive, hence the +1
-         (t/interval (from-sql-time (:measurement-hour (first rows)))
-                     (from-sql-time (:measurement-hour (last rows)))))))
-
 (defn rows-by-day
   [rows day]
   (filter (fn [r]
@@ -65,18 +59,18 @@
   (reduce (fn [acc r] (+ acc (get r column))) 0 (rows-by-day rows day)))
 
 (defn list-of-days-from-rows
-  [column rows]
-  (if (= (count rows) 0)
-    '()
-    (let [days (day-count-from-rows rows)
-          first-day (from-sql-time (:measurement-hour (first rows)))]
-      (for [d (range 0 days)]
-       (sum-column-from-rows column rows (t/plus first-day (t/days d)))))))
+  [column rows begin end]
+  (let [days (t/in-days (t/interval begin end))]
+    (for [d (range 0 days)]
+      (if (= (count rows) 0)
+        0
+        (sum-column-from-rows column rows (t/plus begin (t/days d)))))))
 
 (defn average-from-rows
-  [column rows]
-  (/ (reduce + (list-of-days-from-rows column rows))
-     (float (day-count-from-rows rows))))
+  [column rows begin end]
+  (let [days (t/in-days (t/interval begin end))]
+    (round2 2 (/ (reduce + (list-of-days-from-rows column rows begin end))
+                 (float days)))))
 
 (defn safe-quot
   [num denom]
@@ -93,19 +87,21 @@
                      (f/parse custom-formatter start) the-site)
         end-date (convert-date-to-site-tz
                    (f/parse custom-formatter end) the-site)
+        _ (prn "REV START" start-date)
+        _ (prn "REV STOP" end-date)
         r (metric/site-revenue-by-days site-uuid start-date end-date)
         body {:total-revenue {
-                :daily (list-of-days-from-rows :total-revenue r)
-                :average (average-from-rows :total-revenue r)}
+                :daily (list-of-days-from-rows :total-revenue r start-date end-date)
+                :average (average-from-rows :total-revenue r start-date end-date)}
               :discount {
-                :daily (list-of-days-from-rows :discount r)
-                :average (average-from-rows :discount r)}
+                :daily (list-of-days-from-rows :discount r start-date end-date)
+                :average (average-from-rows :discount r start-date end-date)}
               :avg-order-revenue {
-                :daily (list-of-days-from-rows :avg-order-revenue r)
-                :average (average-from-rows :avg-order-revenue r)}
+                :daily (list-of-days-from-rows :avg-order-revenue r start-date end-date)
+                :average (average-from-rows :avg-order-revenue r start-date end-date)}
               :revenue-per-visit {
-                :daily (list-of-days-from-rows :revenue-per-visit r)
-                :average (average-from-rows :revenue-per-visit r)}}]
+                :daily (list-of-days-from-rows :revenue-per-visit r start-date end-date)
+                :average (average-from-rows :revenue-per-visit r start-date end-date)}}]
     {:status 200
      :headers {"Cache-Control" "max-age=0, no-cache"}
      :body body}))
@@ -122,32 +118,32 @@
         r (metric/site-lift-by-days site-uuid start-date end-date)
         body {:total-revenue {
                 :daily {
-                  :inc (list-of-days-from-rows :total-revenue-inc r)
-                  :exc (list-of-days-from-rows :total-revenue-exc r)}
+                  :inc (list-of-days-from-rows :total-revenue-inc r start-date end-date)
+                  :exc (list-of-days-from-rows :total-revenue-exc r start-date end-date)}
                 :average {
-                  :inc (average-from-rows :total-revenue-inc r)
-                  :exc (average-from-rows :total-revenue-exc r)}}
+                  :inc (average-from-rows :total-revenue-inc r start-date end-date)
+                  :exc (average-from-rows :total-revenue-exc r start-date end-date)}}
               :avg-order-revenue {
                 :daily {
-                  :inc (list-of-days-from-rows :avg-order-revenue-inc r)
-                  :exc (list-of-days-from-rows :avg-order-revenue-exc r)}
+                  :inc (list-of-days-from-rows :avg-order-revenue-inc r start-date end-date)
+                  :exc (list-of-days-from-rows :avg-order-revenue-exc r start-date end-date)}
                 :average {
-                  :inc (average-from-rows :avg-order-revenue-inc r)
-                  :exc (average-from-rows :avg-order-revenue-exc r)}}
+                  :inc (average-from-rows :avg-order-revenue-inc r start-date end-date)
+                  :exc (average-from-rows :avg-order-revenue-exc r start-date end-date)}}
               :revenue-per-visit {
                 :daily {
-                  :inc (list-of-days-from-rows :revenue-per-visit-inc r)
-                  :exc (list-of-days-from-rows :revenue-per-visit-exc r)}
+                  :inc (list-of-days-from-rows :revenue-per-visit-inc r start-date end-date)
+                  :exc (list-of-days-from-rows :revenue-per-visit-exc r start-date end-date)}
                 :average {
-                  :inc (average-from-rows :revenue-per-visit-inc r)
-                  :exc (average-from-rows :revenue-per-visit-exc r)}}
+                  :inc (average-from-rows :revenue-per-visit-inc r start-date end-date)
+                  :exc (average-from-rows :revenue-per-visit-exc r start-date end-date)}}
               :order-count {
                 :daily {
-                  :inc (list-of-days-from-rows :order-count-inc r)
-                  :exc (list-of-days-from-rows :order-count-exc r)}
+                  :inc (list-of-days-from-rows :order-count-inc r start-date end-date)
+                  :exc (list-of-days-from-rows :order-count-exc r start-date end-date)}
                 :average {
-                  :inc (average-from-rows :order-count-inc r)
-                  :exc (average-from-rows :order-count-exc r)}}}]
+                  :inc (average-from-rows :order-count-inc r start-date end-date)
+                  :exc (average-from-rows :order-count-exc r start-date end-date)}}}]
     {:status 200
      :headers {"Cache-Control" "max-age=0, no-cache"}
      :body body}))
