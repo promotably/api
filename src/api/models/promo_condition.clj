@@ -15,7 +15,8 @@
                             from-date to-sql-date to-sql-time
                             to-date]]
    [clj-time.core :refer [before? after? now today-at hour minute
-                          today-at-midnight epoch minus plus days]]
+                          today-at-midnight epoch minus plus days
+                          time-zone-for-id to-time-zone]]
    [schema.core :as s]
    [schema.coerce :as sc]))
 
@@ -111,11 +112,14 @@
      :else context)))
 
 (defmethod validate :times
-  [context
+  [{:keys [site] :as context}
    {:keys [start-time end-time] :as condition}]
   (let [start (Integer/parseInt (clojure.string/replace start-time #":" ""))
         end (Integer/parseInt (clojure.string/replace end-time #":" ""))
-        right-now (Integer/parseInt (format "%02d%02d" (hour (now)) (minute (now))))
+        site-tz (time-zone-for-id (:timezone site))
+        right-now (Integer/parseInt (format "%02d%02d"
+                                            (hour (to-time-zone (now) site-tz))
+                                            (minute (to-time-zone (now) site-tz))))
         ok? (and (<= start right-now) (<= right-now end))]
     (cond
      (not ok?)

@@ -139,6 +139,7 @@
                            coercer)
         _ (log/info "Shiggity: " coerced-params)
         site-id (-> coerced-params :site :site-id)
+        the-site (site/find-by-site-uuid site-id)
         code (-> coerced-params :code clojure.string/upper-case)
         found-promo (promo/find-by-site-uuid-and-code site-id code)
         _ (log/info "Found Promo: " found-promo)
@@ -165,7 +166,7 @@
      {:status 400 :body (write-str (:error coerced-params))}
 
      :else
-     (let [[v errors] (promo/valid? the-promo coerced-params)
+     (let [[v errors] (promo/valid? the-promo (assoc coerced-params :site the-site))
            resp (merge {:uuid (:uuid the-promo) :code code}
                        (if errors
                          {:valid false :messages errors}
