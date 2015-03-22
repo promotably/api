@@ -27,14 +27,15 @@
   [promo-uuid & {:keys [start end] :or {start (epoch)
                                         end (plus (today-at-midnight) (days 1))}}]
   (try
-    (-> (select promo-redemptions
-                (aggregate (sum :promo_redemptions.discount) :total)
-                (join promos (= :promos.id :promo_id))
-                (where {:promos.uuid promo-uuid})
-                (where {:created_at [>= (to-sql-time start)]})
-                (where {:created_at [<= (to-sql-time end)]}))
-        first
-        :total)
+    (or (-> (select promo-redemptions
+                    (aggregate (sum :promo_redemptions.discount) :total)
+                    (join promos (= :promos.id :promo_id))
+                    (where {:promos.uuid promo-uuid})
+                    (where {:created_at [>= (to-sql-time start)]})
+                    (where {:created_at [<= (to-sql-time end)]}))
+            first
+            :total)
+        0.0)
     (catch java.sql.BatchUpdateException ex
       (log/error (.getNextException ex) "Exception in total-discounts"))))
 
