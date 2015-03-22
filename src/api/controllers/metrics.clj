@@ -27,21 +27,19 @@
   (round2 2 (* 100 (float (/ a (float b))))))
 
 (defn convert-date-to-site-tz
-  [the-date the-site]
-  (let [tz (time-zone-for-id (:timezone the-site))
-        the-date-long (to-long the-date)
-        tz-offset (.getOffset tz the-date-long)]
-    (from-long (+ the-date-long tz-offset))))
+  [date site]
+  (let [date-local (t/from-time-zone (f/parse custom-formatter date)
+                                     (time-zone-for-id (:timezone site)))
+        date-utc (t/to-time-zone date-local (time-zone-for-id "UTC"))]
+    date-utc))
 
 (defn get-additional-revenue
   [{:keys [params] :as request}]
   (let [{:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)
         the-site (site/find-by-site-uuid site-uuid)
-        start-date (convert-date-to-site-tz
-                    (f/parse custom-formatter start) the-site)
-        end-date (convert-date-to-site-tz
-                  (f/parse custom-formatter end) the-site)
+        start-date (convert-date-to-site-tz start the-site)
+        end-date (convert-date-to-site-tz end the-site)
         body (metric/site-additional-revenue-by-days site-uuid start-date end-date)]
     {:status 200
      :headers {"Cache-Control" "max-age=0, no-cache"}
@@ -82,8 +80,9 @@
   [{:keys [params] :as request}]
   (let [{:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)
-        start-date (f/parse custom-formatter start)
-        end-date (f/parse custom-formatter end)
+        the-site (site/find-by-site-uuid site-uuid)
+        start-date (convert-date-to-site-tz start the-site)
+        end-date (convert-date-to-site-tz end the-site)
         r (metric/site-revenue-by-days site-uuid start-date end-date)
         body {:total-revenue {
                 :daily (list-of-days-from-rows :total-revenue r start-date end-date)
@@ -105,8 +104,9 @@
   [{:keys [params] :as request}]
   (let [{:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)
-        start-date (f/parse custom-formatter start)
-        end-date  (f/parse custom-formatter end)
+        the-site (site/find-by-site-uuid site-uuid)
+        start-date (convert-date-to-site-tz start the-site)
+        end-date (convert-date-to-site-tz end the-site)
         r (metric/site-lift-by-days site-uuid start-date end-date)
         body {:total-revenue {
                 :daily {
@@ -145,10 +145,8 @@
   (let [{:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)
         the-site (site/find-by-site-uuid site-uuid)
-        start-date (convert-date-to-site-tz
-                    (f/parse custom-formatter start) the-site)
-        end-date (convert-date-to-site-tz
-                  (f/parse custom-formatter end) the-site)
+        start-date (convert-date-to-site-tz start the-site)
+        end-date (convert-date-to-site-tz end the-site)
         body (metric/site-promos-by-days site-uuid start-date end-date)
         body2 (map #(-> % (rename-keys {:promo_id :id})) body)
         body3 (map #(-> % (assoc :revenue-per-order (safe-quot (:revenue %) (:redemptions %)))) body2)]
@@ -161,10 +159,8 @@
   (let [{:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)
         the-site (site/find-by-site-uuid site-uuid)
-        start-date (convert-date-to-site-tz
-                    (f/parse custom-formatter start) the-site)
-        end-date (convert-date-to-site-tz
-                  (f/parse custom-formatter end) the-site)
+        start-date (convert-date-to-site-tz start the-site)
+        end-date (convert-date-to-site-tz end the-site)
         body (metric/site-rcos-by-days site-uuid start-date end-date)
         body2 (map #(-> % (rename-keys {:offer_id :id})) body)
         body3 (map #(-> % (assoc :avg-revenue (safe-quot (:revenue %) (:redeemed %)))) body2)
