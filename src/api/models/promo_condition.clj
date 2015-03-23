@@ -260,6 +260,14 @@
      (update-in context [:errors] conj "No more for today, check back tomorrow!")
      :else context)))
 
+(defmethod validate :no-sale-items
+  [{:keys [matching-products cart-contents promo product-skus-on-sale] :as context}
+   {:keys [] :as condition}]
+  (let [keepers (remove #(get (set product-skus-on-sale)
+                              (:sku %))
+                        (or matching-products cart-contents))]
+    (assoc context :matching-products keepers)))
+
 (defmethod validate :usage-count
   [{:keys [promo] :as context}
    {:keys [usage-count] :as condition}]
