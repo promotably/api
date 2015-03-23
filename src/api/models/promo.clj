@@ -317,6 +317,7 @@
            sorted-by-unit-price (->>
                                  (sort sort-fn selected-cart-contents)
                                  (remove #(= 0 (:line-subtotal %))))]
+
        (cond
 
         ;; Discount applies to everything in selected-cart-contents
@@ -332,8 +333,11 @@
         ;; Discount applies to everything in cart-contents
         (= :cart reward-applied-to)
         (let [cart-total (apply + (map :line-subtotal cart-contents))
-              discount (cond (= :percent reward-type)
-                             (* (/ reward-amount 100.0) cart-total)
-                             (= :fixed reward-type)
-                             (min cart-total reward-amount))]
+              discount (cond->
+                        (cond (= :percent reward-type)
+                              (* (/ reward-amount 100.0) cart-total)
+                              (= :fixed reward-type)
+                              (min cart-total reward-amount))
+                        true float
+                        selected-product-sku (/ (count cart-contents)))]
           [(format "%.4f" (float discount)) context nil]))))))
