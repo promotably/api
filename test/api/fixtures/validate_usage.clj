@@ -118,7 +118,26 @@
                    :shopper_id (java.util.UUID/randomUUID)
                    :site_shopper_id (java.util.UUID/randomUUID)
                    :session_id (java.util.UUID/randomUUID)))
-
+   (table :promos
+          (fixture :promo-no-redemptions
+                   :uuid (java.util.UUID/randomUUID)
+                   :site_id :site-1
+                   :code "P-NO-REDEMPTIONS"
+                   :active true
+                   :reward_amount 10
+                   :reward_type "percent"
+                   :reward_tax "after-tax"
+                   :reward_applied_to "cart"
+                   :description "Promo with total-discounts condition and no redemptions"
+                   :seo_text "duckah"
+                   :updated_at (c/to-sql-date (t/now))
+                   :created_at (c/to-sql-date (t/now))))
+   (table :promo_conditions
+          (fixture :pc-prnr
+                   :promo_id :promo-no-redemptions
+                   :uuid (java.util.UUID/randomUUID)
+                   :type "total-discounts"
+                   :total_discounts 100.00))
    (table :promos
           (fixture :promo-8
                    :uuid (java.util.UUID/randomUUID)
