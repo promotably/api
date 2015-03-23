@@ -163,7 +163,7 @@
      (not (seq keepers))
      (update-in context [:errors] conj
                 "None of your items are eligible for this coupon.")
-     :else context)))
+     :else updated-context)))
 
 (defmethod validate :category-ids
   [{:keys [matching-products cart-contents] :as context}
@@ -223,7 +223,7 @@
 (defmethod validate :min-order-value
   [{:keys [matching-products cart-contents] :as context}
    {:keys [min-order-value] :as condition}]
-  (let [amounts (map :line-total cart-contents)
+  (let [amounts (map :line-subtotal (or matching-products cart-contents))
         total (apply + amounts)]
     (cond
      (< total min-order-value)

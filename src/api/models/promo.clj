@@ -304,10 +304,7 @@
      errors
      ["0" context errors]
 
-     (not selected-cart-contents)
-     ["0" context nil]
-
-     :else
+      :else
      (let [sort-fn (fn [a b]
                      (let [{:keys [line-subtotal quantity]} a
                            unit-price-a (if (and line-subtotal quantity)
@@ -333,17 +330,18 @@
                               (= :fixed reward-type)
                               (min total (* reward-amount qty)))
                         true float
-                        selected-product-sku (/ (count items)))]
+                        selected-product-sku (/ (count cart-contents)))]
           [(format "%.4f" (float discount)) context nil])
 
         ;; Discount applies to everything in cart-contents
         (= :cart reward-applied-to)
-        (let [cart-total (apply + (map :line-subtotal cart-contents))
+        (let [items cart-contents
+              cart-total (apply + (map :line-subtotal items))
               discount (cond->
                         (cond (= :percent reward-type)
                               (* (/ reward-amount 100.0) cart-total)
                               (= :fixed reward-type)
                               (min cart-total reward-amount))
                         true float
-                        selected-product-sku (/ (count cart-contents)))]
+                        selected-product-sku (/ (count items)))]
           [(format "%.4f" (float discount)) context nil]))))))
