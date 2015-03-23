@@ -128,7 +128,6 @@
 
 (defn validate-promo
   [{:keys [params body-params headers] :as request}]
-  (log/info "Validate promo body-params" body-params)
   (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
         coercer (c/coercer PromoValidationRequest matcher)
         coerced-params (-> body-params
@@ -137,19 +136,16 @@
                                  (get headers "promotably-auth")))
                            prep-incoming
                            coercer)
-        _ (log/info "Shiggity: " coerced-params)
         site-id (-> coerced-params :site :site-id)
         the-site (site/find-by-site-uuid site-id)
         code (-> coerced-params :code clojure.string/upper-case)
         found-promo (promo/find-by-site-uuid-and-code site-id code)
-        _ (log/info "Found Promo: " found-promo)
         the-promo (or found-promo
                       (fallback-to-exploding site-id code))]
 
     ;; For debugging
     ;; (clojure.pprint/pprint the-promo)
     ;; (clojure.pprint/pprint coerced-params)
-    (log/info "Validate promo coerced params: " coerced-params)
 
     (cond
      (not the-promo)

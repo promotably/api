@@ -239,7 +239,8 @@
    :daily-usage-count
    :usage-count
    :daily-total-discounts
-   :total-discounts])
+   :total-discounts
+   :no-sale-items])
 
 (defn valid?
   [{:keys [active conditions] :as promo}
@@ -297,6 +298,7 @@
                                  (first (filter #(= selected-product-sku (:sku %))
                                                 (or matching-products cart-contents)))
                                  (or matching-products cart-contents))]
+
     (cond
 
      errors
@@ -317,23 +319,31 @@
            sorted-by-unit-price (->>
                                  (sort sort-fn selected-cart-contents)
                                  (remove #(= 0 (:line-subtotal %))))]
+
        (cond
 
         ;; Discount applies to everything in selected-cart-contents
         (= :matching-items reward-applied-to)
-        (let [total (apply + (map :line-subtotal selected-cart-contents))
-              qty (apply + (map :quantity selected-cart-contents))
-              discount (cond (= :percent reward-type)
-                             (* (/ reward-amount 100.0) total)
-                             (= :fixed reward-type)
-                             (min total (* reward-amount qty)))]
+        (let [items (or matching-products cart-contents)
+              total (apply + (map :line-subtotal items))
+              qty (apply + (map :quantity items))
+              discount (cond->
+                        (cond (= :percent reward-type)
+                              (* (/ reward-amount 100.0) total)
+                              (= :fixed reward-type)
+                              (min total (* reward-amount qty)))
+                        true float
+                        selected-product-sku (/ (count items)))]
           [(format "%.4f" (float discount)) context nil])
 
         ;; Discount applies to everything in cart-contents
         (= :cart reward-applied-to)
         (let [cart-total (apply + (map :line-subtotal cart-contents))
-              discount (cond (= :percent reward-type)
-                             (* (/ reward-amount 100.0) cart-total)
-                             (= :fixed reward-type)
-                             (min cart-total reward-amount))]
+              discount (cond->
+                        (cond (= :percent reward-type)
+                              (* (/ reward-amount 100.0) cart-total)
+                              (= :fixed reward-type)
+                              (min cart-total reward-amount))
+                        true float
+                        selected-product-sku (/ (count cart-contents)))]
           [(format "%.4f" (float discount)) context nil]))))))
