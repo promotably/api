@@ -2,7 +2,7 @@
   (:require [clojure.tools.logging :as log]
             [api.entities :refer :all]
             [clj-time.core :refer [before? after? now today-at today-at-midnight epoch
-                                   plus days]]
+                                   plus days] :as t]
             [clj-time.coerce :refer [from-sql-date to-sql-date to-sql-time]]
             [korma.core :refer :all]
             [schema.core :as s]
@@ -25,18 +25,17 @@
       (log/error (.getNextException ex) "Exception in total-discounts"))))
 
 (defn total-discounts
-  [promo-uuid & {:keys [start end] :or {start (epoch)
-                                        end (plus (today-at-midnight) (days 1))}}]
+  [promo-uuid & [{:keys [start end]
+                  :or {start (epoch)
+                       end (t/plus (t/today-at-midnight) (t/days 1))}}]]
   (try
-    (or (-> (select promo-redemptions
+    (let [res (select promo-redemptions
                     (aggregate (sum :promo_redemptions.discount) :total)
                     (join promos (= :promos.id :promo_id))
                     (where {:promos.uuid promo-uuid})
                     (where {:created_at [>= (to-sql-time start)]})
-                    (where {:created_at [<= (to-sql-time end)]}))
-            first
-            :total)
-        0.0)
+                    (where {:created_at [<= (to-sql-time end)]}))]
+      (or (-> res first :total) 0.0))
     (catch java.sql.BatchUpdateException ex
       (log/error (.getNextException ex) "Exception in total-discounts"))))
 

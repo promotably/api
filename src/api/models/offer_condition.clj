@@ -11,7 +11,8 @@
             [api.util :refer [hyphenify-key]]
             [clj-time.format]
             [clj-time.core :refer [before? after? now time-zone-for-id to-time-zone
-                                   from-time-zone date-time year month day] :as t]
+                                   from-time-zone date-time year month day]
+             :as t]
             [clj-time.coerce :refer [from-sql-date]]
             [clojure.set :refer [rename-keys intersection]]
             [clojure.string :refer [trim split]]
@@ -158,8 +159,8 @@
    {:keys [minutes-on-site] :as condition}]
   (if (contains? session :started-at)
     (let [session-start (clj-time.format/parse (:started-at session))
-          min-time (clj-time.core/plus session-start (clj-time.core/minutes minutes-on-site))]
-      (clj-time.core/after? (now) min-time))
+          min-time (t/plus session-start (t/minutes minutes-on-site))]
+      (t/after? (now) min-time))
     false))
 
 (defmethod valid? :minutes-since-last-engagement
@@ -176,7 +177,8 @@
    {:keys [days-since-last-offer] :as condition}]
   (let [last-offer-event (event/last-event site-id site-shopper-id "offer-made")]
     (if-not (nil? last-offer-event)
-      (t/before? (t/plus (from-sql-date (:created_at last-offer-event)) (t/days days-since-last-offer))
+      (t/before? (t/plus (from-sql-date (:created_at last-offer-event))
+                         (t/days days-since-last-offer))
                  (t/now))
       false)))
 
@@ -203,14 +205,14 @@
                                           :start (t/minus (t/now)
                                                           (t/days 1))
                                           :end (t/now))]
-    (prn count max-redemptions-per-day)
     (< count max-redemptions-per-day)))
 
 (defmethod valid? :max-discount-per-day
   [{:keys [session site-id site-shopper-id offer] :as context}
    {:keys [max-discount-per-day] :as condition}]
-  (let [the-promo (promo/find-by-uuid (-> offer :reward :promo-id))]
-    (>= (redemption/total-discounts (:uuid the-promo) max-discount-per-day))))
+  (let [the-promo (promo/find-by-uuid (-> offer :reward :promo-id))
+        redeemed (redemption/total-discounts (:uuid the-promo))]
+    (< redeemed max-discount-per-day)))
 
 (defmethod valid? :shopper-device-type
   [{:keys [session site-id site-shopper-id offer] :as context}
@@ -226,7 +228,9 @@
 (defmethod valid? :num-visits-in-period
   [{:keys [session site-id site-shopper-id offer] :as context}
    {:keys [num-visits period-in-days] :as condition}]
-  (let [visits (event/count-shopper-events-by-days site-shopper-id "session-start" period-in-days)]
+  (let [visits (event/count-shopper-events-by-days site-shopper-id
+                                                   "session-start"
+                                                   period-in-days)]
     (>= visits num-visits)))
 
 (defmethod valid? :referer-domain
