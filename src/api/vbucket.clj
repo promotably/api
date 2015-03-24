@@ -31,7 +31,7 @@
           (cw/put-metric "bucket-assigned")
           (let [w-session-key (assoc assignment-data :session-id (:session/key response))
                 ev-payload (assoc w-session-key :control-group (= (:bucket assignment-data ) :control))]
-            (kinesis/record-event! (:kinesis current-system) "bucket-assigned" ev-payload))))
+            (kinesis/record-event! (:kinesis current-system) :bucket-assigned ev-payload))))
       response)))
 
 (defn wrap-vbucket
