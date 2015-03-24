@@ -74,17 +74,17 @@
    (delete-conditions! promo-id)
    (create-conditions! c)))
 
-(defmulti validate
+(defmulti valid?
   (fn [context
       {:keys [type] :as condition}]
     (keyword type)))
 
-(defmethod validate :dates
+(defmethod valid? :dates
   [context {:keys [start-date end-date] :as condition}]
   (and (after? (now) (from-sql-date start-date))
        (before? (now) (from-sql-date end-date))))
 
-(defmethod validate :times
+(defmethod valid? :times
   [{:keys [site-id] :as context}
    {:keys [start-time end-time]}]
   (let [the-site (site/find-by-site-uuid site-id)
@@ -111,7 +111,7 @@
     (and (after? now-in-site-tz today-at-start)
          (before? now-in-site-tz today-at-end))))
 
-(defmethod validate :product-views
+(defmethod valid? :product-views
   [{:keys [site-id site-shopper-id] :as context}
    {:keys [product-views period-in-days] :as condition}]
   (let [pv-count (event/count-shopper-events-by-days site-shopper-id
@@ -119,7 +119,7 @@
                                                      (or period-in-days 30))]
     (>= pv-count product-views)))
 
-(defmethod validate :repeat-product-views
+(defmethod valid? :repeat-product-views
   [{:keys [site-id site-shopper-id] :as context}
    {:keys [repeat-product-views period-in-days] :as condition}]
   (let [pv-events (group-by #(get-in % [:data :sku])
@@ -131,29 +131,29 @@
       true
       false)))
 
-(defmethod validate :num-lifetime-orders
+(defmethod valid? :num-lifetime-orders
   [{:keys [site-id site-shopper-id]}
    {:keys [num-lifetime-orders] :as condition}]
   ;; Okay, so by lifetime we mean anytime in the last 100 years
   (>= (event/orders-since site-id site-shopper-id (* 100 365))
       num-lifetime-orders))
 
-(defmethod validate :num-cart-adds-in-period
+(defmethod valid? :num-cart-adds-in-period
   [{:keys [site-id site-shopper-id] :as context}
    {:keys [num-cart-adds period-in-days] :as condition}]
   (>= (event/count-shopper-events-by-days site-shopper-id "productadd" period-in-days) num-cart-adds))
 
-(defmethod validate :min-orders-in-period
+(defmethod valid? :min-orders-in-period
   [{:keys [site-id site-shopper-id] :as context}
    {:keys [num-orders period-in-days] :as condition}]
   (> (event/orders-since site-id site-shopper-id period-in-days) num-orders))
 
-(defmethod validate :max-orders-in-period
+(defmethod valid? :max-orders-in-period
   [{:keys [site-id site-shopper-id] :as context}
    {:keys [num-orders period-in-days] :as condition}]
   (< (event/orders-since site-id site-shopper-id period-in-days) num-orders))
 
-(defmethod validate :minutes-on-site
+(defmethod valid? :minutes-on-site
   [{:keys [session site-id site-shopper-id] :as context}
    {:keys [minutes-on-site] :as condition}]
   (if (contains? session :started-at)
@@ -162,7 +162,7 @@
       (clj-time.core/after? (now) min-time))
     false))
 
-(defmethod validate :minutes-since-last-engagement
+(defmethod valid? :minutes-since-last-engagement
   [{:keys [session site-id site-shopper-id] :as context}
    {:keys [minutes-since-last-engagement] :as condition}]
   (if (contains? session :last-event-at)
@@ -171,7 +171,7 @@
       (t/after? (now) min-time))
     false))
 
-(defmethod validate :days-since-last-offer
+(defmethod valid? :days-since-last-offer
   [{:keys [session site-id site-shopper-id] :as context}
    {:keys [days-since-last-offer] :as condition}]
   (let [last-offer-event (event/last-event site-id site-shopper-id "offer-made")]
@@ -180,34 +180,39 @@
                  (t/now))
       false)))
 
-(defmethod validate :last-order-item-count
+(defmethod valid? :last-order-item-count
   [{:keys [session site-id site-shopper-id] :as context}
    {:keys [last-order-item-count] :as condition}]
   (>= (event/item-count-in-last-order site-id site-shopper-id) last-order-item-count))
 
-(defmethod validate :last-order-value
+(defmethod valid? :last-order-value
   [{:keys [session site-id site-shopper-id] :as context}
    {:keys [last-order-value] :as condition}]
   (>= (event/value-of-last-order site-id site-shopper-id) last-order-value))
 
-(defmethod validate :last-order-max-discount
+(defmethod valid? :last-order-max-discount
   [{:keys [session site-id site-shopper-id] :as context}
    {:keys [last-order-max-discount] :as condition}]
   (< (event/discount-last-order site-id site-shopper-id) last-order-max-discount))
 
-(defmethod validate :max-redemptions-per-day
+(defmethod valid? :max-redemptions-per-day
   [{:keys [session site-id site-shopper-id offer] :as context}
    {:keys [max-redemptions-per-day] :as condition}]
-  (let [the-promo (promo/find-by-uuid (-> offer :reward :promo-id))]
-    (>= (redemption/count-in-period (:uuid the-promo) max-redemptions-per-day))))
+  (let [the-promo (promo/find-by-uuid (-> offer :reward :promo-id))
+        count (redemption/count-in-period (:uuid the-promo)
+                                          :start (t/minus (t/now)
+                                                          (t/days 1))
+                                          :end (t/now))]
+    (prn count max-redemptions-per-day)
+    (< count max-redemptions-per-day)))
 
-(defmethod validate :max-discount-per-day
+(defmethod valid? :max-discount-per-day
   [{:keys [session site-id site-shopper-id offer] :as context}
    {:keys [max-discount-per-day] :as condition}]
   (let [the-promo (promo/find-by-uuid (-> offer :reward :promo-id))]
     (>= (redemption/total-discounts (:uuid the-promo) max-discount-per-day))))
 
-(defmethod validate :shopper-device-type
+(defmethod valid? :shopper-device-type
   [{:keys [session site-id site-shopper-id offer] :as context}
    {:keys [shopper-device-type] :as condition}]
   (let [ua (:user-agent session)]
@@ -218,39 +223,39 @@
      (= :desktop shopper-device-type) (#{:desktop} (:device ua))
      :else false)))
 
-(defmethod validate :num-visits-in-period
+(defmethod valid? :num-visits-in-period
   [{:keys [session site-id site-shopper-id offer] :as context}
    {:keys [num-visits period-in-days] :as condition}]
   (let [visits (event/count-shopper-events-by-days site-shopper-id "session-start" period-in-days)]
     (>= visits num-visits)))
 
-(defmethod validate :referer-domain
+(defmethod valid? :referer-domain
   [{:keys [session site-id site-shopper-id offer] :as context}
    {:keys [referer-domain] :as condition}]
   (let [d (get-in session [:initial-request-headers "referer"])]
     (.contains d referer-domain)))
 
-(defmethod validate :items-in-cart
+(defmethod valid? :items-in-cart
   [{:keys [session site-id site-shopper-id offer] :as context}
    {:keys [items-in-cart] :as condition}]
   (let [c (:last-cart-event session)
         how-many (apply + (map :quantity (:cart-items c)))]
     (>= how-many items-in-cart)))
 
-(defmethod validate :cart-value
+(defmethod valid? :cart-value
   [{:keys [session site-id site-shopper-id offer] :as context}
    {:keys [cart-value] :as condition}]
   (let [c (:last-cart-event session)
         total (apply + (map :subtotal (:cart-items c)))]
     (>= total cart-value)))
 
-(defmethod validate :shipping-zipcode
+(defmethod valid? :shipping-zipcode
   [{:keys [session site-id site-shopper-id offer] :as context}
    {:keys [shipping-zipcode] :as condition}]
   (let [z (get-in session [:last-cart-event :shipping-postcode])]
     (.contains z shipping-zipcode)))
 
-(defmethod validate :billing-zipcode
+(defmethod valid? :billing-zipcode
   [{:keys [session site-id site-shopper-id offer] :as context}
    {:keys [billing-zipcode] :as condition}]
   (let [z (get-in session [:last-cart-event :billing-postcode])]

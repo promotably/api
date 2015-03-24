@@ -250,7 +250,7 @@
   [context {:keys [reward conditions] :as offer}]
   (let [{:keys [promo-id expiry-in-minutes]} reward
         promo (promo/find-by-uuid promo-id)
-        validated-conditions (map #(c/validate context %) conditions)]
+        validated-conditions (map #(c/valid? context %) conditions)]
     (cond
      (not promo)
      (do

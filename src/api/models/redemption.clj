@@ -9,8 +9,9 @@
             [schema.macros :as sm]))
 
 (defn count-in-period
-  [promo-uuid & {:keys [start end] :or {start (epoch)
-                                        end (plus (today-at-midnight) (days 1))}}]
+  [promo-uuid & {:keys [start end]
+                 :or {start (epoch)
+                      end (plus (today-at-midnight) (days 1))}}]
   (try
     (-> (select promo-redemptions
                 (aggregate (count :*) :c)
