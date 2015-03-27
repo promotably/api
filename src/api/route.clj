@@ -334,9 +334,9 @@
         (let [k-data* (-> k-data
                           (assoc :session-id session-id)
                           (assoc :event-format-version "1")
-                          (assoc :event-name "session-start"))]
+                          (assoc :event-name :session-start))]
           (if session-id
-            (kinesis/record-event! (:kinesis current-system) "session-start" k-data*)
+            (kinesis/record-event! (:kinesis current-system) :session-start k-data*)
             (do
               (log/logf :error "Error recording session start: missing session id.")
               (cw/put-metric "session-start-missing-session-id")))
@@ -363,13 +363,19 @@
           s (-> current-system :config :session-length-in-seconds)
           expires (t-coerce/to-string (t/plus (t/now) (t/seconds s)))
           response (handler request)
-          response (cond-> response
-                           sid (update-in [:session :site-id] (constantly sid))
-                           ssid (update-in [:session :site-shopper-id] (constantly ssid))
-                           true (update-in [:session :last-request-at] (constantly (t-coerce/to-string (t/now))))
-                           true (update-in [:session :expires] (constantly expires))
-                           true (update-in [:session :shopper-id] (constantly (:shopper-id request))))]
-      (if (nil? (:session request))
+          response (cond->
+                    response
+                    sid (update-in [:session :site-id]
+                                   (constantly sid))
+                    ssid (update-in [:session :site-shopper-id]
+                                    (constantly ssid))
+                    true (update-in [:session :last-request-at]
+                                    (constantly (t-coerce/to-string (t/now))))
+                    true (update-in [:session :expires]
+                                    (constantly expires))
+                    true (update-in [:session :shopper-id]
+                                    (constantly (:shopper-id request))))]
+      (if (or (empty? (:session request)) (nil? (:session request)))
         (mark-new-session response request sid ssid)
         response))))
 
