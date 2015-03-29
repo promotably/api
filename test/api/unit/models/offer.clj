@@ -100,3 +100,17 @@
                                           :conditions (just [(contains {:type :dates})])})
     (provided
       (api.models.promo/find-by-id 42) => [{:id 1 :uuid promo-uuid}])))
+
+(fact "valid? respects active flag"
+  (let [o {:active true :reward {:promo-id ...promo-id...}}
+        c {}]
+    (valid? c o) => true
+    (provided (api.models.promo/find-by-uuid ...promo-id...) => {:something "here"}
+              (api.models.promo/valid-for-offer? {:something "here"}) => true)))
+
+(fact "valid? respects active flag false"
+  (let [o {:active false :reward {:promo-id ...promo-id...}}
+        c {}]
+    (valid? c o) => false
+    (provided (api.models.promo/find-by-uuid ...promo-id...) => {:something "here"})))
+

@@ -247,25 +247,27 @@
     (if row (db-to-offer row))))
 
 (defn valid?*
-  [context {:keys [reward conditions] :as offer}]
+  [context {:keys [reward conditions active] :as offer}]
   (let [{:keys [promo-id expiry-in-minutes]} reward
         promo (promo/find-by-uuid promo-id)
         validated-conditions (map #(c/valid? context %) conditions)]
     (cond
-     (not promo)
-     (do
-       (log/logf :error "Can't find promo for offer.  Offer uuid %s, promo uuid %s"
-                 (:uuid offer)
-                 promo-id)
-       false)
-     (not (promo/valid-for-offer? promo))
-     false
-     (not (seq conditions))
-     true
-     (every? true? validated-conditions)
-     true
-     :else
-     false)))
+      (= active false)
+      false
+      (not promo)
+      (do
+        (log/logf :error "Can't find promo for offer.  Offer uuid %s, promo uuid %s"
+                  (:uuid offer)
+                  promo-id)
+        false)
+      (not (promo/valid-for-offer? promo))
+      false
+      (not (seq conditions))
+      true
+      (every? true? validated-conditions)
+      true
+      :else
+      false)))
 
 (defn valid?
   [context offer]
