@@ -63,19 +63,31 @@ lein run
 
 ### Testing
 
-Unit testing:  
+#### Unit Testing
 
 ```
 ENV=test lein midje "api.unit.*"
 ```
 
-Integration testing:  
+#### Integration Testing 
 
 ```
 KINESIS_A=dev-PromotablyAPIEvents KINESIS_B=dev-PromoStream RDS_HOST=localhost RDS_PORT=5432 RDS_USER=p_user RDS_DB_NAME=promotably_dev RDS_PW=pr0m0 REDIS_HOST=localhost REDIS_PORT=6379 ENV=integration lein midje "api.integration.*"
 ```
 
 Integration testing depends on AWS credentials as per [doc](https://github.com/mcohen01/amazonica).
+
+#### Interactive Testing
+
+Before you can begin testing conditions you will want to make sure you are not in the control group.
+First you need to generate a *test* ID:
+
+```
+lein test-uuid
+```
+
+Once you have this new uuid, open up your browser and edit the cookie `promotably` for 
+`api-staging.promotably.com` or whatever domain your are testing against.
 
 ### Development
 
