@@ -180,12 +180,11 @@
 (defmethod valid? :days-since-last-offer
   [{:keys [session site-id site-shopper-id] :as context}
    {:keys [days-since-last-offer] :as condition}]
-  (let [last-offer-event (event/last-event site-id site-shopper-id "offer-made")]
-    (if-not (nil? last-offer-event)
-      (t/before? (t/plus (from-sql-date (:created_at last-offer-event))
-                         (t/days days-since-last-offer))
-                 (t/now))
-      false)))
+  (if-let [last-offer-event (event/last-event site-id site-shopper-id "offer-made")]
+    (let [then (from-sql-date (:created_at last-offer-event))
+          i (t/interval then (now))]
+      (> (t/in-days i) days-since-last-offer))
+    true))
 
 (defmethod valid? :last-order-item-count
   [{:keys [session site-id site-shopper-id] :as context}
