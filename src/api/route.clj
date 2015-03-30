@@ -348,7 +348,8 @@
   thence recorded to redis."
   [handler]
   (fn [request]
-    (let [sid (or
+    (let [new? (or (empty? (:session request)) (nil? (:session request)))
+          sid (or
                (-> request :form-params :site-id)
                (-> request :query-params :site-id)
                (-> request :multipart-params :site-id)
@@ -365,6 +366,8 @@
           response (handler request)
           response (cond->
                     response
+                    new? (update-in [:session :started-at]
+                                    (constantly (t-coerce/to-string (t/now))))
                     sid (update-in [:session :site-id]
                                    (constantly sid))
                     ssid (update-in [:session :site-shopper-id]
@@ -375,7 +378,7 @@
                                     (constantly expires))
                     true (update-in [:session :shopper-id]
                                     (constantly (:shopper-id request))))]
-      (if (or (empty? (:session request)) (nil? (:session request)))
+      (if new?
         (mark-new-session response request sid ssid)
         response))))
 

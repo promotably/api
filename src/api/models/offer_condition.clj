@@ -164,8 +164,8 @@
    {:keys [minutes-on-site] :as condition}]
   (if (contains? session :started-at)
     (let [session-start (clj-time.format/parse (:started-at session))
-          min-time (t/plus session-start (t/minutes minutes-on-site))]
-      (t/after? (now) min-time))
+          i (t/interval session-start (now))]
+      (> (t/in-minutes i) minutes-on-site))
     false))
 
 (defmethod valid? :minutes-since-last-engagement

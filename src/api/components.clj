@@ -152,9 +152,6 @@
   (write-session [this session-id data]
     (let [session-id* (or session-id (str (UUID/randomUUID)))
           old-data (redis/wcar* (car/get session-id*))
-          new-data (if (or (nil? session-id) (nil? old-data))
-                     (assoc data :started-at (t-coerce/to-string (t/now)))
-                     data)
           new-data (remove-nils (merge old-data data))
           s (-> config :session-length-in-seconds)]
       (try
