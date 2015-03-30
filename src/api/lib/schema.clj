@@ -486,8 +486,7 @@
    :last-order-max-discount
    :max-redemptions-per-day
    :max-discount-per-day
-   :last-order-includes-item-id
-   :last-order-value])
+   :last-order-includes-item-id])
 (def valid-devices #{:desktop :phone :tablet :all})
 (def valid-reward-types #{:promo :dynamic-promo})
 (def valid-presentation-types #{:lightbox :fly-in :fixed-div :inline :on-exit})
@@ -606,9 +605,6 @@
                  #(= (:type %) :last-order-includes-item-id)
                  (merge BaseOfferCondition {:last-order-includes-item-id s/Str})
 
-                 #(= (:type %) :last-order-value)
-                 (merge BaseOfferCondition {:last-order-value s/Int})
-
                  #(= (:type %) :days-since-last-offer)
                  (merge BaseOfferCondition {:days-since-last-offer s/Int})))
 
@@ -658,7 +654,6 @@
    (s/optional-key :last-order-total) (s/maybe s/Num)
    (s/optional-key :last-order-item-count) (s/maybe s/Int)
    (s/optional-key :last-order-includes-item-id) [s/Str]
-   (s/optional-key :last-order-value) (s/maybe s/Int)
    (s/optional-key :num-visits) (s/maybe s/Int)
    (s/optional-key :max-discount-per-day) (s/maybe s/Num)
    (s/optional-key :max-redemptions-per-day) (s/maybe s/Num)

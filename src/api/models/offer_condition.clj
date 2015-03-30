@@ -192,10 +192,11 @@
    {:keys [last-order-item-count] :as condition}]
   (>= (event/item-count-in-last-order site-id site-shopper-id) last-order-item-count))
 
-(defmethod valid? :last-order-value
+(defmethod valid? :last-order-total
   [{:keys [session site-id site-shopper-id] :as context}
-   {:keys [last-order-value] :as condition}]
-  (>= (event/value-of-last-order site-id site-shopper-id) last-order-value))
+   {:keys [last-order-total] :as condition}]
+  (let [value (event/value-of-last-order site-id site-shopper-id)]
+    (>= value last-order-total)))
 
 (defmethod valid? :last-order-max-discount
   [{:keys [session site-id site-shopper-id] :as context}
