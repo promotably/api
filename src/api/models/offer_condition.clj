@@ -242,7 +242,7 @@
 (defmethod valid? :referer-domain
   [{:keys [session site-id site-shopper-id offer] :as context}
    {:keys [referer-domain] :as condition}]
-  (let [d (get-in session [:initial-request-headers "referer"])]
+  (when-let [d (get-in session [:initial-request-headers "referer"])]
     (.contains d referer-domain)))
 
 (defmethod valid? :items-in-cart
