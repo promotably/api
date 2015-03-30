@@ -262,11 +262,11 @@
   [{:keys [session site-id site-shopper-id offer] :as context}
    {:keys [shipping-zipcode] :as condition}]
   (let [z (get-in session [:last-cart-event :shipping-postcode])]
-    (.contains z shipping-zipcode)))
+    (if z (.contains z shipping-zipcode))))
 
 (defmethod valid? :billing-zipcode
   [{:keys [session site-id site-shopper-id offer] :as context}
    {:keys [billing-zipcode] :as condition}]
   (let [z (get-in session [:last-cart-event :billing-postcode])]
-    (.contains z billing-zipcode)))
+    (if z (.contains z billing-zipcode))))
 
