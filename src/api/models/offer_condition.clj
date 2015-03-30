@@ -201,7 +201,10 @@
 (defmethod valid? :last-order-max-discount
   [{:keys [session site-id site-shopper-id] :as context}
    {:keys [last-order-max-discount] :as condition}]
-  (< (event/discount-last-order site-id site-shopper-id) last-order-max-discount))
+  (let [last-discount (event/discount-last-order site-id site-shopper-id)]
+    (if (= last-discount 0)
+      false
+      (< last-discount last-order-max-discount))))
 
 (defmethod valid? :max-redemptions-per-day
   [{:keys [session site-id site-shopper-id offer] :as context}
