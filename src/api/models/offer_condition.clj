@@ -228,7 +228,7 @@
      (= :all shopper-device-type) true
      (= :phone shopper-device-type) (#{:phone} (:device ua))
      (= :tablet shopper-device-type) (#{:tablet} (:device ua))
-     (= :desktop shopper-device-type) (#{:desktop} (:device ua))
+     (= :desktop shopper-device-type) (#{:desktop :pc} (:device ua))
      :else false)))
 
 (defmethod valid? :num-visits-in-period
