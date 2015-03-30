@@ -142,17 +142,22 @@
 (defmethod valid? :num-cart-adds-in-period
   [{:keys [site-id site-shopper-id] :as context}
    {:keys [num-cart-adds period-in-days] :as condition}]
-  (>= (event/count-shopper-events-by-days site-shopper-id "productadd" period-in-days) num-cart-adds))
+  (let [current (event/count-shopper-events-by-days site-shopper-id
+                                                    "productadd"
+                                                    period-in-days)]
+    (>= current num-cart-adds)))
 
 (defmethod valid? :min-orders-in-period
   [{:keys [site-id site-shopper-id] :as context}
    {:keys [num-orders period-in-days] :as condition}]
-  (> (event/orders-since site-id site-shopper-id period-in-days) num-orders))
+  (let [current (event/orders-since site-id site-shopper-id period-in-days)]
+    (>= current num-orders)))
 
 (defmethod valid? :max-orders-in-period
   [{:keys [site-id site-shopper-id] :as context}
    {:keys [num-orders period-in-days] :as condition}]
-  (< (event/orders-since site-id site-shopper-id period-in-days) num-orders))
+  (let [current (event/orders-since site-id site-shopper-id period-in-days)]
+    (< current num-orders)))
 
 (defmethod valid? :minutes-on-site
   [{:keys [session site-id site-shopper-id] :as context}
