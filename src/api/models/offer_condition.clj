@@ -226,12 +226,14 @@
   [{:keys [session site-id site-shopper-id offer] :as context}
    {:keys [shopper-device-type] :as condition}]
   (let [ua (:user-agent session)]
-    (cond
-     (= :all shopper-device-type) true
-     (= :phone shopper-device-type) (#{:phone} (:device ua))
-     (= :tablet shopper-device-type) (#{:tablet} (:device ua))
-     (= :desktop shopper-device-type) (#{:desktop :pc} (:device ua))
-     :else false)))
+    (if (cond
+         (= :all shopper-device-type) true
+         (= :phone shopper-device-type) (#{:phone} (:device ua))
+         (= :tablet shopper-device-type) (#{:tablet} (:device ua))
+         (= :desktop shopper-device-type) (#{:desktop :pc} (:device ua))
+         :else false)
+      true
+      false)))
 
 (defmethod valid? :num-visits-in-period
   [{:keys [session site-id site-shopper-id offer] :as context}
