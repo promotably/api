@@ -25,7 +25,10 @@
 
 (defn- user-exists?
   [user-id]
-  (not (nil? (first (select users (where {:user_id (UUID/fromString user-id)}))))))
+  (try
+    (if (and (not (nil? user-id)) (not= "" user-id))
+      (not (nil? (first (select users (where {:user_id (UUID/fromString user-id)}))))))
+    (catch Throwable t)))
 
 (defn- generate-user-auth-token
   "Generates an AES encrypted json object containing the user-id using
