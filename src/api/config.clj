@@ -3,7 +3,7 @@
   (:import [org.apache.log4j Level]))
 
 ;; File-based config data
-(def configfile-data {})
+(def ^:dynamic configfile-data {})
 
 ;; Static name of the ns session cookie
 (def session-cookie-name "promotably-session")
@@ -24,12 +24,13 @@
 ;; Setup info for logging
 (defn- base-log-config []
   (if-let [log-dir (get-config-value "LOG_DIR")]
-    {:name "file"
-     :level :info
-     :out (org.apache.log4j.DailyRollingFileAppender.
-           (net.logstash.log4j.JSONEventLayoutV1.)
-           (str log-dir "/api.log")
-           "'.'yyyy-MM-dd-HH")}
+    (let [log-file (get-config-value "LOG_FILE" (str log-dir "/api.log"))]
+      {:name "file"
+       :level :info
+       :out (org.apache.log4j.DailyRollingFileAppender.
+             (net.logstash.log4j.JSONEventLayoutV1.)
+             log-file
+             "'.'yyyy-MM-dd-HH")})
     {:name "console"
      :level :info
      :out (org.apache.log4j.ConsoleAppender.
