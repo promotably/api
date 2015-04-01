@@ -18,6 +18,7 @@
             [api.lib.auth :refer [parse-auth-string auth-valid? transform-auth]]
             [api.cloudwatch :refer [put-metric]]
             [schema.coerce :as sc]
+            [api.vbucket :refer [pick-bucket]]
             [schema.core :as s]))
 
 (def rename-pn
@@ -133,7 +134,7 @@
   (put-metric "event-record")
   ;; for debug
   ;; (prn "PARAMS" params)
-  (let [event-params (assoc params :control-group (= (:test-bucket (:session request)) :control))
+  (let [event-params (assoc params :control-group (= (bucket-from-request request) :control))
         parsed (parse-event event-params)]
     ;; for debug
     ;; (prn "PARSED" parsed)
@@ -169,8 +170,7 @@
                      (assoc :shopper-id (:shopper-id request))
                      (assoc :site-id (-> parsed :site :site-id))
                      (assoc :session-id (get-in cookies [config/session-cookie-name :value]))
-                     (assoc :control-group (= (:test-bucket session)
-                                              :control))
+                     (assoc :control-group (= (bucket-from-request request) :control))
                      coercer
                      (assoc :event-format-version "1"))]
          ;; For debugging
