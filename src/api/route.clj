@@ -346,41 +346,50 @@
 (defn wrap-ensure-session
   "Ensure that all relevant data is in the response session map and
   thence recorded to redis."
-  [handler]
+  [handler & [options]]
   (fn [request]
-    (let [new? (or (empty? (:session request)) (nil? (:session request)))
-          sid (or
-               (-> request :form-params :site-id)
-               (-> request :query-params :site-id)
-               (-> request :multipart-params :site-id)
-               (-> request :body-params :site-id)
-               (-> request :params :site-id))
-          ssid (or
-                (-> request :form-params :site-shopper-id)
-                (-> request :query-params :site-shopper-id)
-                (-> request :multipart-params :site-shopper-id)
-                (-> request :body-params :site-shopper-id)
-                (-> request :params :site-shopper-id))
-          s (-> current-system :config :session-length-in-seconds)
-          expires (t-coerce/to-string (t/plus (t/now) (t/seconds s)))
-          response (handler request)
-          response (cond->
-                    response
-                    new? (update-in [:session :started-at]
-                                    (constantly (t-coerce/to-string (t/now))))
-                    sid (update-in [:session :site-id]
-                                   (constantly sid))
-                    ssid (update-in [:session :site-shopper-id]
-                                    (constantly ssid))
-                    true (update-in [:session :last-request-at]
-                                    (constantly (t-coerce/to-string (t/now))))
-                    true (update-in [:session :expires]
-                                    (constantly expires))
-                    true (update-in [:session :shopper-id]
-                                    (constantly (:shopper-id request))))]
-      (if new?
-        (mark-new-session response request sid ssid)
-        response))))
+    (let [{:keys [include-routes exclude-routes]} options
+          route-excluded? (if exclude-routes
+                            (some map? (map #(% request) exclude-routes))
+                            false)
+          route-included? (if include-routes
+                            (some map? (map #(% request) include-routes))
+                            true)]
+      (if (and (not route-excluded?) route-included?)
+        (let [new? (or (empty? (:session request)) (nil? (:session request)))
+              sid (or
+                   (-> request :form-params :site-id)
+                   (-> request :query-params :site-id)
+                   (-> request :multipart-params :site-id)
+                   (-> request :body-params :site-id)
+                   (-> request :params :site-id))
+              ssid (or
+                    (-> request :form-params :site-shopper-id)
+                    (-> request :query-params :site-shopper-id)
+                    (-> request :multipart-params :site-shopper-id)
+                    (-> request :body-params :site-shopper-id)
+                    (-> request :params :site-shopper-id))
+              s (-> current-system :config :session-length-in-seconds)
+              expires (t-coerce/to-string (t/plus (t/now) (t/seconds s)))
+              response (handler request)
+              response (cond->
+                        response
+                        new? (update-in [:session :started-at]
+                                        (constantly (t-coerce/to-string (t/now))))
+                        sid (update-in [:session :site-id]
+                                       (constantly sid))
+                        ssid (update-in [:session :site-shopper-id]
+                                        (constantly ssid))
+                        true (update-in [:session :last-request-at]
+                                        (constantly (t-coerce/to-string (t/now))))
+                        true (update-in [:session :expires]
+                                        (constantly expires))
+                        true (update-in [:session :shopper-id]
+                                        (constantly (:shopper-id request))))]
+          (if new?
+            (mark-new-session response request sid ssid)
+            response))
+        (handler request)))))
 
 (defn wrap-detect-user-agent
   "Add a :user-agent key to the session map indicating the requestor's device type."
@@ -416,7 +425,7 @@
   (-> all-routes
       wrap-vbucket
       wrap-detect-user-agent
-      wrap-ensure-session
+      (wrap-ensure-session {:exclude-routes [(GET "/health-check" [] "ok")]})
       (wrap-permacookie {:name "promotably" :request-key :shopper-id})
       (wrap-restful-format :formats [:json-kw :edn])
       jsonp/wrap-json-with-padding
