@@ -39,9 +39,9 @@
   (start [this]
     (if-let [loggly-url (-> config :logging :loggly-url)]
       (do (log-config/set-loggers!
-           "api"
+           :root
            (-> config :logging :base))
-          (let [^Logger api-logger (log-config/as-logger "api")
+          (let [^Logger root-logger (log-config/as-logger :root)
                 loggly-appender (doto (org.apache.log4j.AsyncAppender.)
                                   (.setName "async")
                                   (.setLayout (net.logstash.log4j.JSONEventLayoutV1.))
@@ -51,11 +51,11 @@
                                                   (.setName "loggly")
                                                   (.setLayout (net.logstash.log4j.JSONEventLayoutV1.))
                                                   (.logglyURL loggly-url))))]
-            (doto api-logger
+            (doto root-logger
               (.addAppender loggly-appender))
-            (log/info "Loggly appender is attached?" (.isAttached api-logger loggly-appender))))
+            (log/info "Loggly appender is attached?" (.isAttached root-logger loggly-appender))))
       (log-config/set-loggers!
-       "api"
+       :root
        (-> config :logging :base)))
     (log/logf :info "Environment is %s" (-> config :env))
     this)
