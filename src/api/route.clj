@@ -425,7 +425,9 @@
   (-> all-routes
       wrap-vbucket
       wrap-detect-user-agent
-      (wrap-ensure-session {:exclude-routes [(GET "/health-check" [] "ok")]})
+      (wrap-ensure-session {:include-routes
+                            [(GET "/api/v1/track" [] "ok")
+                             (GET "/api/v1/rco" [] "ok")]})
       (wrap-permacookie {:name "promotably" :request-key :shopper-id})
       (wrap-restful-format :formats [:json-kw :edn])
       jsonp/wrap-json-with-padding
