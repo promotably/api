@@ -161,14 +161,21 @@
         the-site (site/find-by-site-uuid site-uuid)
         start-date (convert-date-to-site-tz start the-site)
         end-date (convert-date-to-site-tz end the-site)
-        body (metric/site-rcos-by-days site-uuid start-date end-date)
-        body2 (map #(-> % (rename-keys {:offer_id :id})) body)
-        body3 (map #(-> % (assoc :avg-revenue (safe-quot (:revenue %) (:redeemed %)))) body2)
-        body4 (map #(-> % (assoc :redemption-rate (percentage (:redeemed %) (:offered %)))) body3)
-        body5 (map #(-> % (assoc :conversion-rate (percentage (:orders %) (:offered %)))) body4)
-        body6 (map #(-> % (assoc :avg-items-in-cart (safe-quot (:total-items-in-cart %) (:orders %)))) body5)
-        body7 (map #(-> % (assoc :avg-discount (safe-quot (:discount %) (:orders %)))) body6)
-        body8 (map #(-> % (dissoc :total-items-in-cart)) body7)]
+        body (->>
+              (metric/site-rcos-by-days site-uuid start-date end-date)
+              (map #(rename-keys % {:offer_id :id}))
+              (map #(assoc % :avg-revenue (safe-quot (:revenue %)
+                                                     (:orders %))))
+              (map #(assoc % :redemption-rate (percentage (:redeemed %)
+                                                          (:offered %))))
+              (map #(assoc % :conversion-rate (percentage (:orders %)
+                                                          (:visits %))))
+              (map #(assoc % :avg-items-in-cart (safe-quot
+                                                 (:total-items-in-cart %)
+                                                 (:orders %))))
+              (map #(assoc % :avg-discount (safe-quot (:discount %)
+                                                      (:orders %))))
+              (map #(dissoc % :total-items-in-cart)))]
     {:status 200
      :headers {"Cache-Control" "max-age=0, no-cache"}
-     :body body8}))
+     :body body}))
