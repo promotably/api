@@ -332,6 +332,7 @@
           response* (assoc response :session/key session-id)]
       (if-let [k-data (:new-session-data response)]
         (let [k-data* (-> k-data
+                          (assoc :control-group (= :control (:test-bucket response)))
                           (assoc :session-id session-id)
                           (assoc :event-format-version "1")
                           (assoc :event-name :session-start))]
