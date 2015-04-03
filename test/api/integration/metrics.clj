@@ -107,38 +107,24 @@
               (fact "Can route to controller.api.metrics.get-promos"
                     (let [r (request-metrics "/metrics/promos" fix/site-id "20150220" "20150223")
                           b (json/read-str (:body r) :key-fn keyword)]
-                      b => [{:id (str fix/promo-id-uno),
-                             :redemptions 6,
-                             :discount 7.5,
-                             :revenue 30.0,
-                             :code "C1",
-                             :revenue-per-order 5.0},
-                            {:id (str fix/promo-id-duo),
+                      b => [{:id (str fix/promo-id-duo),
                              :redemptions 20,
                              :discount 20.0,
                              :revenue 200.0,
                              :code "C2",
-                             :revenue-per-order 10.0}]
+                             :revenue-per-order 10.0},
+                            {:id (str fix/promo-id-uno),
+                             :redemptions 6,
+                             :discount 7.5,
+                             :revenue 30.0,
+                             :code "C1",
+                             :revenue-per-order 5.0}]
                       (:status r) => 200))
 
               (fact "Can route to controller.api.metrics.get-rco"
                     (let [r (request-metrics "/metrics/rco" fix/site-id "20150220" "20150223")
                           b (json/read-str (:body r) :key-fn keyword)]
-                      b => [{:id (str fix/offer-id-uno),
-                             :code "C1",
-                             :visits 300,
-                             :qualified 30,
-                             :offered 15,
-                             :orders 9,
-                             :redeemed 6,
-                             :redemption-rate 40.00,
-                             :conversion-rate 3.0,
-                             :avg-items-in-cart 3,
-                             :avg-revenue 18.0,
-                             :revenue 170.0,
-                             :avg-discount 4.0,
-                             :discount 43.5},
-                            {:id (str fix/offer-id-duo),
+                      b => [{:id (str fix/offer-id-duo),
                              :code "C2",
                              :visits 200,
                              :qualified 20,
@@ -151,6 +137,20 @@
                              :avg-revenue 33.0,
                              :revenue 200.0,
                              :avg-discount 6.0,
-                             :discount 41.0}]
+                             :discount 41.0},
+                            {:id (str fix/offer-id-uno),
+                             :code "C1",
+                             :visits 300,
+                             :qualified 30,
+                             :offered 15,
+                             :orders 9,
+                             :redeemed 6,
+                             :redemption-rate 40.00,
+                             :conversion-rate 3.0,
+                             :avg-items-in-cart 3,
+                             :avg-revenue 18.0,
+                             :revenue 170.0,
+                             :avg-discount 4.0,
+                             :discount 43.5}]
                       (:status r) => 200))))
 

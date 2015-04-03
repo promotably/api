@@ -54,7 +54,7 @@
             (aggregate (sum :redemptions) :redemptions :promo_id)
             (aggregate (sum :discount) :discount :code) ;; Code can't be a field unless its included as an aggregate
             (aggregate (sum :revenue) :revenue )
-            (order :revenue :ASC)
+            (order :revenue :DESC)
             (where {:site_id site-uuid})
             (where {:measurement_hour [>= (to-sql-time start-day)]})
             (where {:measurement_hour [<= (to-sql-time end-day)]}))]
@@ -72,7 +72,7 @@
                   (aggregate (sum :total_items_in_carts) :total-items-in-cart)
                   (aggregate (sum :revenue) :revenue)
                   (aggregate (sum :discount) :discount)
-                  (order :revenue :ASC)
+                  (order :revenue :DESC)
                   (where {:site_id site-uuid})
                   (where {:measurement_hour [>= (to-sql-time start-day)]})
                   (where {:measurement_hour [<= (to-sql-time end-day)]}))]
