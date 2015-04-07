@@ -25,6 +25,7 @@
                    (s/optional-key :promotably-auth) s/Str
                    (s/optional-key :shopper-id) s/Str
                    (s/optional-key :site-shopper-id) s/Uuid
+                   (s/optional-key :site-session-id) s/Uuid
                    :code s/Str})
 
 (defn lookup-promos
