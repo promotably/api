@@ -17,7 +17,6 @@
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.content-type :refer [wrap-content-type]]
-            [ring.middleware.session :as session]
             [ring.middleware.jsonp :as jsonp]
             [ring.middleware.nested-params :refer [wrap-nested-params]]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
@@ -27,6 +26,7 @@
             [ring.middleware.permacookie :refer [wrap-permacookie]]
             [ring.middleware.anti-forgery :as ring-anti-forgery
              :refer [wrap-anti-forgery]]
+            [api.session :as session]
             [api.authentication :as auth]
             [api.events :as events]
             [api.kinesis :as kinesis]
