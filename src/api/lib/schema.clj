@@ -170,6 +170,8 @@
 
 (def AppliedCoupon
   {(s/required-key :code) s/Str
+   (s/required-key :promo-uuid) (s/maybe s/Uuid)
+   (s/required-key :offer-uuid) (s/maybe s/Uuid)
    (s/required-key :discount) s/Str})
 
 (def ShippingMethod
