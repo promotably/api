@@ -11,7 +11,7 @@
                                       shape-lookup
                                       shape-new-offer
                                       shape-update-offer]]
-            [api.cloudwatch :as cw]
+            [apollo.core :as apollo]
             [clj-time.core :as t]
             [clj-time.coerce :as t-coerce]
             [clj-time.format :as tf]
@@ -225,7 +225,7 @@
 (defn wrap-record-rco-events
   "Record offer events."
   [handler]
-  (fn [{:keys [session] :as request}]
+  (fn [{:keys [session cloudwatch-recorder] :as request}]
     (let [k (:kinesis current-system)
           response (handler request)
           assignment-data (:new-bucket-assignment response)
@@ -237,13 +237,13 @@
       (if sid
         (do
           (when qualified-event
-            (cw/put-metric "rco-qualification")
+            (cloudwatch-recorder "rco-qualification" 1 :Count)
             (kinesis/record-event! k :shopper-qualified-offers (merge qualified-event ev-base)))
           (when assignment-event
-            (cw/put-metric "rco-assignment")
+            (cloudwatch-recorder "rco-assignment" 1 :Count)
             (kinesis/record-event! k :offer-made (merge assignment-event ev-base))))
         (do
           (log/logf :error "Error recording rco: missing session id.")
-          (cw/put-metric "rco-session-id-error")))
+          (cloudwatch-recorder "rco-session-id-error" 1 :Count)))
       response)))
 

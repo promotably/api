@@ -16,7 +16,6 @@
                                              custom-matcher
                                              underscore-to-dash-keys]]
             [api.lib.auth :refer [parse-auth-string auth-valid? transform-auth]]
-            [api.cloudwatch :refer [put-metric]]
             [schema.coerce :as sc]
             [schema.core :as s]))
 
@@ -129,8 +128,8 @@
         coercer)))
 
 (defn record-event
-  [kinesis-comp {:keys [session params cookies] :as request}]
-  (put-metric "event-record")
+  [kinesis-comp {:keys [session params cookies cloudwatch-recorder] :as request}]
+  (cloudwatch-recorder "event-record" 1 :Count :dimensions {:endpoint "events"})
   ;; for debug
   ;; (prn "PARAMS" params)
   (let [event-params (assoc params :control-group (= (:test-bucket (:session request)) :control))
@@ -141,12 +140,12 @@
      (= schema.utils.ErrorContainer (type parsed))
      (do
        (log/logf :error "Event parse error: %s, params: %s" (pr-str parsed) params)
-       (put-metric "event-record-parse-error")
+       (cloudwatch-recorder "event-record-parse-error" 1 :Count :dimensions {:endpoint "events"})
        {:status 400 :session (:session request)})
 
      (nil? (:site parsed))
      (do
-       (put-metric "event-record-unknown-site")
+       (cloudwatch-recorder "event-record-unknown-site" 1 :Count :dimensions {:endpoint "events"})
        {:status 404 :session (:session request)})
 
      (and
@@ -156,7 +155,7 @@
                         (:auth parsed)
                         request)))
      (do
-       (put-metric "event-record-auth-error")
+       (cloudwatch-recorder "event-record-auth-error" 1 :Count :dimensions {:endpoint "events"})
        {:status 403 :session (:session request)})
 
      :else
@@ -177,9 +176,9 @@
          ;; (clojure.pprint/pprint out)
          (when (= schema.utils.ErrorContainer (type out))
            (log/logf :error "Tracking event in invalid format: %s" (pr-str parsed))
-           (put-metric "event-format-invalid"))
+           (cloudwatch-recorder "event-format-invalid" 1 :Count :dimensions {:endpoint "events"}))
          (kinesis/record-event! kinesis-comp (:event-name out) out)
-         (put-metric "event-record-success")
+         (cloudwatch-recorder "event-record-success" 1 :Count :dimensions {:endpoint "events"})
          (let [session (cond-> (:session request)
                                (#{:productadd :cartview :cartupdate :checkout} (:event-name out))
                                  (assoc :last-cart-event out)

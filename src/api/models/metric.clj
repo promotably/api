@@ -8,7 +8,6 @@
             [clojure.java.jdbc :as jdbc]
             [api.entities :refer :all]
             [api.util :refer [hyphenify-key assoc*]]
-            [api.cloudwatch :as cw]
             [api.lib.schema :refer :all]
             [korma.core :refer :all]
             [schema.core :as s]

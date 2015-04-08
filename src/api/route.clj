@@ -44,7 +44,6 @@
                                               update-site-for-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]
             [api.controllers.metrics :refer [get-revenue get-additional-revenue get-lift get-promos get-rco]]
-            [api.cloudwatch :as cw]
             [api.lib.detector :as detector]
             [api.system :refer [current-system]]
             [api.vbucket :refer [wrap-vbucket wrap-record-vbucket-assignment]]
@@ -139,9 +138,9 @@
            offer-routes))
 
 (defn- fetch-static
-  [profile-name bucket filename cached]
+  [cloudwatch-recorder profile-name bucket filename cached]
   (try
-    (cw/put-metric "static-fetch")
+    (cloudwatch-recorder "static-fetch" 1 :Count)
     (let [^com.amazonaws.auth.AWSCredentialsProvider cp
           (if profile-name
             (ProfileCredentialsProvider. profile-name)
@@ -160,7 +159,7 @@
         (reset! cached {:content content :cached-at (now)})
         content))
     (catch Throwable t
-      (cw/put-metric "static-missing")
+      (cloudwatch-recorder "static-missing" 1 :Count)
       (log/logf :error
                 "Can't fetch static file. Bucket %s, file '%s' exception %s."
                 bucket
@@ -168,19 +167,19 @@
                 t))))
 
 (defn serve-cached-static
-  [req profile-name bucket filename cached]
+  [{:keys [cloudwatch-recorder] :as req} profile-name bucket filename cached]
   ;; if it's old, refresh it, but still return current copy
   (let [expires (t/plus (now) (t/minutes 5))]
     (if (or (nil? (:content @cached))
             (after? (:cached-at @cached) expires))
-      (future (fetch-static profile-name bucket filename cached))))
+      (future (fetch-static cloudwatch-recorder profile-name bucket filename cached))))
   (if (:content @cached)
     (:content @cached)
     {:status 404}))
 
 (defn serve-cached-index
-  [req]
-  (cw/put-metric "serve-index")
+  [{:keys [cloudwatch-recorder] :as req}]
+  (cloudwatch-recorder "serve-index" 1 :Count)
   (let [c (-> current-system :config)
         api-secret (get-api-secret)]
     (if (auth/authorized? req api-secret)
@@ -193,8 +192,8 @@
        :headers {"Location" "/login"}})))
 
 (defn serve-cached-register
-  [req]
-  (cw/put-metric "serve-register")
+  [{:keys [cloudwatch-recorder] :as req}]
+  (cloudwatch-recorder "serve-register" 1 :Count)
   (let [c (-> current-system :config)
         api-secret (get-api-secret)]
     (if-not (auth/authorized? req api-secret)
@@ -207,8 +206,8 @@
        :headers {"Location" "/"}})))
 
 (defn serve-cached-login
-  [req]
-  (cw/put-metric "serve-login")
+  [{:keys [cloudwatch-recorder] :as req}]
+  (cloudwatch-recorder "serve-login")
   (let [c (-> current-system :config)
         api-secret (get-api-secret)]
     (if-not (auth/authorized? req api-secret)
@@ -251,8 +250,12 @@
     (apply wrapper handler args)
     handler))
 
+(defn wrap-cloudwatch [handler]
+  (fn [req]
+    (handler (assoc req :cloudwatch-recorder (get-in current-system [:cloudwatch :recorder])))))
+
 (defn wrap-request-logging [handler]
-  (fn [{:keys [request-method uri] :as req}]
+  (fn [{:keys [request-method uri cloudwatch-recorder] :as req}]
     (let [start  (System/currentTimeMillis)
           resp   (handler req)
           finish (System/currentTimeMillis)
@@ -263,7 +266,7 @@
                           (:status resp)
                           uri
                           total)))
-      (cw/put-metric "ResponseTime" {:value total :unit "Milliseconds" :dimensions [{:name "URI" :value uri}]})
+      (cloudwatch-recorder "response-time" total :Milliseconds :dimensions {:URI uri})
       resp)))
 
 
@@ -317,7 +320,7 @@
 (defn wrap-record-new-session
   "When a new session is started, record relevant data to kinesis."
   [handler & [{:keys [cookie-name]}]]
-  (fn [request]
+  (fn [{:keys [cloudwatch-recorder] :as request}]
     (let [response (handler request)
           set-cookies (get (:headers response) "Set-Cookie")
           set-cookies (reduce
@@ -339,7 +342,7 @@
             (kinesis/record-event! (:kinesis current-system) :session-start k-data*)
             (do
               (log/logf :error "Error recording session start: missing session id.")
-              (cw/put-metric "session-start-missing-session-id")))
+              (cloudwatch-recorder "session-start-missing-session-id" 1 :Count)))
           response*)
         response*))))
 
@@ -394,10 +397,11 @@
 (defn wrap-detect-user-agent
   "Add a :user-agent key to the session map indicating the requestor's device type."
   [handler]
-  (fn [request]
+  (fn [{:keys [cloudwatch-recorder] :as request}]
     (if (-> request :session :user-agent)
       (handler request)
-      (let [ua (detector/user-agent (get (:headers request) "user-agent"))
+      (let [ua (detector/user-agent cloudwatch-recorder
+                                    (get (:headers request) "user-agent"))
             response (handler (assoc-in request [:session :user-agent] ua))]
         (assoc-in response [:session :user-agent] ua)))))
 
@@ -457,7 +461,8 @@
       wrap-stacktrace
       wrap-request-logging
       wrap-gzip
-      wrap-content-type))
+      wrap-content-type
+      wrap-cloudwatch))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -499,26 +504,29 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defrecord Router [config logging session-cache]
+(defrecord Router [config logging session-cache cloudwatch]
   component/Lifecycle
-  (start
-   [component]
-   (if (:stop! component)
-     component
-     (do
-       (fetch-static (-> config :kinesis :aws-credential-profile)
-                     (-> config :dashboard :artifact-bucket)
-                     (-> config :dashboard :index-filename)
-                     cached-index)
-       (fetch-static (-> config :kinesis :aws-credential-profile)
-                     (-> config :dashboard :artifact-bucket)
-                     (-> config :dashboard :register-filename)
-                     cached-register)
-       (fetch-static (-> config :kinesis :aws-credential-profile)
-                     (-> config :dashboard :artifact-bucket)
-                     (-> config :dashboard :login-filename)
-                     cached-login)
-       (assoc component :ring-routes (ring-routes config session-cache)))))
+  (start [component]
+    (let [cloudwatch-recorder (:recorder cloudwatch)]
+      (if (:stop! component)
+        component
+        (do
+          (fetch-static cloudwatch-recorder
+                        (-> config :kinesis :aws-credential-profile)
+                        (-> config :dashboard :artifact-bucket)
+                        (-> config :dashboard :index-filename)
+                        cached-index)
+          (fetch-static cloudwatch-recorder
+                        (-> config :kinesis :aws-credential-profile)
+                        (-> config :dashboard :artifact-bucket)
+                        (-> config :dashboard :register-filename)
+                        cached-register)
+          (fetch-static cloudwatch-recorder
+                        (-> config :kinesis :aws-credential-profile)
+                        (-> config :dashboard :artifact-bucket)
+                        (-> config :dashboard :login-filename)
+                        cached-login)
+          (assoc component :ring-routes (ring-routes config session-cache))))))
   (stop
    [component]
     component))

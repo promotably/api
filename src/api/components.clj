@@ -14,11 +14,11 @@
             [clj-time.coerce :as t-coerce]
             [taoensso.carmine :as car :refer [wcar]]
             [api.lib.coercion-helper :refer [remove-nils]]
-            [api.cloudwatch :as cw]
             [api.config :as config]
             [api.route :as route]
             [api.kinesis :as kinesis]
-            [api.redis :as redis])
+            [api.redis :as redis]
+            [apollo.core :as apollo])
   (:import (java.util.concurrent Executors TimeUnit
                                  ScheduledExecutorService)
            [java.util UUID]
@@ -135,7 +135,7 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defrecord SessionCacheComponent [config logging redis kinesis]
+(defrecord SessionCacheComponent [config logging redis kinesis cloudwatch]
   component/Lifecycle
   (start [this]
     (log/logf :info "Cache is starting.")
@@ -153,22 +153,48 @@
     (let [session-id* (or session-id (str (UUID/randomUUID)))
           old-data (redis/wcar* (car/get session-id*))
           new-data (remove-nils (merge old-data data))
-          s (-> config :session-length-in-seconds)]
+          s (-> config :session-length-in-seconds)
+          cloudwatch-recorder (:recorder cloudwatch)]
       (try
         (redis/wcar*
          (car/set session-id* new-data)
          (car/expire session-id* s))
         (catch Throwable t
           (log/logf :error "Session redis error: %s" (pr-str t))
-          (cw/put-metric "session-error" {:config config})))
+          (cloudwatch-recorder "session-error" 1 :Count)))
       session-id*))
   (delete-session [this session-id]
     (try
       (redis/wcar* (car/del session-id))
       (catch Throwable t
         (log/logf :error "Session redis error: %s" (pr-str t))
-        (cw/put-metric "session-error" {:config config})))
+        (let [cloudwatch-recorder (:recorder cloudwatch)]
+          (cloudwatch-recorder "session-error" 1 :Count))))
     nil))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; AWS Cloudwatch Component
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defrecord Cloudwatch [config client scheduler recorder]
+  component/Lifecycle
+  (start [this]
+    (let [{:keys [aws-credential-profile delay-minutes interval-minutes]} (:cloudwatch config)
+          c (apollo/create-async-cw-client :provider (ProfileCredentialsProvider. aws-credential-profile))
+          s (apollo/create-vacuum-scheduler)
+          recorder-namespace (str "api-" (name (:env config)))]
+      (log/infof "Cloudwatch is starting with credential profile '%s'." aws-credential-profile)
+      (apollo/start-vacuum-scheduler! delay-minutes interval-minutes s c)
+      (log/infof "Cloudwatch Recording Namespace: %s" recorder-namespace)
+      (-> this
+          (assoc :client c)
+          (assoc :scheduler s)
+          (assoc :recorder (apollo/get-context-recorder recorder-namespace {})))))
+  (stop [this]
+    (log/info "Cloudwatch is stopping")
+    (apollo/stop-vacuum-scheduler! (:scheduler this))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -233,8 +259,9 @@
    :logging       (component/using (map->LoggingComponent {}) [:config])
    :database      (component/using (map->DatabaseComponent {}) [:config :logging])
    :kinesis       (component/using (map->Kinesis {}) [:config :logging])
+   :cloudwatch    (component/using (map->Cloudwatch {}) [:config :logging])
    :cider         (component/using (map->ReplComponent {:port (java.lang.Integer. repl-port)}) [:config :logging])
    :redis         (component/using (map->RedisComponent {}) [:config :logging])
-   :session-cache (component/using (map->SessionCacheComponent {}) [:config :logging :redis :kinesis])
-   :router        (component/using (route/map->Router {}) [:config :logging :session-cache])
+   :session-cache (component/using (map->SessionCacheComponent {}) [:config :logging :redis :kinesis :cloudwatch])
+   :router        (component/using (route/map->Router {}) [:config :logging :session-cache :cloudwatch])
    :server        (component/using (map->Server {:port (java.lang.Integer. port)}) [:config :logging :router])))

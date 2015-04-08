@@ -1,7 +1,6 @@
 (ns api.authentication
   (:require [api.entities :refer [users accounts]]
             [api.lib.crypto :as cr]
-            [api.cloudwatch :as cw]
             [clj-time.core :as t]
             [clj-time.format :as tf]
             [clojure.data.json :as json]
@@ -224,7 +223,7 @@
   which takes the request and creates a new user, validates any 3rd
   party access tokens and then invokes the create-user-fn. Returns an
   auth-response whose body is the result of calling the create-user-fn."
-  [request auth-config create-user-fn]
+  [{:keys [cloudwatch-recorder] :as request} auth-config create-user-fn]
   (if (is-social? request)
     (if-let [body-params-with-social (add-social-data request auth-config)]
       (let [create-resp (create-user-fn (assoc request :body-params body-params-with-social))
@@ -236,7 +235,7 @@
           (auth-response create-resp api-secret user-id)
           create-resp))
       (do
-        (cw/put-metric "login-error")
+        (cloudwatch-recorder "login-error" 1 :Count)
         {:status 401}))
     (let [create-resp (create-user-fn request)
           user-id (str (get-in create-resp [:body :user-id]))

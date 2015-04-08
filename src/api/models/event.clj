@@ -8,7 +8,6 @@
             [clojure.java.jdbc :as jdbc]
             [api.entities :refer :all]
             [api.util :refer [hyphenify-key assoc*]]
-            [api.cloudwatch :as cw]
             [api.lib.schema :refer :all]
             [korma.core :refer :all]
             [schema.core :as s]
@@ -120,7 +119,7 @@
 
 (sm/defn find-outstanding-offer
   "Find an unredeemed, unexpired offer with the code."
-  [site-id :- s/Uuid code :- s/Str]
+  [cloudwatch-recorder site-id :- s/Uuid code :- s/Str]
   (let [offer (find-offer site-id code)
         expiry (-> offer :data :expiry clj-time.format/parse)
         redemption (first (select promo-redemptions
@@ -133,7 +132,7 @@
         offer
         (do
           (log/logf :debug "Expired offer")
-          (cw/put-metric "offer-expired")
+          (cloudwatch-recorder "offer-expired" 1 :Count)
           nil)))))
 
 ;; (find-outstanding-offer #uuid "9be8a905-498d-4a8e-ba50-397e2d5f5275" "XP9HEW")

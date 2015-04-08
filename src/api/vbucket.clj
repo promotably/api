@@ -1,7 +1,6 @@
 (ns api.vbucket
   (:require [api.kinesis :as kinesis]
-            [api.system :refer [current-system]]
-            [api.cloudwatch :refer [put-metric] :as cw]))
+            [api.system :refer [current-system]]))
 
 (def not-nil? (complement nil?))
 
@@ -24,11 +23,11 @@
 (defn wrap-record-vbucket-assignment
   "Record new bucket assignments."
   [handler & matching-routes]
-  (fn [{:keys [session] :as request}]
+  (fn [{:keys [session cloudwatch-recorder] :as request}]
     (let [response (handler request)]
       (when-let [assignment-data (:new-bucket-assignment response)]
         (when (some map? (map #(% request) matching-routes))
-          (cw/put-metric "bucket-assigned")
+          (cloudwatch-recorder "bucket-assigned" 1 :Count)
           (let [w-session-key (assoc assignment-data :session-id (:session/key response))
                 ev-payload (assoc w-session-key :control-group (= (:bucket assignment-data ) :control))]
             (kinesis/record-event! (:kinesis current-system) :bucket-assigned ev-payload))))

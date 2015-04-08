@@ -13,7 +13,6 @@
             [api.lib.schema :refer :all]
             [taoensso.carmine :as car :refer [wcar]]
             [api.redis :as redis]
-            [api.cloudwatch :refer [put-metric] :as cw]
             [schema.coerce :as sc]
             [schema.core :as s]))
 
@@ -29,10 +28,10 @@
 (defn wrap-record-bucket-assignment
   "Record new bucket assignments."
   [handler]
-  (fn [{:keys [session] :as request}]
+  (fn [{:keys [session cloudwatch-recorder] :as request}]
     (let [response (handler request)]
       (when-let [assignment-data (:new-bucket-assignment response)]
-        (cw/put-metric "bucket-assigned")
+        (cloudwatch-recorder "bucket-assigned" 1 :Count)
         (kinesis/record-event! (:kinesis current-system) "bucket-assigned"
                                (assoc assignment-data :session-id (:session/key response))))
       response)))
@@ -40,7 +39,7 @@
 (defn wrap-sorting-hat
   "Bucket the visitor."
   [handler]
-  (fn [{:keys [session] :as request}]
+  (fn [{:keys [session cloudwatch-recorder] :as request}]
     (if-let [session-bucket (:test-bucket session)]
       (handler request)
       (let [site-id (or
@@ -74,7 +73,7 @@
              (car/expire redis-key s))
             (catch Throwable t
               (log/logf :error "Bucket assignment error: %s" (pr-str t))
-              (cw/put-metric "sorting-hat-error"))))
+              (cloudwatch-recorder "sorting-hat-error" 1 :Count) )))
         (let [response (handler (assoc-in request [:session :test-bucket] bucket))]
           (if saved-bucket
             response

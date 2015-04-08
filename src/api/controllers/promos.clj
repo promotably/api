@@ -90,8 +90,8 @@
     (shape-promo {:promo promo})))
 
 (defn fallback-to-exploding
-  [site-id code]
-  (let [{:keys [offer-id] :as offer-event} (event/find-outstanding-offer site-id code)]
+  [cloudwatch-recorder site-id code]
+  (let [{:keys [offer-id] :as offer-event} (event/find-outstanding-offer cloudwatch-recorder site-id code)]
     (when offer-event
       (let [offer-promo (promo/find-by-uuid (-> offer-event
                                                 :data
@@ -101,13 +101,13 @@
 
 ;; TODO: Check auth
 (defn query-promo
-  [{:keys [params] :as request}]
+  [{:keys [params cloudwatch-recorder] :as request}]
   (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
         coercer (c/coercer query-schema matcher)
         {:keys [site-id code] :as coerced-params} (coercer params)
         code (clojure.string/upper-case code)
         the-promo (promo/find-by-site-uuid-and-code site-id code)
-        offer-promo (fallback-to-exploding site-id code)]
+        offer-promo (fallback-to-exploding cloudwatch-recorder site-id code)]
     (shape-promo {:promo (or the-promo offer-promo)})))
 
 (def coerce-site-id

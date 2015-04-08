@@ -69,7 +69,8 @@
                  [commons-codec "1.10"]
                  [net.sf.uadetector/uadetector-resources "2014.10"]
                  [net.logstash.log4j/jsonevent-layout "1.7"]
-                 [crypto-random "1.2.0"]]
+                 [crypto-random "1.2.0"]
+                 [org.clojars.promotably/apollo "0.2.0"]]
   :resource-paths ["resources"]
   :jvm-opts ["-Xmx1g" "-server" "-XX:+UseParallelGC" "-XX:+UseParallelOldGC" "-XX:MaxPermSize=256m"
              ;; "–XX:+UseG1GC"

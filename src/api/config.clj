@@ -62,6 +62,12 @@
      :event-stream-name event-stream-name
      :aws-credential-profile credential-profile}))
 
+(defn- get-cloudwatch-config
+  []
+  {:aws-credential-profile (get-config-value "CRED_PROFILE" nil)
+   :delay-minutes 1
+   :interval-minutes 1})
+
 (defn- get-database-config
   "Checks environment variables for database config settings. These
   should always be present on environments deployed to AWS"
@@ -111,6 +117,9 @@
                                    (assoc :promo-stream-name (:promo-stream-name c))
                                    (:event-stream-name c)
                                    (assoc :event-stream-name (:event-stream-name c))))
+                :cloudwatch {:aws-credential-profile "promotably"
+                             :delay-minutes 1
+                             :interval-minutes 1}
                 :dashboard (get-dashboard-config)
                 :logging {:base (base-log-config)
                           :loggly-url (loggly-url)}
@@ -128,6 +137,9 @@
                 :kinesis  {:aws-credential-profile "promotably"
                            :promo-stream-name "dev-PromoStream"
                            :event-stream-name "dev-PromotablyAPIEvents"}
+                :cloudwatch {:aws-credential-profile "promotably"
+                             :delay-minutes 1
+                             :interval-minutes 1}
                 :dashboard (get-dashboard-config)
                 :logging {:base (base-log-config)
                           :loggly-url (loggly-url)}
@@ -137,6 +149,7 @@
                 :env :test}
    :staging    {:database (get-database-config)
                 :kinesis (get-kinesis-config)
+                :cloudwatch (get-cloudwatch-config)
                 :redis (get-redis-config)
                 :dashboard (get-dashboard-config)
                 :logging {:base (base-log-config)
@@ -150,16 +163,18 @@
                                  "api-integration-test")
                  :redis (get-redis-config)
                  :kinesis (get-kinesis-config)
+                 :cloudwatch (get-cloudwatch-config)
                  :dashboard (get-dashboard-config)
                  :logging {:base (base-log-config)
                            :loggly-url (loggly-url)}
                  :session-length-in-seconds (* 60 60 2)
-                :bucket-assignment-length-in-seconds (* 60 60 24 120)
+                 :bucket-assignment-length-in-seconds (* 60 60 24 120)
                  :auth-token-config (auth-token-config)
                  :env :integration}
    :production {:database (get-database-config)
                 :redis (get-redis-config)
                 :kinesis (get-kinesis-config)
+                :cloudwatch (get-cloudwatch-config)
                 :dashboard (get-dashboard-config)
                 :logging {:base (base-log-config)
                           :loggly-url (loggly-url)}
