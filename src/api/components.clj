@@ -18,7 +18,9 @@
             [api.config :as config]
             [api.route :as route]
             [api.kinesis :as kinesis]
-            [api.redis :as redis])
+            [api.redis :as redis]
+            [api.system :refer [current-system]]
+            [api.models.event :as event])
   (:import (java.util.concurrent Executors TimeUnit
                                  ScheduledExecutorService)
            [java.util UUID]
@@ -135,14 +137,35 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn session-expired
+  [msg]
+    (let [[type channel session-id] msg
+          uuid (if (string? session-id) (java.util.UUID/fromString session-id))
+          start (if uuid (event/last-event-by-session-id uuid "session-start"))]
+      (if (and (string? session-id) uuid start)
+        (kinesis/record-event! (:kinesis current-system)
+                               :session-end
+                               (-> (start :data)
+                                   (assoc :event-name "session-end")
+                                   (assoc :event-format-version 1)
+                                   (dissoc :request-headers)))
+        (cw/put-metric "session-end"))))
+
 (defrecord SessionCacheComponent [config logging redis kinesis]
   component/Lifecycle
   (start [this]
     (log/logf :info "Cache is starting.")
-    this)
+    (redis/wcar*
+     (car/config-set "notify-keyspace-events" "KEx"))
+    (let [listener (car/with-new-pubsub-listener {}
+                     {"__keyevent@0__:expired" session-expired}
+                     (car/subscribe  "__keyevent@0__:expired"))]
+      (assoc this :listener listener)))
   (stop [this]
     (log/logf :info "Cache is shutting down.")
-    this)
+    (when-let [l (:listener this)]
+      (redis/wcar* (car/close-listener l)))
+    (dissoc this :listener))
 
   ss/SessionStore
   (read-session [this session-id]

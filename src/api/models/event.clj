@@ -77,6 +77,15 @@
                  (order :created_at :DESC)
                  (limit 1))))
 
+(sm/defn last-event-by-session-id
+  "Get the last event for the session-id/event-type tuple."
+  [session-id :- s/Uuid event-type :- s/Str]
+  (first (select events
+                 (where {:session_id session-id
+                         :type event-type})
+                 (order :created_at :DESC)
+                 (limit 1))))
+
 ;; (clojure.pprint/pprint (last-event #uuid "5669de1d-cc61-4590-9ef6-5cab58369df2" #uuid "001fd699-9d50-4b7c-af3b-3e022d379647" "thankyou"))
 
 (sm/defn item-count-in-last-order
