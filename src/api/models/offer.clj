@@ -13,6 +13,7 @@
             [api.models.redemption :as rd]
             [api.models.site :as site]
             [api.models.promo :as promo]
+            [api.models.event :as event]
             [api.util :refer [hyphenify-key]]
             [api.db]
             [clojure.core.cache :as cache]
@@ -25,6 +26,28 @@
 
 ;; TODO: remove this
 (def OffersCache (atom (cache/ttl-cache-factory {} :ttl 300000))) ;; TTL 5 minutes
+
+(defn fallback-to-exploding
+  [cloudwatch-recorder site-id code]
+  (let [{:keys [offer-id] :as offer-event} (event/find-outstanding-offer cloudwatch-recorder site-id code)]
+    (when offer-event
+      (let [offer-promo (promo/find-by-uuid (-> offer-event
+                                                :data
+                                                :promo-id
+                                                java.util.UUID/fromString))]
+        (if offer-promo [(-> offer-event :data :offer-id)
+                         (assoc offer-promo :code code)])))))
+
+(defn lookup-exploding
+  [site-id code]
+  (let [{:keys [offer-id] :as offer-event} (event/find-offer site-id code)]
+    (when offer-event
+      (let [offer-promo (promo/find-by-uuid (-> offer-event
+                                                :data
+                                                :promo-id
+                                                java.util.UUID/fromString))]
+        (if offer-promo [(-> offer-event :data :offer-id)
+                         (assoc offer-promo :code code)])))))
 
 (defn db-to-offer
   "Convert a database result to a offer that obeys the OfferSchema"

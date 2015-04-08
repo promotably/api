@@ -148,6 +148,7 @@
    (s/required-key :site) s/Any
    (s/optional-key :shopper-id) (s/maybe s/Uuid)
    (s/optional-key :site-shopper-id) (s/maybe s/Uuid)
+   (s/optional-key :site-session-id) (s/maybe s/Uuid)
    (s/required-key :control-group) s/Bool})
 
 (def CartItem
@@ -169,6 +170,8 @@
 
 (def AppliedCoupon
   {(s/required-key :code) s/Str
+   (s/required-key :promo-uuid) (s/maybe s/Uuid)
+   (s/required-key :offer-uuid) (s/maybe s/Uuid)
    (s/required-key :discount) s/Str})
 
 (def ShippingMethod
@@ -324,6 +327,16 @@
                              (assoc (s/required-key :session-id) s/Uuid)
                              (dissoc (s/required-key :site)
                                      (s/required-key :auth))))
+
+;; RCOs ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def InboundRCO
+  {(s/optional-key :auth) Auth
+   (s/optional-key :xyzzy) s/Str
+   (s/required-key :site-id) s/Uuid
+   (s/required-key :control-group) s/Bool
+   (s/optional-key :site-session-id) s/Uuid ;; should be req'd?  need to alter tests...
+   (s/required-key :site-shopper-id) s/Uuid})
 
 ;; Linked Products ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -702,6 +715,7 @@
    (s/optional-key :auth) Auth
    (s/optional-key :shopper-id) (s/maybe s/Str)
    (s/optional-key :site-shopper-id) (s/maybe s/Str)
+   (s/optional-key :site-session-id) (s/maybe s/Str)
    (s/required-key :shopper-email) s/Str
    (s/optional-key :applied-coupons) [s/Str]
    (s/optional-key :shipping-address-1) s/Str

@@ -9,6 +9,9 @@
             [api.kinesis :as kinesis]
             [api.models.helper :refer :all]
             [api.models.site :as site]
+            [api.models.promo :as promo]
+            [api.models.offer :as offer :refer [fallback-to-exploding
+                                                lookup-exploding]]
             [api.lib.schema :refer :all]
             [api.lib.coercion-helper :refer [transform-map
                                              make-trans
@@ -41,7 +44,8 @@
                                 (clojure.string/replace "track" "")
                                 keyword)))))
 
-(def fix-applied-coupons
+(defn make-coupon-fixer
+  [site-uuid]
   (make-trans
    #{"applied-coupon[]"}
    (fn [k items]
@@ -50,8 +54,13 @@
                    (string? items) [items]
                    (seq items) items
                    :else nil)]
-        (mapcat #(let [[code discount] (clojure.string/split % #"," 2)]
-                   [{:code code
+        (mapcat #(let [[code discount] (clojure.string/split % #"," 2)
+                       c (clojure.string/upper-case code)
+                       p (promo/find-by-site-uuid-and-code site-uuid c)
+                       [o-id o-promo] (lookup-exploding site-uuid c)]
+                   [{:code c
+                     :promo-uuid (:uuid (or p o-promo))
+                     :offer-uuid o-id
                      :discount (str discount)}])
                 items))])))
 
@@ -103,7 +112,10 @@
 
 (defn prep-incoming
   [params]
-  (let [dbg (partial prn "---")]
+  (let [dbg (partial prn "---")
+        fix-applied-coupons (make-coupon-fixer (-> params
+                                                   :site-id
+                                                   java.util.UUID/fromString))]
     (-> params
         del-unused
         underscore-to-dash-keys
@@ -119,7 +131,7 @@
         fix-mod)))
 
 (defn parse-event
-  "Convert an incoming event to a regular data structure."
+  "Convert an incoming event to a normalized data structure."
   [r]
   (let [matcher (sc/first-matcher [custom-matcher sc/string-coercion-matcher])
         coercer (sc/coercer InboundEvent matcher)]

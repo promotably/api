@@ -15,6 +15,7 @@
                                       shape-update-promo
                                       shape-validate
                                       shape-calculate]]
+            [api.models.offer :as offer :refer [fallback-to-exploding]]
             [api.lib.auth :refer [parse-auth-string auth-valid? transform-auth]]
             [clojure.data.json :refer [read-str write-str]]
             [clojure.tools.logging :as log]
@@ -25,6 +26,7 @@
                    (s/optional-key :promotably-auth) s/Str
                    (s/optional-key :shopper-id) s/Str
                    (s/optional-key :site-shopper-id) s/Uuid
+                   (s/optional-key :site-session-id) s/Uuid
                    :code s/Str})
 
 (defn lookup-promos
@@ -89,16 +91,6 @@
         promo (promo/find-by-site-and-uuid (:id site) promo-uuid)]
     (shape-promo {:promo promo})))
 
-(defn fallback-to-exploding
-  [cloudwatch-recorder site-id code]
-  (let [{:keys [offer-id] :as offer-event} (event/find-outstanding-offer cloudwatch-recorder site-id code)]
-    (when offer-event
-      (let [offer-promo (promo/find-by-uuid (-> offer-event
-                                                :data
-                                                :promo-id
-                                                java.util.UUID/fromString))]
-        (if offer-promo (assoc offer-promo :code code))))))
-
 ;; TODO: Check auth
 (defn query-promo
   [{:keys [params cloudwatch-recorder] :as request}]
@@ -107,7 +99,7 @@
         {:keys [site-id code] :as coerced-params} (coercer params)
         code (clojure.string/upper-case code)
         the-promo (promo/find-by-site-uuid-and-code site-id code)
-        offer-promo (fallback-to-exploding cloudwatch-recorder site-id code)]
+        [offer-id offer-promo] (fallback-to-exploding cloudwatch-recorder site-id code)]
     (shape-promo {:promo (or the-promo offer-promo)})))
 
 (def coerce-site-id
@@ -127,7 +119,7 @@
         transform-auth)))
 
 (defn validate-promo
-  [{:keys [params body-params headers] :as request}]
+  [{:keys [params body-params headers cloudwatch-recorder] :as request}]
   (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
         coercer (c/coercer PromoValidationRequest matcher)
         coerced-params (-> body-params
@@ -140,8 +132,8 @@
         the-site (site/find-by-site-uuid site-id)
         code (-> coerced-params :code clojure.string/upper-case)
         found-promo (promo/find-by-site-uuid-and-code site-id code)
-        the-promo (or found-promo
-                      (fallback-to-exploding site-id code))]
+        [offer-id offer-promo] (fallback-to-exploding cloudwatch-recorder site-id code)
+        the-promo (or found-promo offer-promo)]
 
     ;; For debugging
     ;; (clojure.pprint/pprint the-promo)
@@ -181,8 +173,9 @@
                            coercer)
         site-id (-> coerced-params :site :site-id)
         code (-> coerced-params :code clojure.string/upper-case)
+        [offer-id offer-promo] (fallback-to-exploding site-id code)
         the-promo (or (promo/find-by-site-uuid-and-code site-id code)
-                      (fallback-to-exploding site-id code))
+                      offer-promo)
         [context errors] (promo/valid? the-promo coerced-params)]
     (cond
      (not the-promo)
