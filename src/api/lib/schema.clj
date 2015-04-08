@@ -328,6 +328,16 @@
                              (dissoc (s/required-key :site)
                                      (s/required-key :auth))))
 
+;; RCOs ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def InboundRCO
+  {(s/optional-key :auth) Auth
+   (s/optional-key :xyzzy) s/Str
+   (s/required-key :site-id) s/Uuid
+   (s/required-key :control-group) s/Bool
+   (s/optional-key :site-session-id) s/Uuid ;; should be req'd?  need to alter tests...
+   (s/required-key :site-shopper-id) s/Uuid})
+
 ;; Linked Products ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def Linked

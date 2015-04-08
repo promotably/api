@@ -132,7 +132,7 @@
         fix-mod)))
 
 (defn parse-event
-  "Convert an incoming event to a regular data structure."
+  "Convert an incoming event to a normalized data structure."
   [r]
   (let [matcher (sc/first-matcher [custom-matcher sc/string-coercion-matcher])
         coercer (sc/coercer InboundEvent matcher)]
