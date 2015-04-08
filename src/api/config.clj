@@ -5,6 +5,9 @@
 ;; File-based config data
 (def ^:dynamic configfile-data {})
 
+;; How long does a session last after activity ceases?  60 minutes.
+(def default-session-inactivity (* 60 60))
+
 ;; Static name of the ns session cookie
 (def session-cookie-name "promotably-session")
 
@@ -123,7 +126,7 @@
                 :dashboard (get-dashboard-config)
                 :logging {:base (base-log-config)
                           :loggly-url (loggly-url)}
-                :session-length-in-seconds (* 60 60 2)
+                :session-length-in-seconds 10
                 :bucket-assignment-length-in-seconds (* 60 60 24 120)
                 :auth-token-config (auth-token-config)
                 :env :dev}
@@ -143,7 +146,7 @@
                 :dashboard (get-dashboard-config)
                 :logging {:base (base-log-config)
                           :loggly-url (loggly-url)}
-                :session-length-in-seconds (* 60 60 2)
+                :session-length-in-seconds default-session-inactivity
                 :bucket-assignment-length-in-seconds (* 60 60 24 120)
                 :auth-token-config (auth-token-config)
                 :env :test}
@@ -154,7 +157,7 @@
                 :dashboard (get-dashboard-config)
                 :logging {:base (base-log-config)
                           :loggly-url (loggly-url)}
-                :session-length-in-seconds (* 60 60 2)
+                :session-length-in-seconds default-session-inactivity
                 :bucket-assignment-length-in-seconds (* 60 60 24 120)
                 :auth-token-config (auth-token-config)
                 :env :staging}
@@ -167,7 +170,7 @@
                  :dashboard (get-dashboard-config)
                  :logging {:base (base-log-config)
                            :loggly-url (loggly-url)}
-                 :session-length-in-seconds (* 60 60 2)
+                 :session-length-in-seconds default-session-inactivity
                  :bucket-assignment-length-in-seconds (* 60 60 24 120)
                  :auth-token-config (auth-token-config)
                  :env :integration}
@@ -178,7 +181,7 @@
                 :dashboard (get-dashboard-config)
                 :logging {:base (base-log-config)
                           :loggly-url (loggly-url)}
-                :session-length-in-seconds (* 60 60 2)
+                :session-length-in-seconds default-session-inactivity
                 :bucket-assignment-length-in-seconds (* 60 60 24 120)
                 :auth-token-config (auth-token-config)
                 :env :production}})
