@@ -108,7 +108,7 @@
                   ;; let scribe catch up
                   (loop [tries 1]
                     (Thread/sleep 3000)
-                    (let [e (event/find-outstanding-offer site-id code)]
+                    (let [e (event/find-outstanding-offer (get-in api.system/current-system [:cloudwatch :recorder]) site-id code)]
                       (if e
                         (-> e :data :code) => code
                         (if (< tries max-retries)

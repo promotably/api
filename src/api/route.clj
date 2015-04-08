@@ -207,7 +207,7 @@
 
 (defn serve-cached-login
   [{:keys [cloudwatch-recorder] :as req}]
-  (cloudwatch-recorder "serve-login")
+  (cloudwatch-recorder "serve-login" 1 :Count)
   (let [c (-> current-system :config)
         api-secret (get-api-secret)]
     (if-not (auth/authorized? req api-secret)
