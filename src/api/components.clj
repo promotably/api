@@ -161,7 +161,10 @@
                 (car/config-set "notify-keyspace-events" "KEx"))
       (catch Throwable t))
     (let [listener (car/with-new-pubsub-listener (-> redis :conn :spec)
-                     {"__keyevent@0__:expired" (fn [msg] (session-expired (:recorder cloudwatch) msg))}
+                     {"__keyevent@0__:expired" (fn [msg] (session-expired
+                                                          kinesis
+                                                          (:recorder cloudwatch)
+                                                          msg))}
                      (car/subscribe  "__keyevent@0__:expired"))]
       (assoc this :listener listener)))
 
