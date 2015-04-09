@@ -19,8 +19,9 @@
             [api.kinesis :as kinesis]
             [api.redis :as redis]
             [apollo.core :as apollo]
-            [api.system :refer [current-system]]
-            [api.models.event :as event])
+            ;; [api.system :refer [current-system]]
+            ;; [api.models.event :as event]
+            )
   (:import (java.util.concurrent Executors TimeUnit
                                  ScheduledExecutorService)
            [java.util UUID]
@@ -137,6 +138,7 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(comment
 (defn session-expired
   [kinesis-spec cloudwatch-recorder msg]
   (let [[type channel session-id] msg
@@ -149,12 +151,13 @@
                                  (assoc :event-name "session-end")
                                  (assoc :event-format-version 1)
                                  (dissoc :request-headers)))
-      (cloudwatch-recorder "session-end" 1 :Count))))
+      (cloudwatch-recorder "session-end" 1 :Count)))))
 
 (defrecord SessionCacheComponent [config logging redis kinesis cloudwatch]
   component/Lifecycle
   (start [this]
     (log/logf :info "Cache is starting.")
+(comment
     (car/wcar (-> redis :conn)
               (car/config-set "notify-keyspace-events" "KEx"))
     (let [listener (car/with-new-pubsub-listener (-> redis :conn)
@@ -164,11 +167,14 @@
                                                  msg))}
                      (car/subscribe  "__keyevent@0__:expired"))]
       (assoc this :listener listener)))
+    this)
   (stop [this]
     (log/logf :info "Cache is shutting down.")
+(comment
     (when-let [l (:listener this)]
       (redis/wcar* (car/close-listener l)))
     (dissoc this :listener))
+    this)
 
   ss/SessionStore
   (read-session [this session-id]
