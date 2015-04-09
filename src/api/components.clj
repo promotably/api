@@ -138,7 +138,6 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(comment
 (defn session-expired
   [kinesis-spec cloudwatch-recorder msg]
   (let [[type channel session-id] msg
@@ -151,30 +150,27 @@
                                  (assoc :event-name "session-end")
                                  (assoc :event-format-version 1)
                                  (dissoc :request-headers)))
-      (cloudwatch-recorder "session-end" 1 :Count)))))
+      (cloudwatch-recorder "session-end" 1 :Count))))
 
 (defrecord SessionCacheComponent [config logging redis kinesis cloudwatch]
   component/Lifecycle
+
   (start [this]
     (log/logf :info "Cache is starting.")
-(comment
-    (car/wcar (-> redis :conn)
-              (car/config-set "notify-keyspace-events" "KEx"))
-    (let [listener (car/with-new-pubsub-listener (-> redis :conn)
-                     {"__keyevent@0__:expired"
-                      (fn [msg] (session-expired kinesis
-                                                 (:recorder cloudwatch)
-                                                 msg))}
+    (try
+      (car/wcar (:conn redis)
+                (car/config-set "notify-keyspace-events" "KEx"))
+      (catch Throwable t))
+    (let [listener (car/with-new-pubsub-listener (-> redis :conn :spec)
+                     {"__keyevent@0__:expired" (fn [msg] (session-expired (:recorder cloudwatch) msg))}
                      (car/subscribe  "__keyevent@0__:expired"))]
       (assoc this :listener listener)))
-    this)
+
   (stop [this]
     (log/logf :info "Cache is shutting down.")
-(comment
     (when-let [l (:listener this)]
-      (redis/wcar* (car/close-listener l)))
-    (dissoc this :listener))
-    this)
+      (car/wcar (:conn redis) (car/close-listener l)))
+        (dissoc this :listener))
 
   ss/SessionStore
   (read-session [this session-id]
