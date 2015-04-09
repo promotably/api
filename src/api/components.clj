@@ -19,9 +19,8 @@
             [api.kinesis :as kinesis]
             [api.redis :as redis]
             [apollo.core :as apollo]
-            ;; [api.system :refer [current-system]]
-            ;; [api.models.event :as event]
-            )
+            [api.system :refer [current-system]]
+            [api.models.event :as event])
   (:import (java.util.concurrent Executors TimeUnit
                                  ScheduledExecutorService)
            [java.util UUID]
