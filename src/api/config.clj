@@ -126,7 +126,7 @@
                 :dashboard (get-dashboard-config)
                 :logging {:base (base-log-config)
                           :loggly-url (loggly-url)}
-                :session-length-in-seconds 10
+                :session-length-in-seconds (* 60 10) ;; 10 minutes
                 :bucket-assignment-length-in-seconds (* 60 60 24 120)
                 :auth-token-config (auth-token-config)
                 :env :dev}
