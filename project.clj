@@ -6,7 +6,7 @@
                                    :exclusions [joda-time
                                                 org.clojure/tools.macro]]]
                    :plugins [[drift "1.5.2"]
-                             [lein-midje "3.0.0"]]}}
+                             [lein-midje "3.1.3"]]}}
   :main api.core
   :aliases {"test-uuid" ["run" "-m" "tasks.test-uuid"]}
   :aot [api.connection-customizer]
