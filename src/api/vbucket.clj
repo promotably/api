@@ -20,6 +20,21 @@
     (> (pick-vbucket uuid) 50) :test
     :else :control))
 
+(defn ssid-from-request
+  [request]
+  (or
+    (-> request :form-params :site-shopper-id)
+    (-> request :query-params :site-shopper-id)
+    (-> request :multipart-params :site-shopper-id)
+    (-> request :body-params :site-shopper-id)
+    (-> request :params :site-shopper-id)
+    (str (java.util.UUID/randomUUID))))
+
+(defn bucket-from-request
+  "Determine whether the user is :test or :control using the request structure"
+  [request]
+  (pick-bucket (ssid-from-request request) (:xyzzy (:params request))))
+
 (defn wrap-record-vbucket-assignment
   "Record new bucket assignments."
   [handler & matching-routes]
@@ -44,23 +59,13 @@
                      (-> request :multipart-params :site-id)
                      (-> request :body-params :site-id)
                      (-> request :params :site-id))
-            session-id (:session/key request)
-            sid (:shopper-id request)
-            ssid (or
-                  (-> request :form-params :site-shopper-id)
-                  (-> request :query-params :site-shopper-id)
-                  (-> request :multipart-params :site-shopper-id)
-                  (-> request :body-params :site-shopper-id)
-                  (-> request :params :site-shopper-id))
-            bucket-id (or ssid sid session-id (str (java.util.UUID/randomUUID)))
-            test-override (:xyzzy (:params request)) ;; xyzzy param forces :test bucket
-            bucket (pick-bucket bucket-id test-override)
+            bucket (bucket-from-request request)
             assignment-data {:event-format-version "1"
                              :event-name "bucket-assigned"
-                             :site-shopper-id ssid
+                             :site-shopper-id (ssid-from-request request)
                              :site-id site-id
                              :bucket bucket
-                             :shopper-id sid}]
+                             :shopper-id (ssid-from-request request)}]
 
         (let [response (handler (assoc-in request [:session :test-bucket] bucket))]
           (-> response
