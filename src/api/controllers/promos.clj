@@ -165,7 +165,7 @@
                              :body (shape-validate resp)})))))
 
 (defn calculate-promo
-  [{:keys [params body-params] :as request}]
+  [{:keys [params body-params cloudwatch-recorder] :as request}]
   (let [base-response {:context {:cloudwatch-endpoint "promos-calculate"}}
         matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
         coercer (c/coercer PromoValidationRequest matcher)
@@ -175,7 +175,9 @@
                            coercer)
         site-id (-> coerced-params :site :site-id)
         code (-> coerced-params :code clojure.string/upper-case)
-        [offer-id offer-promo] (fallback-to-exploding site-id code)
+        [offer-id offer-promo] (fallback-to-exploding cloudwatch-recorder
+                                                      site-id
+                                                      code)
         the-promo (or (promo/find-by-site-uuid-and-code site-id code)
                       offer-promo)
         [context errors] (promo/valid? the-promo coerced-params)]

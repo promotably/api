@@ -330,14 +330,12 @@
           set-cookies (get (:headers response) "Set-Cookie")
           set-cookies (reduce
                        #(let [parts (clojure.string/split %2 #";")
-                              [cookie-name cookie-val] (clojure.string/split (first parts) #"=")]
+                              [cookie-name cookie-val] (clojure.string/split
+                                                        (first parts) #"=")]
                           (assoc %1 cookie-name cookie-val))
                        {}
                        set-cookies)
-          cookies-req (ring.middleware.cookies/cookies-request request)
-          req-key  (get-in cookies-req [:cookies cookie-name :value])
-          session-id (or req-key (get set-cookies cookie-name))
-          response* (assoc response :session/key session-id)]
+          session-id (:session/key response)]
       (if-let [k-data (:new-session-data response)]
         (let [k-data* (-> k-data
                           (assoc :control-group (= :control (:test-bucket response)))
@@ -349,8 +347,8 @@
             (do
               (log/logf :error "Error recording session start: missing session id.")
               (cloudwatch-recorder "session-start-missing-session-id" 1 :Count)))
-          response*)
-        response*))))
+          response)
+        response))))
 
 (defn wrap-ensure-session
   "Ensure that all relevant data is in the response session map and
@@ -436,7 +434,14 @@
       wrap-vbucket
       wrap-detect-user-agent
       (wrap-ensure-session {:include-routes
-                            [(GET "/api/v1/track" [] "ok")
+                            [(GET ["/api/v1/promos/query/:code",
+                                   :code promo-code-regex] [code] "ok")
+                             (POST ["/api/v1/promos/calculation/:code",
+                                    :code promo-code-regex] [code] "ok")
+                             (POST ["/api/v1/promos/validation/:code",
+                                    :code promo-code-regex] [code] "ok")
+                             (GET "/api/v1/track" [] "ok")
+                             (GET "/api/v1/track" [] "ok")
                              (GET "/api/v1/rco" [] "ok")]})
       (wrap-permacookie {:name "promotably" :request-key :shopper-id})
       (wrap-restful-format :formats [:json-kw :edn])

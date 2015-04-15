@@ -266,16 +266,21 @@
           assignment-event (:offer-assignment-event response)
           ev-base {:session-id sid
                    :control-group (= (:test-bucket response) :control)}]
-      (if sid
-        (do
-          (when qualified-event
-            (cloudwatch-recorder "rco-qualification" 1 :Count)
-            (kinesis/record-event! k :shopper-qualified-offers (merge qualified-event ev-base)))
-          (when assignment-event
-            (cloudwatch-recorder "rco-assignment" 1 :Count)
-            (kinesis/record-event! k :offer-made (merge assignment-event ev-base))))
-        (do
-          (log/logf :error "Error recording rco: missing session id.")
-          (cloudwatch-recorder "rco-session-id-error" 1 :Count)))
+      (if (or qualified-event assignment-event)
+        (if sid
+          (do
+            (when qualified-event
+              (cloudwatch-recorder "rco-qualification" 1 :Count)
+              (kinesis/record-event! k :shopper-qualified-offers
+                                     (merge qualified-event ev-base)))
+            (when assignment-event
+              (cloudwatch-recorder "rco-assignment" 1 :Count)
+              (kinesis/record-event! k :offer-made
+                                     (merge assignment-event ev-base))))
+          (do
+            (log/logf :error "Error recording rco %s %s: missing session id."
+                      (if qualified-event "Q" "-")
+                      (if assignment-event "A" "-"))
+            (cloudwatch-recorder "rco-session-id-error" 1 :Count))))
       response)))
 

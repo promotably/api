@@ -189,11 +189,14 @@
          ;; (clojure.pprint/pprint out)
          (when (= schema.utils.ErrorContainer (type out))
            (log/logf :error "Tracking event in invalid format: %s" (pr-str parsed))
-           (cloudwatch-recorder "event-format-invalid" 1 :Count :dimensions {:endpoint "events"}))
+           (cloudwatch-recorder "event-format-invalid" 1
+                                :Count :dimensions {:endpoint "events"}))
          (kinesis/record-event! kinesis-comp (:event-name out) out)
-         (cloudwatch-recorder "event-record-success" 1 :Count :dimensions {:endpoint "events"})
+         (cloudwatch-recorder "event-record-success" 1
+                              :Count :dimensions {:endpoint "events"})
          (let [session (cond-> (:session request)
-                               (#{:productadd :cartview :cartupdate :checkout} (:event-name out))
+                               (#{:productadd :cartview :cartupdate :checkout}
+                                (:event-name out))
                                  (assoc :last-cart-event out)
                                true
                                  (assoc :last-event-at (t-coerce/to-string (t/now))))

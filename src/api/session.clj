@@ -21,7 +21,7 @@
                         (if-let [root (options :root)]
                           {:path root}))})
 
-(defn- get-request-key
+(defn get-request-key
   [request cookie-name]
   (or (-> request :params :site-session-id)
       (get-in request [:cookies cookie-name :value])))
@@ -56,7 +56,9 @@
                 (merge cookie-attrs
                        session-attrs
                        {:value (or new-session-key session-key)})}
-        response (dissoc response :session :session-cookie-attrs)]
+        response (-> response
+                     (dissoc :session :session-cookie-attrs)
+                     (assoc :session/key (or new-session-key session-key)))]
     (if (or (and new-session-key (not= session-key new-session-key))
             (and session-attrs (or new-session-key session-key)))
       (assoc response :cookies (merge (response :cookies) cookie))
