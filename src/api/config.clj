@@ -68,8 +68,8 @@
 (defn- get-cloudwatch-config
   []
   {:aws-credential-profile (get-config-value "CRED_PROFILE" nil)
-   :delay-minutes 1
-   :interval-minutes 1})
+   :delay-seconds 30
+   :interval-seconds 30})
 
 (defn- get-database-config
   "Checks environment variables for database config settings. These
@@ -121,8 +121,8 @@
                                    (:event-stream-name c)
                                    (assoc :event-stream-name (:event-stream-name c))))
                 :cloudwatch {:aws-credential-profile "promotably"
-                             :delay-minutes 1
-                             :interval-minutes 1}
+                             :delay-seconds 30
+                             :interval-seconds 30}
                 :dashboard (get-dashboard-config)
                 :logging {:base (base-log-config)
                           :loggly-url (loggly-url)}
@@ -141,8 +141,8 @@
                            :promo-stream-name "dev-PromoStream"
                            :event-stream-name "dev-PromotablyAPIEvents"}
                 :cloudwatch {:aws-credential-profile "promotably"
-                             :delay-minutes 1
-                             :interval-minutes 1}
+                             :delay-seconds 30
+                             :interval-seconds 30}
                 :dashboard (get-dashboard-config)
                 :logging {:base (base-log-config)
                           :loggly-url (loggly-url)}

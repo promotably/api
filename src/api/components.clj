@@ -210,12 +210,12 @@
 (defrecord Cloudwatch [config client scheduler recorder]
   component/Lifecycle
   (start [this]
-    (let [{:keys [aws-credential-profile delay-minutes interval-minutes]} (:cloudwatch config)
+    (let [{:keys [aws-credential-profile delay-seconds interval-seconds]} (:cloudwatch config)
           c (apollo/create-async-cw-client :provider (ProfileCredentialsProvider. aws-credential-profile))
           s (apollo/create-vacuum-scheduler)
           recorder-namespace (str "api-" (name (:env config)))]
       (log/infof "Cloudwatch is starting with credential profile '%s'." aws-credential-profile)
-      (apollo/start-vacuum-scheduler! delay-minutes interval-minutes s c)
+      (apollo/start-vacuum-scheduler! delay-seconds interval-seconds s c)
       (log/infof "Cloudwatch Recording Namespace: %s" recorder-namespace)
       (-> this
           (assoc :client c)
