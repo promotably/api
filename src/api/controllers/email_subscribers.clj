@@ -4,5 +4,6 @@
 
 (defn create-email-subscriber!
   [{:keys [params] :as request}]
-  (render-create
-   (es/create-email-subscriber! (:email params))))
+  (merge {:context {:cloudwatch-endpoint "email-subscribers-create"}}
+         (render-create
+          (es/create-email-subscriber! (:email params)))))

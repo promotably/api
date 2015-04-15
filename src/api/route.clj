@@ -255,9 +255,9 @@
     (handler (assoc req :cloudwatch-recorder (get-in current-system [:cloudwatch :recorder])))))
 
 (defn wrap-request-logging [handler]
-  (fn [{:keys [request-method uri cloudwatch-recorder] :as req}]
+  (fn [{:keys [request-method uri cloudwatch-recorder params] :as req}]
     (let [start  (System/currentTimeMillis)
-          resp   (handler req)
+          {:keys [context status] :as resp} (handler req)
           finish (System/currentTimeMillis)
           total  (- finish start)]
       (when #((get-in current-system [:config :env]) #{:dev :test :integration})
@@ -266,8 +266,13 @@
                           (:status resp)
                           uri
                           total)))
-      (cloudwatch-recorder "response-time" total :Milliseconds :dimensions {:URI uri})
-      resp)))
+      (when-let [ep (:cloudwatch-endpoint context)]
+        (cloudwatch-recorder "response-time" total :Milliseconds :dimensions {:endpoint ep})
+        (cloudwatch-recorder (str "status-" status) 1 :Count :dimensions {:endpoint ep})
+        (when-let [site-id (:site-id params)]
+          (cloudwatch-recorder "response-time" total :Milliseconds :dimensions {:endpoint ep :site-id site-id})
+          (cloudwatch-recorder (str "status-"status) 1 :Count :dimensions {:endpoint ep :site-id site-id})))
+      (dissoc resp :context))))
 
 
 (defn wrap-argument-exception [handler]
@@ -452,6 +457,7 @@
                                             [code] "ok"))
       wrap-record-rco-events
       wrap-cookies
+      wrap-request-logging
       wrap-keyword-params
       wrap-multipart-params
       wrap-params
@@ -460,7 +466,6 @@
       wrap-save-the-raw-body
       wrap-argument-exception
       wrap-stacktrace
-      wrap-request-logging
       wrap-gzip
       wrap-content-type
       wrap-cloudwatch))

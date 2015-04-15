@@ -144,7 +144,8 @@
   (cloudwatch-recorder "event-record" 1 :Count :dimensions {:endpoint "events"})
   ;; for debug
   ;; (prn "PARAMS" params)
-  (let [event-params (assoc params :control-group (= (:test-bucket (:session request)) :control))
+  (let [base-response {:context {:cloudwatch-endpoint "events-track"}}
+        event-params (assoc params :control-group (= (:test-bucket (:session request)) :control))
         parsed (parse-event event-params)]
     ;; for debug
     ;; (prn "PARSED" parsed)
@@ -153,12 +154,12 @@
      (do
        (log/logf :error "Event parse error: %s, params: %s" (pr-str parsed) params)
        (cloudwatch-recorder "event-record-parse-error" 1 :Count :dimensions {:endpoint "events"})
-       {:status 400 :session (:session request)})
+       (merge base-response {:status 400 :session (:session request)}))
 
      (nil? (:site parsed))
      (do
        (cloudwatch-recorder "event-record-unknown-site" 1 :Count :dimensions {:endpoint "events"})
-       {:status 404 :session (:session request)})
+       (merge base-response {:status 404 :session (:session request)}))
 
      (and
       (not (= (:event-name params) "_trackOfferShown"))
@@ -168,7 +169,7 @@
                         request)))
      (do
        (cloudwatch-recorder "event-record-auth-error" 1 :Count :dimensions {:endpoint "events"})
-       {:status 403 :session (:session request)})
+       (merge base-response {:status 403 :session (:session request)}))
 
      :else
      (do
@@ -196,8 +197,8 @@
                                  (assoc :last-cart-event out)
                                true
                                  (assoc :last-event-at (t-coerce/to-string (t/now))))
-               response {:headers {"Content-Type" "text/javascript"}
-                         :body ""
-                         :session session
-                         :status 200}]
+               response (merge base-response {:headers {"Content-Type" "text/javascript"}
+                                              :body ""
+                                              :session session
+                                              :status 200})]
            response))))))

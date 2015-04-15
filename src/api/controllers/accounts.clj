@@ -35,37 +35,41 @@
 (defn get-account
   "Returns an account."
   [{:keys [params user-id] :as request}]
-  (let [{:keys [account-id user-id]} (shape-to-spec (assoc params :user-id user-id)
+  (let [base-response {:context {:cloudwatch-endpoint "accounts-get"}}
+        {:keys [account-id user-id]} (shape-to-spec (assoc params :user-id user-id)
                                                     inbound-account-spec)]
     (if (user-access-to-account? user-id account-id)
       (if-let [result (account/find-by-account-id account-id)]
-        (build-response 200 :account result)
-        (build-response 404 :error "Account does not exist."))
-      (build-response 403 :error "User does not have access to this account."))))
+        (merge base-response (build-response 200 :account result))
+        (merge base-response (build-response 404 :error "Account does not exist.")))
+      (merge base-response (build-response 403 :error "User does not have access to this account.")))))
 
 (defn create-new-account!
   "Creates a new account in the database."
   [{:keys [body-params user-id] :as request}]
-  (let [account (shape-to-spec (assoc body-params :user-id user-id)
+  (let [base-response {:context {:cloudwatch-endpoint "accounts-create"}}
+        account (shape-to-spec (assoc body-params :user-id user-id)
                                inbound-account-spec)
         results (account/new-account! account)]
     (if results
-      (build-response 201 :account results)
-      (build-response 400 :error "Unable to create account, invalid or missing parameters."))))
+      (merge base-response (build-response 201 :account results))
+      (merge base-response (build-response 400 :error "Unable to create account, invalid or missing parameters.")))))
 
 (defn update-account!
   [{:keys [body-params user-id] :as request}]
-  (let [account (shape-to-spec (assoc body-params :user-id user-id)
+  (let [base-response {:context {:cloudwatch-endpoint "accounts-update"}}
+        account (shape-to-spec (assoc body-params :user-id user-id)
                                inbound-account-spec)]
     (if (user-access-to-account? (:user-id account) (:account-id account))
       (let [result (account/update! account)]
         (if result
-          (build-response 200 :account result)
-          (build-response 400 :error "Unable to update account, invalid or missing parameters."))))))
+          (merge base-response (build-response 200 :account result))
+          (merge base-response (build-response 400 :error "Unable to update account, invalid or missing parameters.")))))))
 
 (defn create-site-for-account!
   [{:keys [body-params user-id] :as request}]
-  (let [site (shape-to-spec (assoc body-params :user-id user-id)
+  (let [base-response {:context {:cloudwatch-endpoint "sites-create"}}
+        site (shape-to-spec (assoc body-params :user-id user-id)
                             inbound-site-spec)
         id (:id (account/find-by-account-id (:account-id site)))]
     (if (user-access-to-account? (:user-id site) (:account-id site))
@@ -76,20 +80,21 @@
         (if-not (site/find-by-site-code new-site-code)
           (if-let [result (site/create-site-for-account! id (assoc site :site-code new-site-code))]
             (let [account-with-sites (account/find-by-account-id (:account-id site))]
-              (build-response 201 :account account-with-sites))
-            (build-response 400 :error "Unable to create site, invalid or missing parameters."))
-          (build-response 409 :error "Site with this URL already exists.")))
-      (build-response 403 :error "User does not have access to this account."))))
+              (merge base-response (build-response 201 :account account-with-sites)))
+            (merge base-response (build-response 400 :error "Unable to create site, invalid or missing parameters.")))
+          (merge base-response (build-response 409 :error "Site with this URL already exists."))))
+      (merge base-response (build-response 403 :error "User does not have access to this account.")))))
 
 (defn update-site-for-account!
   [{:keys [body-params user-id] :as request}]
-  (let [site (shape-to-spec (assoc body-params :user-id user-id)
+  (let [base-response {:context {:cloudwatch-endpoint "sites-update"}}
+        site (shape-to-spec (assoc body-params :user-id user-id)
                             inbound-site-spec)
         id (:account-id (site/find-by-site-uuid (:site-id site)))
         account-id (:account-id (account/find-by-id id))]
     (if (user-access-to-account? (:user-id site) account-id)
       (if-let [result (site/update-site-for-account! id site)]
         (let [account-with-sites (account/find-by-account-id account-id)]
-          (build-response 200 :account account-with-sites))
-        (build-response 400 :error "Unable to update site, invalid or missing parameters."))
-      (build-response 403 :error "User does not have access to this account."))))
+          (merge base-response (build-response 200 :account account-with-sites)))
+        (merge base-response (build-response 400 :error "Unable to update site, invalid or missing parameters.")))
+      (merge base-response (build-response 403 :error "User does not have access to this account.")))))

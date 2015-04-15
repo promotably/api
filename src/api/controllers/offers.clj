@@ -37,30 +37,32 @@
         found (offer/find-by-site-uuid (:site-id coerced-params))]
     (when (= schema.utils.ErrorContainer (type coerced-params))
       (throw+ {:type :argument-error :body-params params :error coerced-params}))
-    (shape-lookup found)))
+    (merge (shape-lookup found) {:context {:cloudwatch-endpoint "offers-lookup"}})))
 
 (defn show-offer
   [{:keys [params body] :as request}]
   (let [offer-uuid (java.util.UUID/fromString (:offer-id params))
         site-uuid (java.util.UUID/fromString (:site-id params))
         offers (offer/by-site-uuid-and-offer-uuid site-uuid offer-uuid)]
-    (shape-offer (offer/db-to-offer (first offers)))))
+    (merge (shape-offer (offer/db-to-offer (first offers))) {:context {:cloudwatch-endpoint "offers-show"}})))
 
 ;; TODO: enforce ownership
 (defn delete-offer!
   [{:keys [params body] :as request}]
-  (let [{:keys [offer-id]} params
+  (let [base-response {:context {:cloudwatch-endpoint "offers-delete"}}
+        {:keys [offer-id]} params
         offer-uuid (java.util.UUID/fromString offer-id)
         found (offer/find-by-uuid offer-uuid)]
     (if found
       (do
         (offer/delete-by-uuid offer-uuid)
-        {:status 200})
-      {:status 404})))
+        (merge {:status 200} base-response))
+      (merge {:status 404} base-response))))
 
 (defn create-new-offer!
   [{:keys [params body-params] :as request}]
-  (let [site-uuid (java.util.UUID/fromString (:site-id body-params))
+  (let [base-response {:context {:cloudwatch-endpoint "offers-create"}}
+        site-uuid (java.util.UUID/fromString (:site-id body-params))
         ;; TODO: Handle the site not being found
         id (site/get-id-by-site-uuid site-uuid)
         ;; required since JSON input results in strings and we need keywords
@@ -84,7 +86,7 @@
     (when (= schema.utils.ErrorContainer (type coerced-params))
       (throw+ {:type :argument-error :body-params params :error coerced-params}))
     (let [result (offer/new-offer! (assoc coerced-params :site-id id))]
-      (shape-new-offer site-uuid result))))
+      (merge base-response (shape-new-offer site-uuid result)))))
 
 (defn update-offer!
   [{:keys [params body-params] :as request}]
@@ -112,12 +114,14 @@
         id (site/get-id-by-site-uuid site-uuid)]
     (when (= schema.utils.ErrorContainer (type coerced-params))
       (throw+ {:type :argument-error :body-params params :error coerced-params}))
-    (shape-update-offer site-uuid
-                        (offer/update-offer! offer-id (assoc coerced-params :site-id id)))))
+    (merge (shape-update-offer site-uuid
+                               (offer/update-offer! offer-id (assoc coerced-params :site-id id)))
+           {:context {:cloudwatch-endpoint "offers-update"}})))
 
 (defn query-offer
   [{:keys [params] :as request}]
-  (let [{:keys [site-id offer-code] :as coerced-params}
+  (let [base-response {:context {:cloudwatch-endpoint "offers-query"}}
+        {:keys [site-id offer-code] :as coerced-params}
         ((c/coercer query-schema
                     (c/first-matcher [custom-matcher
                                       c/string-coercion-matcher]))
@@ -125,9 +129,9 @@
         the-offer (offer/find-by-site-uuid-and-code site-id
                                                     offer-code)]
     (if-not the-offer
-      {:status 404 :body "Can't find that offer"}
+      (merge {:status 404 :body "Can't find that offer"} base-response)
       (do
-        {:body (shape-offer the-offer)}))))
+        (merge {:body (shape-offer the-offer)} base-response)))))
 
 (defn uuid-from-request-or-new
   [key params request]
@@ -172,78 +176,83 @@
 
 (defn get-available-offers
   [kinesis-comp {:keys [params session cookies cloudwatch-recorder] :as request}]
-  (if-let [active (:active-offer session)]
-    {:body nil}
-    (let [parsed (parse-rco-request request)]
-      (cond
-       (= schema.utils.ErrorContainer (type parsed))
-       (do
-         (log/logf :error "RCO parse error: %s, params: %s" (pr-str parsed) params)
-         (cloudwatch-recorder "rco-parse-error" 1 :Count)
-         {:status 400 :session (:session request)})
+  (let [base-response {:context {:cloudwatch-endpoint "rco"}}]
+    (if-let [active (:active-offer session)]
+      (merge base-response {:body nil})
+      (let [parsed (parse-rco-request request)]
+        (cond
+          (= schema.utils.ErrorContainer (type parsed))
+          (do
+            (log/logf :error "RCO parse error: %s, params: %s" (pr-str parsed) params)
+            (cloudwatch-recorder "rco-parse-error" 1 :Count)
+            (merge base-response {:status 400 :session (:session request)}))
 
-       ;; TODO: check auth here
-       ;; ...
+          ;; TODO: check auth here
+          ;; ...
 
-       :else
-       (let [site-id (uuid-from-request-or-new :site-id parsed request)
-             shopper-id (uuid-from-request-or-new :shopper-id parsed request)
-             site-shopper-id (uuid-from-request-or-new :site-shopper-id parsed request)
-             valid-offers (find-valid-offers shopper-id
-                                             site-shopper-id
-                                             site-id
-                                             session)
-             the-offer (select-offer session valid-offers)
-             {:keys [promo-id expiry-in-minutes]} (:reward the-offer)
-             promo (if the-offer (promo/find-by-uuid promo-id))
-             is-dynamic? (= :dynamic-promo (-> the-offer :reward :type))
-             [exploding-code expiry] (if is-dynamic?
-                                       (offer/generate-exploding-code the-offer))
-             qualified-event {:event-name :shopper-qualified-offers
-                              :site-id site-id
-                              :shopper-id shopper-id
-                              :site-shopper-id site-shopper-id}
-             response-data (if the-offer (create-response promo
-                                                          the-offer
-                                                          is-dynamic?
-                                                          exploding-code
-                                                          expiry))]
-         (if (empty? valid-offers)
-           (cond-> {:body nil}
-                   ;; remember what was qualified
-                   true (assoc-in [:session :qualified-offer-ids]
-                                  (set (:offer-ids qualified-event)))
+          :else
+          (let [site-id (uuid-from-request-or-new :site-id parsed request)
+                shopper-id (uuid-from-request-or-new :shopper-id parsed request)
+                site-shopper-id (uuid-from-request-or-new :site-shopper-id parsed request)
+                valid-offers (find-valid-offers shopper-id
+                                                site-shopper-id
+                                                site-id
+                                                session)
+                the-offer (select-offer session valid-offers)
+                {:keys [promo-id expiry-in-minutes]} (:reward the-offer)
+                promo (if the-offer (promo/find-by-uuid promo-id))
+                is-dynamic? (= :dynamic-promo (-> the-offer :reward :type))
+                [exploding-code expiry] (if is-dynamic?
+                                          (offer/generate-exploding-code the-offer))
+                qualified-event {:event-name :shopper-qualified-offers
+                                 :site-id site-id
+                                 :shopper-id shopper-id
+                                 :site-shopper-id site-shopper-id}
+                response-data (if the-offer (create-response promo
+                                                             the-offer
+                                                             is-dynamic?
+                                                             exploding-code
+                                                             expiry))]
+            (if (empty? valid-offers)
+              (cond-> {:body nil}
+                ;; merge base-response
+                true (merge base-response)
+                ;; remember what was qualified
+                true (assoc-in [:session :qualified-offer-ids]
+                               (set (:offer-ids qualified-event)))
 
-                   ;; if what's qualified differs from previous, record it
-                   (not= (set (:offer-ids qualified-event))
-                         (:qualified-offer-ids session))
-                   (assoc :offer-qualification-event qualified-event))
-           (let [qualified-event (assoc qualified-event
-                                   :offer-ids
-                                   (mapv :uuid valid-offers))
-                 assignment-event (-> qualified-event
-                                      (assoc :event-name :offer-made)
-                                      (dissoc :offer-ids)
-                                      (assoc :promo-id (:uuid promo))
-                                      (assoc :offer-id (:uuid the-offer)))
-                 now (t-coerce/to-string (t/now))]
-             (cond-> {:body response-data}
-                     ;; remember what was qualified
-                     true (assoc-in [:session :qualified-offer-ids]
-                                    (set (:offer-ids qualified-event)))
+                ;; if what's qualified differs from previous, record it
+                (not= (set (:offer-ids qualified-event))
+                      (:qualified-offer-ids session))
+                (assoc :offer-qualification-event qualified-event))
+              (let [qualified-event (assoc qualified-event
+                                           :offer-ids
+                                           (mapv :uuid valid-offers))
+                    assignment-event (-> qualified-event
+                                         (assoc :event-name :offer-made)
+                                         (dissoc :offer-ids)
+                                         (assoc :promo-id (:uuid promo))
+                                         (assoc :offer-id (:uuid the-offer)))
+                    now (t-coerce/to-string (t/now))]
+                (cond-> {:body response-data}
+                  ;; merge in base-response
+                  true (merge base-response)
+                  ;; remember what was qualified
+                  true (assoc-in [:session :qualified-offer-ids]
+                                 (set (:offer-ids qualified-event)))
 
-                     ;; if what's qualified differs from previous, record it
-                     (not= (set (:offer-ids qualified-event))
-                           (:qualified-offer-ids session))
-                     (assoc :offer-qualification-event qualified-event)
+                  ;; if what's qualified differs from previous, record it
+                  (not= (set (:offer-ids qualified-event))
+                        (:qualified-offer-ids session))
+                  (assoc :offer-qualification-event qualified-event)
 
-                     the-offer (assoc-in [:session :active-offer] the-offer)
-                     is-dynamic? (assoc-in [:session :active-offer :code] exploding-code)
-                     is-dynamic? (assoc-in [:session :active-offer :expires] expiry)
-                     the-offer (assoc-in [:session :last-offer-at] now)
-                     the-offer (assoc :offer-assignment-event assignment-event)
-                     is-dynamic? (assoc-in [:offer-assignment-event :code] exploding-code)
-                     is-dynamic? (assoc-in [:offer-assignment-event :expiry] expiry)))))))))
+                  the-offer (assoc-in [:session :active-offer] the-offer)
+                  is-dynamic? (assoc-in [:session :active-offer :code] exploding-code)
+                  is-dynamic? (assoc-in [:session :active-offer :expires] expiry)
+                  the-offer (assoc-in [:session :last-offer-at] now)
+                  the-offer (assoc :offer-assignment-event assignment-event)
+                  is-dynamic? (assoc-in [:offer-assignment-event :code] exploding-code)
+                  is-dynamic? (assoc-in [:offer-assignment-event :expiry] expiry))))))))))
 
 (defn wrap-record-rco-events
   "Record offer events."

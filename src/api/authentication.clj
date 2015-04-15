@@ -224,23 +224,24 @@
   party access tokens and then invokes the create-user-fn. Returns an
   auth-response whose body is the result of calling the create-user-fn."
   [{:keys [cloudwatch-recorder] :as request} auth-config create-user-fn]
-  (if (is-social? request)
-    (if-let [body-params-with-social (add-social-data request auth-config)]
-      (let [create-resp (create-user-fn (assoc request :body-params body-params-with-social))
-            create-status (:status create-resp)
+  (let [base-response {:context {:cloudwatch-endpoint "users-validate-and-create"}}]
+    (if (is-social? request)
+      (if-let [body-params-with-social (add-social-data request auth-config)]
+        (let [create-resp (create-user-fn (assoc request :body-params body-params-with-social))
+              create-status (:status create-resp)
+              user-id (str (get-in create-resp [:body :user-id]))
+              api-secret (get-in auth-config [:api :api-secret])]
+          (if (or (= create-status 200)
+                  (= create-status 201))
+            (merge base-response (auth-response create-resp api-secret user-id))
+            (merge base-response create-resp)))
+        (do
+          (cloudwatch-recorder "login-error" 1 :Count)
+          (merge base-response {:status 401})))
+      (let [create-resp (create-user-fn request)
             user-id (str (get-in create-resp [:body :user-id]))
             api-secret (get-in auth-config [:api :api-secret])]
-        (if (or (= create-status 200)
-                (= create-status 201))
-          (auth-response create-resp api-secret user-id)
-          create-resp))
-      (do
-        (cloudwatch-recorder "login-error" 1 :Count)
-        {:status 401}))
-    (let [create-resp (create-user-fn request)
-          user-id (str (get-in create-resp [:body :user-id]))
-          api-secret (get-in auth-config [:api :api-secret])]
-      (auth-response create-resp api-secret user-id))))
+        (merge base-response (auth-response create-resp api-secret user-id))))))
 
 (defn- authenticate-native
   "Given a login request, the auth-config map, and a fn that takes a
@@ -282,6 +283,7 @@
   authenticated and returns an auth-response or a response with status
   401."
   [{:keys [body-params] :as request} auth-config get-user-fn]
-  (if (:password body-params)
-    (or (authenticate-native request auth-config get-user-fn) {:status 401})
-    (or (authenticate-social request auth-config get-user-fn) {:status 401})))
+  (let [base-response {:context {:cloudwatch-endpoint "authenticate"}}]
+    (if (:password body-params)
+      (or (authenticate-native request auth-config get-user-fn) (merge base-response {:status 401}))
+      (or (authenticate-social request auth-config get-user-fn) (merge base-response {:status 401})))))

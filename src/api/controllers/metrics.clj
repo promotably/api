@@ -35,15 +35,16 @@
 
 (defn get-additional-revenue
   [{:keys [params] :as request}]
-  (let [{:keys [site-id start end]} params
+  (let [base-response {:context {:cloudwatch-endpoint "metrics-additional-revenue"}}
+        {:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)
         the-site (site/find-by-site-uuid site-uuid)
         start-date (convert-date-to-site-tz start the-site)
         end-date (convert-date-to-site-tz end the-site)
         body (metric/site-additional-revenue-by-days site-uuid start-date end-date)]
-    {:status 200
-     :headers {"Cache-Control" "max-age=0, no-cache"}
-     :body (first body)}))
+    (merge base-response {:status 200
+                          :headers {"Cache-Control" "max-age=0, no-cache"}
+                          :body (first body)})))
 
 (defn rows-by-day
   [rows day]
@@ -78,7 +79,8 @@
 
 (defn get-revenue
   [{:keys [params] :as request}]
-  (let [{:keys [site-id start end]} params
+  (let [base-response {:context {:cloudwatch-endpoint "metrics-revenue"}}
+        {:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)
         the-site (site/find-by-site-uuid site-uuid)
         start-date (convert-date-to-site-tz start the-site)
@@ -96,13 +98,14 @@
               :revenue-per-visit {
                 :daily (list-of-days-from-rows :revenue-per-visit r start-date end-date)
                 :average (average-from-rows :revenue-per-visit r start-date end-date)}}]
-    {:status 200
-     :headers {"Cache-Control" "max-age=0, no-cache"}
-     :body body}))
+    (merge base-response {:status 200
+                          :headers {"Cache-Control" "max-age=0, no-cache"}
+                          :body body})))
 
 (defn get-lift
   [{:keys [params] :as request}]
-  (let [{:keys [site-id start end]} params
+  (let [base-response {:context {:cloudwatch-endpoint "metrics-lift"}}
+        {:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)
         the-site (site/find-by-site-uuid site-uuid)
         start-date (convert-date-to-site-tz start the-site)
@@ -136,13 +139,14 @@
                 :average {
                   :inc (average-from-rows :order-count-inc r start-date end-date)
                   :exc (average-from-rows :order-count-exc r start-date end-date)}}}]
-    {:status 200
-     :headers {"Cache-Control" "max-age=0, no-cache"}
-     :body body}))
+    (merge base-response {:status 200
+                          :headers {"Cache-Control" "max-age=0, no-cache"}
+                          :body body})))
 
 (defn get-promos
   [{:keys [params] :as request}]
-  (let [{:keys [site-id start end]} params
+  (let [base-response {:context {:cloudwatch-endpoint "metrics-promos"}}
+        {:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)
         the-site (site/find-by-site-uuid site-uuid)
         start-date (convert-date-to-site-tz start the-site)
@@ -150,13 +154,14 @@
         body (metric/site-promos-by-days site-uuid start-date end-date)
         body2 (map #(-> % (rename-keys {:promo_id :id})) body)
         body3 (map #(-> % (assoc :revenue-per-order (safe-quot (:revenue %) (:redemptions %)))) body2)]
-    {:status 200
-     :headers {"Cache-Control" "max-age=0, no-cache"}
-     :body body3}))
+    (merge base-response {:status 200
+                          :headers {"Cache-Control" "max-age=0, no-cache"}
+                          :body body3})))
 
 (defn get-rco
   [{:keys [params] :as request}]
-  (let [{:keys [site-id start end]} params
+  (let [base-response {:context {:cloudwatch-endpoint "metrics-rco"}}
+        {:keys [site-id start end]} params
         site-uuid (java.util.UUID/fromString site-id)
         the-site (site/find-by-site-uuid site-uuid)
         start-date (convert-date-to-site-tz start the-site)
@@ -176,6 +181,6 @@
               (map #(assoc % :avg-discount (safe-quot (:discount %)
                                                       (:orders %))))
               (map #(dissoc % :total-items-in-cart)))]
-    {:status 200
-     :headers {"Cache-Control" "max-age=0, no-cache"}
-     :body body}))
+    (merge base-response {:status 200
+                          :headers {"Cache-Control" "max-age=0, no-cache"}
+                          :body body})))
