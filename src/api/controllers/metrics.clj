@@ -151,12 +151,13 @@
         the-site (site/find-by-site-uuid site-uuid)
         start-date (convert-date-to-site-tz start the-site)
         end-date (convert-date-to-site-tz end the-site)
-        body (metric/site-promos-by-days site-uuid start-date end-date)
-        body2 (map #(-> % (rename-keys {:promo_id :id})) body)
-        body3 (map #(-> % (assoc :revenue-per-order (safe-quot (:revenue %) (:redemptions %)))) body2)]
+        body (->>
+               (metric/site-promos-by-days site-uuid start-date end-date)
+               (map #(-> % (rename-keys {:promo_id :id})))
+               (map #(-> % (assoc :revenue-per-order (safe-quot (:revenue %) (:redemptions %))))))]
     (merge base-response {:status 200
                           :headers {"Cache-Control" "max-age=0, no-cache"}
-                          :body body3})))
+                          :body body})))
 
 (defn get-rco
   [{:keys [params] :as request}]
