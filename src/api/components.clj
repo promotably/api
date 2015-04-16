@@ -79,10 +79,9 @@
                            :port port
                            :handler cider.nrepl/cider-nrepl-handler))))
   (stop [this]
-    (if ((-> config :env) #{:dev :localdev})
-      (when (:server this)
-        (log/info (format "Stopping cider (nrepl)"))
-        (clojure.tools.nrepl.server/stop-server (:server this))))
+    (when (:server this)
+      (log/info (format "Stopping cider (nrepl)"))
+      (clojure.tools.nrepl.server/stop-server (:server this)))
     (dissoc this :server)))
 
 ;;;;;;;;;;;;;;;;;;;;;;
