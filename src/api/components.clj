@@ -73,11 +73,10 @@
 (defrecord ReplComponent [port config logging]
   component/Lifecycle
   (start [this]
-    (when ((-> config :env) #{:dev :localdev})
-      (log/info (format "Starting cider (nrepl) on %d" port))
-      (assoc this :server (clojure.tools.nrepl.server/start-server
-                           :port port
-                           :handler cider.nrepl/cider-nrepl-handler))))
+    (log/info (format "Starting cider (nrepl) on %d" port))
+    (assoc this :server (clojure.tools.nrepl.server/start-server
+                         :port port
+                         :handler cider.nrepl/cider-nrepl-handler)))
   (stop [this]
     (when (:server this)
       (log/info (format "Stopping cider (nrepl)"))
