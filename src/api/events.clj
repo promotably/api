@@ -180,7 +180,7 @@
                      (assoc :site-shopper-id (-> request :params :site-shopper-id))
                      (assoc :shopper-id (:shopper-id request))
                      (assoc :site-id (-> parsed :site :site-id))
-                     (assoc :session-id (get-in cookies [config/session-cookie-name :value]))
+                     (assoc :session-id (:session/key request))
                      (assoc :control-group (= (:test-bucket session)
                                               :control))
                      coercer
