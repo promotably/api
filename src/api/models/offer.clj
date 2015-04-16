@@ -306,7 +306,8 @@
   [{:keys [reward] :as offer}]
   (let [{:keys [promo-id expiry-in-minutes]} reward
         promo (promo/find-by-uuid promo-id)
-        code (clojure.string/upper-case (random/url-part 4))
+        code (-> (random/url-part 4)
+                 clojure.string/upper-case
+                 (clojure.string/replace #"[O0]" "9"))
         expiry (t-coerce/to-string (t/plus (t/now) (t/minutes expiry-in-minutes)))]
     [code expiry]))
-
