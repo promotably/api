@@ -27,6 +27,7 @@
                    (s/optional-key :shopper-id) s/Str
                    (s/optional-key :site-shopper-id) s/Uuid
                    (s/optional-key :site-session-id) s/Uuid
+                   (s/optional-key :request-format-version) s/Str
                    :code s/Str})
 
 (defn lookup-promos

@@ -144,6 +144,7 @@
 (def BaseEvent
   {(s/required-key :event-name) EventType
    (s/required-key :auth) Auth
+   (s/optional-key :request-format-version) s/Str
    (s/optional-key :user-id) s/Str
    (s/required-key :site) s/Any
    (s/optional-key :shopper-id) (s/maybe s/Uuid)
@@ -721,6 +722,7 @@
    (s/optional-key :shopper-id) (s/maybe s/Str)
    (s/optional-key :site-shopper-id) (s/maybe s/Str)
    (s/optional-key :site-session-id) (s/maybe s/Str)
+   (s/optional-key :request-format-version) (s/maybe s/Str)
    (s/required-key :shopper-email) s/Str
    (s/optional-key :applied-coupons) [s/Str]
    (s/optional-key :shipping-address-1) s/Str

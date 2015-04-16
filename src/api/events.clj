@@ -188,7 +188,10 @@
          ;; For debugging
          ;; (clojure.pprint/pprint out)
          (when (= schema.utils.ErrorContainer (type out))
-           (log/logf :error "Tracking event in invalid format: %s" (pr-str parsed))
+           (log/logf :error
+                     "Tracking event in invalid format: %s %s"
+                     (pr-str parsed)
+                     (pr-str out))
            (cloudwatch-recorder "event-format-invalid" 1
                                 :Count :dimensions {:endpoint "events"}))
          (kinesis/record-event! kinesis-comp (:event-name out) out)
