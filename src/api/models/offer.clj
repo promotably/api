@@ -100,6 +100,11 @@
               withs (with withs))
       (select)))
 
+(defn find-existing
+  [offer-ids]
+  (select offers
+          (where {:uuid [in offer-ids]})))
+
 (sm/defn find-by-site-uuid
   "Finds all offers for a given site id. Returns a collection (empty
   array if no results found)"
