@@ -27,10 +27,18 @@
     (let [response (handler request)]
       (when-let [assignment-data (:new-bucket-assignment response)]
         (when (some map? (map #(% request) matching-routes))
-          (cloudwatch-recorder "bucket-assigned" 1 :Count)
-          (let [w-session-key (assoc assignment-data :session-id (:session/key response))
-                ev-payload (assoc w-session-key :control-group (= (:bucket assignment-data ) :control))]
-            (kinesis/record-event! (:kinesis current-system) :bucket-assigned ev-payload))))
+          (let [control? (= (:bucket assignment-data) :control)
+                payload (-> assignment-data
+                            (assoc :session-id (:session/key response))
+                            (assoc :control-group control?))
+                dims {:bucket (:bucket payload)
+                      :control (if control? "1" "0")
+                      :site-id (-> payload :site-id str)}]
+            (cloudwatch-recorder "bucket-assigned" 1 :Count)
+            (cloudwatch-recorder "bucket-assigned" 1 :Count
+                                 :dimensions dims)
+            (kinesis/record-event! (:kinesis current-system)
+                                   :bucket-assigned payload))))
       response)))
 
 (defn wrap-vbucket

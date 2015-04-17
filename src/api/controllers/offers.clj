@@ -270,13 +270,22 @@
         (if sid
           (do
             (when qualified-event
+              (cloudwatch-recorder "rco-qualification" 1 :Count
+                                   :dimensions {:site-id
+                                                (-> qualified-event :site-id str)})
               (cloudwatch-recorder "rco-qualification" 1 :Count)
               (kinesis/record-event! k :shopper-qualified-offers
                                      (merge qualified-event ev-base)))
             (when assignment-event
-              (cloudwatch-recorder "rco-assignment" 1 :Count)
-              (kinesis/record-event! k :offer-made
-                                     (merge assignment-event ev-base))))
+              (let [dims {:site-id (-> assignment-event :site-id str)
+                          :exploding (if (not (nil? (:expiry assignment-event)))
+                                       "1"
+                                       "0")}]
+                (cloudwatch-recorder "rco-assignment" 1 :Count
+                                     :dimensions dims)
+                (cloudwatch-recorder "rco-assignment" 1 :Count)
+                (kinesis/record-event! k :offer-made
+                                       (merge assignment-event ev-base)))))
           (do
             (log/logf :error "Error recording rco %s %s: missing session id."
                       (if qualified-event "Q" "-")

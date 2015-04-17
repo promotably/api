@@ -192,18 +192,23 @@
                      "Tracking event in invalid format: %s %s"
                      (pr-str parsed)
                      (pr-str out))
-           (cloudwatch-recorder "event-format-invalid" 1
-                                :Count :dimensions {:endpoint "events"}))
+           (cloudwatch-recorder "event-format-invalid" 1 :Count)
+           (cloudwatch-recorder "event-format-invalid" 1 :Count
+                                :dimensions {:event-name (:event-name out)
+                                             :site-id (-> parsed :site :site-id str)}))
          (kinesis/record-event! kinesis-comp (:event-name out) out)
-         (cloudwatch-recorder "event-record-success" 1
-                              :Count :dimensions {:endpoint "events"})
+         (cloudwatch-recorder "event-record-success" 1 :Count
+                              :dimensions {:event-name (:event-name out)
+                                           :site-id (-> parsed :site :site-id str)})
+         (cloudwatch-recorder "event-record-success" 1 :Count)
          (let [session (cond-> (:session request)
                                (#{:productadd :cartview :cartupdate :checkout}
                                 (:event-name out))
                                  (assoc :last-cart-event out)
                                true
                                  (assoc :last-event-at (t-coerce/to-string (t/now))))
-               response (merge base-response {:headers {"Content-Type" "text/javascript"}
+               response (merge base-response {:headers {"Content-Type"
+                                                        "text/javascript"}
                                               :body ""
                                               :session session
                                               :status 200})]

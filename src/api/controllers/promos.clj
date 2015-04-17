@@ -100,7 +100,8 @@
         {:keys [site-id code] :as coerced-params} (coercer params)
         code (clojure.string/upper-case code)
         the-promo (promo/find-by-site-uuid-and-code site-id code)
-        [offer-id offer-promo] (fallback-to-exploding cloudwatch-recorder site-id code)]
+        [offer-id offer-promo] (fallback-to-exploding cloudwatch-recorder
+                                                      site-id code)]
     (shape-promo {:promo (or the-promo offer-promo)})))
 
 (def coerce-site-id
@@ -143,17 +144,29 @@
 
     (cond
      (not the-promo)
-     (merge base-response {:status 404 :body "Can't find that promo" :session (:session request)})
+     (do
+       (cloudwatch-recorder "promo-validate-not-found" 1 :Count)
+       (cloudwatch-recorder "promo-validate-not-found" 1 :Count
+                            :dimensions {:site-id (str site-id)})
+       (merge base-response {:status 404 :body "Can't find that promo" :session (:session request)}))
 
      (not (auth-valid? site-id
                        (-> coerced-params :site :api-secret)
                        (:auth coerced-params)
                        (assoc request :body body-params)))
-     (merge base-response {:status 403
-                           :session (:session request)})
+     (do
+       (cloudwatch-recorder "promo-validate-auth-error" 1 :Count)
+       (cloudwatch-recorder "promo-validate-auth-error" 1 :Count
+                            :dimensions {:site-id (str site-id)})
+       (merge base-response {:status 403
+                             :session (:session request)}))
 
      (= (class coerced-params) schema.utils.ErrorContainer)
-     (merge base-response {:status 400 :body (write-str (:error coerced-params))})
+     (do
+       (cloudwatch-recorder "promo-validate-auth-error" 1 :Count)
+       (cloudwatch-recorder "promo-validate-auth-error" 1 :Count
+                            :dimensions {:site-id (str site-id)})
+       (merge base-response {:status 400 :body (write-str (:error coerced-params))}))
 
      :else
      (let [[v errors] (promo/valid? the-promo (assoc coerced-params :site the-site))
@@ -161,6 +174,10 @@
                        (if errors
                          {:valid false :messages errors}
                          {:valid true :messages []}))]
+       (cloudwatch-recorder "promo-validate-success" 1 :Count)
+       (cloudwatch-recorder "promo-validate-success" 1 :Count
+                            :dimensions {:site-id (str site-id)
+                                         :valid (if errors "0" "1")})
        (merge base-response {:status 201
                              :session (:session request)
                              :body (shape-validate resp)})))))
@@ -184,25 +201,40 @@
         [context errors] (promo/valid? the-promo coerced-params)]
     (cond
      (not the-promo)
-     (merge base-response {:status 404
-                           :body "Can't find that promo"
-                           :session (:session request)})
+     (do
+       (cloudwatch-recorder "promo-calculate-not-found" 1 :Count)
+       (cloudwatch-recorder "promo-calculate-not-found" 1 :Count
+                            :dimensions {:site-id (str site-id)})
+       (merge base-response {:status 404
+                             :body "Can't find that promo"
+                             :session (:session request)}))
 
      errors
-     (merge base-response {:status 400
-                           :session (:session request)})
+     (do
+       (cloudwatch-recorder "promo-calculate-errors" 1 :Count)
+       (cloudwatch-recorder "promo-calculate-errors" 1 :Count
+                            :dimensions {:site-id (str site-id)})
+       (merge base-response {:status 400
+                             :session (:session request)}))
 
      (not (auth-valid? site-id
                        (-> coerced-params :site :api-secret)
                        (:auth coerced-params)
                        (assoc request :body body-params)))
-     (merge base-response {:status 403
-                           :session (:session request)})
+     (do
+       (cloudwatch-recorder "promo-calculate-auth-error" 1 :Count)
+       (cloudwatch-recorder "promo-calculate-auth-error" 1 :Count
+                            :dimensions {:site-id (str site-id)})
+       (merge base-response {:status 403
+                             :session (:session request)}))
 
      :else
       (let [[amt context errors] (promo/discount-amount the-promo
                                                         context
                                                         errors)]
+        (cloudwatch-recorder "promo-calculate-success" 1 :Count)
+        (cloudwatch-recorder "promo-calculate-success" 1 :Count
+                             :dimensions {:site-id (str site-id)})
         (merge base-response {:status 201
                               :session (:session request)
                               :body (shape-calculate {:valid true :discount amt})})))))

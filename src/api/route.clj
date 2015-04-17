@@ -327,28 +327,30 @@
   [handler & [{:keys [cookie-name]}]]
   (fn [{:keys [cloudwatch-recorder] :as request}]
     (let [response (handler request)
-          set-cookies (get (:headers response) "Set-Cookie")
-          set-cookies (reduce
-                       #(let [parts (clojure.string/split %2 #";")
-                              [cookie-name cookie-val] (clojure.string/split
-                                                        (first parts) #"=")]
-                          (assoc %1 cookie-name cookie-val))
-                       {}
-                       set-cookies)
           session-id (:session/key response)]
       (if-let [k-data (:new-session-data response)]
-        (let [k-data* (-> k-data
-                          (assoc :control-group (= :control (:test-bucket response)))
+        (let [control? (= :control (:test-bucket response))
+              k-data* (-> k-data
+                          (assoc :control-group control?)
                           (assoc :session-id session-id)
                           (assoc :event-format-version "1")
-                          (assoc :event-name :session-start))]
+                          (assoc :event-name :session-start))
+              dims {:site-id (-> k-data :site-id str)
+                    :control (if control? "1" "0")}]
           (if session-id
-            (kinesis/record-event! (:kinesis current-system) :session-start k-data*)
+            (do
+              (cloudwatch-recorder "session-start" 1 :Count)
+              (cloudwatch-recorder "session-start" 1 :Count
+                                   :dimensions dims)
+              (kinesis/record-event! (:kinesis current-system)
+                                     :session-start
+                                     k-data*))
             (do
               (log/logf :error "Error recording session start: missing session id.")
-              (cloudwatch-recorder "session-start-missing-session-id" 1 :Count)))
-          response)
-        response))))
+              (cloudwatch-recorder "session-start-missing-session-id" 1 :Count)
+              (cloudwatch-recorder "session-start-missing-session-id" 1 :Count
+                                   :dimensions dims)))))
+      response)))
 
 (defn wrap-ensure-session
   "Ensure that all relevant data is in the response session map and

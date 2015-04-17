@@ -140,14 +140,16 @@
   (let [[type channel session-id] msg
         uuid (if (string? session-id) (java.util.UUID/fromString session-id))
         start (if uuid (event/last-event-by-session-id uuid "session-start"))]
-    (if (and (string? session-id) uuid start)
+    (when (and (string? session-id) uuid start)
       (kinesis/record-event! kinesis-spec
                              :session-end
                              (-> (start :data)
                                  (assoc :event-name "session-end")
                                  (assoc :event-format-version 1)
                                  (dissoc :request-headers)))
-      (cloudwatch-recorder "session-end" 1 :Count))))
+      (let [dims {:site-id (-> start :data :site-id str)}]
+        (cloudwatch-recorder "session-end" 1 :Count)
+        (cloudwatch-recorder "session-end" 1 :Count :dimensions dims)))))
 
 (defrecord SessionCacheComponent [config logging redis kinesis cloudwatch]
   component/Lifecycle
