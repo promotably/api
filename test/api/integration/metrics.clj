@@ -108,12 +108,14 @@
                     (let [r (request-metrics "/metrics/promos" fix/site-id "20150220" "20150223")
                           b (json/read-str (:body r) :key-fn keyword)]
                       b => [{:id (str fix/promo-id-duo),
+                             :deleted true,
                              :redemptions 20,
                              :discount 20.0,
                              :revenue 200.0,
                              :code "C2",
                              :revenue-per-order 10.0},
                             {:id (str fix/promo-id-uno),
+                             :deleted true,
                              :redemptions 6,
                              :discount 7.5,
                              :revenue 30.0,
@@ -125,6 +127,7 @@
                     (let [r (request-metrics "/metrics/rco" fix/site-id "20150220" "20150223")
                           b (json/read-str (:body r) :key-fn keyword)]
                       b => [{:id (str fix/offer-id-duo),
+                             :deleted true,
                              :code "C2",
                              :visits 200,
                              :qualified 20,
@@ -139,6 +142,7 @@
                              :avg-discount 6.0,
                              :discount 41.0},
                             {:id (str fix/offer-id-uno),
+                             :deleted true,
                              :code "C1",
                              :visits 300,
                              :qualified 30,
