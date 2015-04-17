@@ -1,6 +1,8 @@
 (ns api.controllers.metrics
   (:require [api.models.metric :as metric]
             [api.models.site :as site]
+            [api.models.promo :as promo]
+            [api.models.offer :as offer]
             [api.lib.coercion-helper :refer [transform-map
                                              remove-nils
                                              make-trans
@@ -143,6 +145,13 @@
                           :headers {"Cache-Control" "max-age=0, no-cache"}
                           :body body})))
 
+(defn add-deleted-property
+  [finder-fn metrics]
+  (let [ids (map #(get % :id) metrics)
+        existing (finder-fn ids)
+        existing-ids (set (map #(get % :uuid) existing))]
+    (map #(assoc % :deleted (not (contains? existing-ids (get % :id)))) metrics)))
+
 (defn get-promos
   [{:keys [params] :as request}]
   (let [base-response {:context {:cloudwatch-endpoint "metrics-promos"}}
@@ -151,12 +160,14 @@
         the-site (site/find-by-site-uuid site-uuid)
         start-date (convert-date-to-site-tz start the-site)
         end-date (convert-date-to-site-tz end the-site)
-        body (metric/site-promos-by-days site-uuid start-date end-date)
-        body2 (map #(-> % (rename-keys {:promo_id :id})) body)
-        body3 (map #(-> % (assoc :revenue-per-order (safe-quot (:revenue %) (:redemptions %)))) body2)]
+        body (->>
+               (metric/site-promos-by-days site-uuid start-date end-date)
+               (map #(-> % (rename-keys {:promo_id :id})))
+               (add-deleted-property promo/find-existing)
+               (map #(-> % (assoc :revenue-per-order (safe-quot (:revenue %) (:redemptions %))))))]
     (merge base-response {:status 200
                           :headers {"Cache-Control" "max-age=0, no-cache"}
-                          :body body3})))
+                          :body body})))
 
 (defn get-rco
   [{:keys [params] :as request}]
@@ -169,6 +180,7 @@
         body (->>
               (metric/site-rcos-by-days site-uuid start-date end-date)
               (map #(rename-keys % {:offer_id :id}))
+              (add-deleted-property offer/find-existing)
               (map #(assoc % :avg-revenue (safe-quot (:revenue %)
                                                      (:orders %))))
               (map #(assoc % :redemption-rate (percentage (:redeemed %)
