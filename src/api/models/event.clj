@@ -108,7 +108,7 @@
   [site-id :- s/Uuid site-shopper-id :- s/Uuid]
   (let [e (last-event site-id site-shopper-id "thankyou")]
     (if e
-      (-> e :data :discount bigint)
+      (-> e :data :discount float)
       0)))
 
 ;; (discount-last-order #uuid "5669de1d-cc61-4590-9ef6-5cab58369df2" #uuid "001fd699-9d50-4b7c-af3b-3e022d379647")
