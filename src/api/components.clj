@@ -1,34 +1,33 @@
 (ns api.components
-  (:require [com.stuartsierra.component :as component]
-            [org.httpkit.server :as http-kit]
-            [korma.core :refer :all]
-            [korma.db :refer [default-connection]]
-            [clojure.java.jdbc :as jdbc]
-            [clojure.core.reducers :as r]
-            [clojure.tools.logging :as log]
-            [ring.middleware.session.store :as ss]
-            [clojure.tools.nrepl.server :as nrepl-server]
-            [cider.nrepl :refer (cider-nrepl-handler)]
-            [clj-logging-config.log4j :as log-config]
-            [clj-time.core :refer [before? after? now] :as t]
-            [clj-time.coerce :as t-coerce]
-            [taoensso.carmine :as car :refer [wcar]]
-            [api.lib.coercion-helper :refer [remove-nils]]
-            [api.config :as config]
-            [api.route :as route]
-            [api.kinesis :as kinesis]
-            [api.redis :as redis]
-            [apollo.core :as apollo]
-            [api.system :refer [current-system]]
-            [api.models.event :as event])
-  (:import (java.util.concurrent Executors TimeUnit
-                                 ScheduledExecutorService)
-           [java.util UUID]
-           [com.mchange.v2.c3p0 ComboPooledDataSource]
-           [com.amazonaws.services.kinesis AmazonKinesisClient]
-           [com.amazonaws.auth.profile ProfileCredentialsProvider]
-           [com.amazonaws.auth DefaultAWSCredentialsProviderChain]
-           [org.apache.log4j Logger Level]))
+  (:require
+   [com.stuartsierra.component :as component]
+   [org.httpkit.server :as http-kit]
+   [korma.core :refer :all]
+   [korma.db :refer [default-connection]]
+   [clojure.java.jdbc :as jdbc]
+   [clojure.core.reducers :as r]
+   [clojure.tools.logging :as log]
+   [ring.middleware.session.store :as ss]
+   [clojure.tools.nrepl.server :as nrepl-server]
+   [cider.nrepl :refer (cider-nrepl-handler)]
+   [clj-logging-config.log4j :as log-config]
+   [clj-time.core :refer [before? after? now] :as t]
+   [clj-time.coerce :as t-coerce]
+   [taoensso.carmine :as car :refer [wcar]]
+   [api.lib.coercion-helper :refer [remove-nils]]
+   [api.config :as config]
+   [api.route :as route]
+   [api.kinesis :as kinesis]
+   [api.redis :as redis]
+   [apollo.core :as apollo]
+   [api.system :refer [current-system]]
+   [api.models.event :as event])
+  (:import
+   [java.util UUID]
+   [com.mchange.v2.c3p0 ComboPooledDataSource]
+   [com.amazonaws.auth.profile ProfileCredentialsProvider]
+   [com.amazonaws.auth DefaultAWSCredentialsProviderChain]
+   [org.apache.log4j Logger Level]))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -228,31 +227,6 @@
     (apollo/stop-vacuum-scheduler! (:scheduler this))))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; AWS Kinesis Component
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defrecord Kinesis [config logging]
-  component/Lifecycle
-  (start [this]
-    (log/logf :info
-              "Kinesis is starting, using credentials for '%s'."
-              (-> config :kinesis :aws-credential-profile))
-    (let [creds (-> config :kinesis :aws-credential-profile)
-          ^com.amazonaws.auth.AWSCredentialsProvider cp
-          (if-not (nil? creds)
-            (ProfileCredentialsProvider. creds)
-            (DefaultAWSCredentialsProviderChain.))
-          c (com.amazonaws.services.kinesis.AmazonKinesisClient. cp)]
-      (merge this
-             (:kinesis config)
-             {:client c})))
-  (stop [this]
-    (log/logf :info "Kinesis is shutting down.")
-    (dissoc this :client)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Server component
@@ -290,7 +264,7 @@
    :config        (component/using (config/map->Config options) [])
    :logging       (component/using (map->LoggingComponent {}) [:config])
    :database      (component/using (map->DatabaseComponent {}) [:config :logging])
-   :kinesis       (component/using (map->Kinesis {}) [:config :logging])
+   :kinesis       (component/using (kinesis/map->Kinesis {}) [:config :logging])
    :cloudwatch    (component/using (map->Cloudwatch {}) [:config :logging])
    :cider         (component/using (map->ReplComponent {:port (java.lang.Integer. repl-port)}) [:config :logging])
    :redis         (component/using (map->RedisComponent {}) [:config :logging])

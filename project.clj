@@ -13,8 +13,14 @@
   :global-vars {*warn-on-reflection* false}
   :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.2"]
             [cider/cider-nrepl "0.8.2"]]
-  :dependencies [[compojure "1.1.9" :exclusions [joda-time]]
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [org.clojure/core.cache "0.6.4"]
+                 [org.clojure/data.json "0.2.5"]
+                 [org.clojure/tools.logging "0.3.0"]
+                 [org.clojure/tools.nrepl "0.2.6"]
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [org.clojure/tools.cli "0.3.1"]
+                 [compojure "1.1.9" :exclusions [joda-time]]
                  [amazonica "0.3.18" :exclusions [joda-time]]
                  [clj-http "0.9.2"
                   :exclusions [commons-logging
@@ -33,11 +39,6 @@
                                org.tukaani/xz
                                org.clojure/tools.reader]]
                  [korma "0.4.0"]
-                 [org.clojure/clojure "1.6.0"]
-                 [org.clojure/core.cache "0.6.4"]
-                 [org.clojure/data.json "0.2.5"]
-                 [org.clojure/tools.logging "0.3.0"]
-                 [org.clojure/tools.nrepl "0.2.6"]
                  [org.postgresql/postgresql "9.3-1100-jdbc4"]
                  [org.clojars.promotably/proggly "0.1.8"]
                  [com.cognitect/transit-clj "0.8.259"
