@@ -227,10 +227,12 @@
 
 (defn serve-404-or-index
   [req]
-  (if (.contains (:uri req) ".")
+  (if (.contains (:uri req) "/api")
     (serve-404-page req)
     (serve-cached-index req)))
 
+;; IF YOU CHANGE THIS: make sure you update the squadron repo to look
+;; for the appropriate response.
 (defn health-check
   [request]
   {:status 200
