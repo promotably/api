@@ -11,53 +11,14 @@
    [clojure.core.async :as async]
    [com.stuartsierra.component :as component]
    [amazonica.aws.kinesis :refer (put-record)]
+   [clj-time.core :as t]
+   [clj-time.format :as tf]
    [clojure.tools.logging :as log]
+   [api.system :refer [current-system]]
    [cognitect.transit :as transit]))
 
-(comment
-
-(defn- update-stats
-  [q]
-  (prn "update")
-  {:foo 1})
-
-(def q-stats (atom {}))
-(def from-callers (async/chan))
-(def to-kinesis (async/chan 10))
-(async/>!! from-callers "foo")
-(async/>!! to-kinesis "foo")
-(async/<!! to-kinesis)
-
-(prn (async/alts!! [(async/timeout 1000)
-                    [from-callers "fooz"]]))
-
-(async/go
-  (prn (async/alts! [(async/timeout 1000) from-callers])))
-
-(async/<!! to-kinesis)
-
-;; (queue-process-uncontrolled from-callers to-kinesis)
-
-(defn queue-process-uncontrolled
-  [input output stats]
-  (async/go
-    (loop [q clojure.lang.PersistentQueue/EMPTY]
-      (let [[val-to-q ch] (async/alts!
-                           (if-let [v (peek q)]
-                             [input [output v]]
-                             [input]))]
-        (swap! stats update-stats q)
-        (cond
-         ;; Read a value from input.
-         val-to-q (recur (conj q val-to-q))
-
-         ;; Input channel is closed. => drain queue.
-         (identical? ch input) (doseq [v q] (async/>! output v))
-
-         ;; Write happened.
-         :else (recur (pop q)))))))
-
-)
+;; Allow for some burstiness
+(def queue-size 50)
 
 (defn- record!
   "Records to an AWS Kinesis Stream."
@@ -71,31 +32,54 @@
                   stream-name
                   (ByteBuffer/wrap (.toByteArray out-stream))
                   (str (java.util.UUID/randomUUID))))
-    (catch Exception e
+    (catch Throwable t
       (log/errorf "Can't send kinesis message %s" (:event-name message-map))
-      (log/warn e (format "Failed to send Kinesis message to %s: %s"
+      (log/warn t (format "Failed to send Kinesis message to %s: %s"
                           stream-name
                           (pr-str message-map))))))
 
+(defn- start-consumer
+  [queue]
+  (future
+    (loop [result (async/<!! queue)]
+      (record! (:client result)
+               (:stream-name result)
+               (:message-map result))
+      (recur (async/<!! queue)))))
+
+(defn- enqueue!
+  "Enqueue a record for sending to kinesis"
+  [^com.amazonaws.services.kinesis.AmazonKinesisClient kinesis-client
+   queue stream-name message-map]
+  (let [timeout (async/timeout 100)
+        [res c] (async/alts!! [timeout [queue {:client kinesis-client
+                                               :stream-name stream-name
+                                               :message-map message-map}]])]
+    (when (= timeout c)
+      (log/errorf "Can't enqueue kinesis event %s" (:event-name message-map))
+      (let [cw (get-in current-system [:cloudwatch :recorder])]
+        (cw "kinesis-write-error" 1 :Count)))))
+
 (defn record-event!
   [kinesis event-name attributes]
-  ;; TODO: this is grossly inefficient...
-  (future
-    (record! (:client kinesis)
-             (get-in kinesis [:config :kinesis :event-stream-name])
-             {:message-id (java.util.UUID/randomUUID)
-              :event-name event-name
-              :attributes attributes})))
+  (enqueue! (:client kinesis)
+            (:queue kinesis)
+            (get-in kinesis [:config :kinesis :event-stream-name])
+            {:message-id (java.util.UUID/randomUUID)
+             :recorded-at (tf/unparse (tf/formatters :basic-date-time-no-ms) (t/now) )
+             :event-name event-name
+             :attributes attributes}))
 
 (defn record-promo-action!
   [kinesis action promo site]
-  (future
-    (record! (:client kinesis)
-             (get-in kinesis [:config :kinesis :promo-stream-name])
-             {:message-id (java.util.UUID/randomUUID)
-              :action action
-              :promo promo
-              :site site})))
+  (enqueue! (:client kinesis)
+            (:queue kinesis)
+            (get-in kinesis [:config :kinesis :promo-stream-name])
+            {:message-id (java.util.UUID/randomUUID)
+             :recorded-at (tf/unparse (tf/formatters :basic-date-time-no-ms) (t/now) )
+             :action action
+             :promo promo
+             :site site}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -114,11 +98,19 @@
           (if-not (nil? creds)
             (ProfileCredentialsProvider. creds)
             (DefaultAWSCredentialsProviderChain.))
-          c (com.amazonaws.services.kinesis.AmazonKinesisClient. cp)]
+          c (com.amazonaws.services.kinesis.AmazonKinesisClient. cp)
+          q (async/chan queue-size)
+          consumer (start-consumer q)]
       (merge this
              (:kinesis config)
-             {:client c})))
+             {:queue q
+              :consumer consumer
+              :client c})))
   (stop [this]
     (log/logf :info "Kinesis is shutting down.")
-    (dissoc this :client)))
+    (if-let [c (:consumer this)]
+      (future-cancel c))
+    (dissoc this :client :queue :consumer)))
+
+;; (future-cancel (-> api.system/current-system :kinesis :consumer))
 
