@@ -235,7 +235,8 @@
   [request]
   {:status 200
    :headers {"Content-Type" "application/json; charset=UTF-8"}
-   :body (json/write-str {:version api.version/version})})
+   :body (json/write-str {:version api.version/version
+                          :control-group (= (:test-bucket (:session request)))})})
 
 (defroutes all-routes
   (GET "/health-check" [] health-check)
