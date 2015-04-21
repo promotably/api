@@ -73,6 +73,15 @@
 (def promo-code-regex #"[a-zA-Z0-9-_]{1,}")
 (def offer-code-regex #"[a-zA-Z0-9-_]{1,}")
 
+;; IF YOU CHANGE THIS: make sure you update the squadron repo to look
+;; for the appropriate response.
+(defn health-check
+  [request]
+  {:status 200
+   :headers {"Content-Type" "application/json; charset=UTF-8"}
+   :body (json/write-str {:version api.version/version
+                          :control-group (= (:test-bucket (:session request)))})})
+
 (defroutes promo-routes
   (context "/promos" []
            (POST ["/validation/:code", :code promo-code-regex]
@@ -91,6 +100,7 @@
 
 (defroutes api-routes
   (context "/api/v1" []
+           (GET "/health-check" [] health-check)
            (GET "/track" req (fn [r] (events/record-event (:kinesis current-system) r)))
            (POST "/email-subscribers" [] create-email-subscriber!)
            (GET "/rco" req (fn [r] (get-available-offers (:kinesis current-system) r)))
@@ -230,15 +240,6 @@
   (if (.contains (:uri req) "/api")
     (serve-404-page req)
     (serve-cached-index req)))
-
-;; IF YOU CHANGE THIS: make sure you update the squadron repo to look
-;; for the appropriate response.
-(defn health-check
-  [request]
-  {:status 200
-   :headers {"Content-Type" "application/json; charset=UTF-8"}
-   :body (json/write-str {:version api.version/version
-                          :control-group (= (:test-bucket (:session request)))})})
 
 (defroutes all-routes
   (GET "/health-check" [] health-check)
