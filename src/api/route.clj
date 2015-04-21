@@ -237,7 +237,8 @@
 
 (defn serve-404-or-index
   [req]
-  (if (.contains (:uri req) "/api")
+  (if (or (.contains (:uri req) "/api")
+          (.contains (:uri req) "."))
     (serve-404-page req)
     (serve-cached-index req)))
 
