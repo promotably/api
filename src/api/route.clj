@@ -5,6 +5,7 @@
            [com.amazonaws.auth.profile ProfileCredentialsProvider])
   (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
+            [clojure.data.json :as json]
             [clojure.core.match :as match :refer (match)]
             [clojure.repl :refer [pst]]
             [clojure.pprint :refer [pprint]]
@@ -26,6 +27,7 @@
             [ring.middleware.permacookie :refer [wrap-permacookie]]
             [ring.middleware.anti-forgery :as ring-anti-forgery
              :refer [wrap-anti-forgery]]
+            [api.version]
             [api.session :as session]
             [api.authentication :as auth]
             [api.events :as events]
@@ -229,8 +231,14 @@
     (serve-404-page req)
     (serve-cached-index req)))
 
+(defn health-check
+  [request]
+  {:status 200
+   :headers {"Content-Type" "application/json; charset=UTF-8"}
+   :body (json/write-str {:version api.version/version})})
+
 (defroutes all-routes
-  (GET "/health-check" [] "<h1>I'm here</h1>")
+  (GET "/health-check" [] health-check)
   api-routes
   (GET "/" [] serve-cached-index)
   (GET "/register" [] serve-cached-register)

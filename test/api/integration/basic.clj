@@ -6,6 +6,7 @@
    [api.system :as system]
    [api.core :as core]
    [api.db :as db]
+   [cheshire.core :refer :all]
    [clj-http.client :as client]
    [midje.sweet :refer :all]))
 
@@ -18,6 +19,7 @@
                             (comment migrate-down))]
 
   (facts "Health check"
-    (let [resp (client/get "http://localhost:3000/health-check")]
-      (:body resp) => "<h1>I'm here</h1>"
+    (let [resp (client/get "http://localhost:3000/health-check")
+          body (parse-string (:body resp) keyword)]
+      body => map?
       (get (:cookies resp) "promotably") => truthy)))
