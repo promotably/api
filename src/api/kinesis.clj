@@ -66,7 +66,7 @@
             (:queue kinesis)
             (get-in kinesis [:config :kinesis :event-stream-name])
             {:message-id (java.util.UUID/randomUUID)
-             :recorded-at (tf/unparse (tf/formatters :basic-date-time-no-ms) (t/now) )
+             :recorded-at (tf/unparse (tf/formatters :basic-date-time-no-ms) (t/now))
              :event-name event-name
              :attributes attributes}))
 
@@ -76,7 +76,7 @@
             (:queue kinesis)
             (get-in kinesis [:config :kinesis :promo-stream-name])
             {:message-id (java.util.UUID/randomUUID)
-             :recorded-at (tf/unparse (tf/formatters :basic-date-time-no-ms) (t/now) )
+             :recorded-at (tf/unparse (tf/formatters :basic-date-time-no-ms) (t/now))
              :action action
              :promo promo
              :site site}))
