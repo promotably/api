@@ -11,7 +11,7 @@
   :aliases {"test-uuid" ["run" "-m" "tasks.test-uuid"]}
   :aot [api.connection-customizer]
   :global-vars {*warn-on-reflection* false}
-  :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.2"]
+  :plugins [[org.clojars.cvillecsteele/lein-git-version "1.0.3"]
             [cider/cider-nrepl "0.8.2"]]
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/core.cache "0.6.4"]
