@@ -1,6 +1,6 @@
 (defproject api "version placeholder"
   :description "Promotably API server"
-  ;; :url "http://example.com/FIXME"
+  :url "https://github.com/promotably/api"
   :profiles {:uberjar {:aot :all}
              :dev {:dependencies [[midje "1.6.3"
                                    :exclusions [joda-time
