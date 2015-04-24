@@ -40,18 +40,14 @@
               (fact "Can route to controller.api.metrics.get-revenue"
                     (let [r (request-metrics "/metrics/revenue" fix/site-id "20150220" "20150225")
                           b (json/read-str (:body r) :key-fn keyword)]
-                      b => {:total-revenue {
-                              :daily [0 0 30.0 0 10.0]
-                              :average 8.0},
-                            :discount {
-                              :daily [0 0 7.5 0 2.5]
-                              :average 2.0},
-                            :avg-order-revenue {
-                              :daily [0 0 30.0 0 10.0]
-                              :average 8.0},
-                            :revenue-per-visit {
-                              :daily [0 0 30.0 0 10.0]
-                              :average 8.0}}
+                      b => {:avg-order-revenue {:average 8.0,
+                                                :daily [0 30.0 0 10.0 0]},
+                            :discount {:average 2.0,
+                                       :daily [0 7.5 0 2.5 0]},
+                            :revenue-per-visit {:average 8.0,
+                                                :daily [0 30.0 0 10.0 0]},
+                            :total-revenue {:average 8.0,
+                                            :daily [0 30.0 0 10.0 0]}}
                       (:status r) => 200))
 
               (fact "/metrics/*/revenue will produce empty results for queries with no data"
@@ -74,34 +70,22 @@
               (fact "Can route to controller.api.metrics.get-lift"
                     (let [r (request-metrics "/metrics/lift" fix/site-id "20150220" "20150224")
                           b (json/read-str (:body r) :key-fn keyword)]
-                      b => {:total-revenue {
-                              :daily {
-                                :inc [0 0 4.0 1.0]
-                                :exc [0 0 4.0 1.0]}
-                              :average {
-                                :inc 1.25
-                                :exc 1.25}}
-                           :avg-order-revenue {
-                              :daily {
-                                :inc [0 0 4.0 1.0]
-                                :exc [0 0 4.0 1.0]}
-                              :average {
-                                :inc 1.25
-                                :exc 1.25}}
-                           :revenue-per-visit {
-                              :daily {
-                                :inc [0 0 4.0 1.0]
-                                :exc [0 0 4.0 1.0]}
-                              :average {
-                                :inc 1.25,
-                                :exc 1.25}}
-                           :order-count {
-                              :daily {
-                                :inc [0 0 4 1]
-                                :exc [0 0 4 1]}
-                              :average {
-                                :inc 1.25
-                                :exc 1.25}}}
+                      b => {:avg-order-revenue {:average {:exc 1.25,
+                                                          :inc 1.25},
+                                                :daily {:exc [0 4.0 1.0 0],
+                                                        :inc [0 4.0 1.0 0]}},
+                            :order-count {:average {:exc 1.25,
+                                                    :inc 1.25},
+                                          :daily {:exc [0 4 1 0],
+                                                  :inc [0 4 1 0]}},
+                            :revenue-per-visit {:average {:exc 1.25,
+                                                          :inc 1.25},
+                                                :daily {:exc [0 4.0 1.0 0],
+                                                        :inc [0 4.0 1.0 0]}},
+                            :total-revenue {:average {:exc 1.25,
+                                                      :inc 1.25},
+                                            :daily {:exc [0 4.0 1.0 0],
+                                                    :inc [0 4.0 1.0 0]}}}
                       (:status r) => 200))
 
               (fact "Can route to controller.api.metrics.get-promos"

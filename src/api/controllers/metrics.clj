@@ -11,7 +11,7 @@
             [schema.core :as s]
             [schema.coerce :as c]
             [clj-time.format :as f]
-            [clj-time.core :refer [to-time-zone time-zone-for-id]]
+            [clj-time.core :refer [to-time-zone time-zone-for-id] :as t]
             [clj-time.coerce :refer [from-sql-time to-long from-long]]
             [clojure.set :refer [rename-keys]]
             [clj-time.core :as t]))
@@ -50,10 +50,9 @@
 
 (defn rows-by-day
   [rows day]
-  (filter (fn [r]
-            (= (f/unparse custom-formatter (from-sql-time (:measurement-hour r)))
-               (f/unparse custom-formatter day)))
-          rows))
+  (let [i (t/interval day (t/plus day (t/days 1)))]
+    (filter #(t/within? i (from-sql-time (:measurement-hour %)))
+            rows)))
 
 (defn sum-column-from-rows
   [column rows day]
