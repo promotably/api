@@ -37,17 +37,18 @@
                             :less-commission-and-discount 19.5}
                       (:status r) => 200))
 
+
               (fact "Can route to controller.api.metrics.get-revenue"
                     (let [r (request-metrics "/metrics/revenue" fix/site-id "20150220" "20150225")
                           b (json/read-str (:body r) :key-fn keyword)]
                       b => {:avg-order-revenue {:average 8.0,
-                                                :daily [0 30.0 0 10.0 0]},
+                                                :daily [0 0 30.0 0 10.0]},
                             :discount {:average 2.0,
-                                       :daily [0 7.5 0 2.5 0]},
+                                       :daily [0 0 7.5 0 2.5]},
                             :revenue-per-visit {:average 8.0,
-                                                :daily [0 30.0 0 10.0 0]},
+                                                :daily [0 0 30.0 0 10.0]},
                             :total-revenue {:average 8.0,
-                                            :daily [0 30.0 0 10.0 0]}}
+                                            :daily [0 0 30.0 0 10.0]}}
                       (:status r) => 200))
 
               (fact "/metrics/*/revenue will produce empty results for queries with no data"
@@ -72,20 +73,20 @@
                           b (json/read-str (:body r) :key-fn keyword)]
                       b => {:avg-order-revenue {:average {:exc 1.25,
                                                           :inc 1.25},
-                                                :daily {:exc [0 4.0 1.0 0],
-                                                        :inc [0 4.0 1.0 0]}},
+                                                :daily {:exc [0 0 4.0 1.0],
+                                                        :inc [0 0 4.0 1.0]}},
                             :order-count {:average {:exc 1.25,
                                                     :inc 1.25},
-                                          :daily {:exc [0 4 1 0],
-                                                  :inc [0 4 1 0]}},
+                                          :daily {:exc [0 0 4 1],
+                                                  :inc [0 0 4 1]}},
                             :revenue-per-visit {:average {:exc 1.25,
                                                           :inc 1.25},
-                                                :daily {:exc [0 4.0 1.0 0],
-                                                        :inc [0 4.0 1.0 0]}},
+                                                :daily {:exc [0 0 4.0 1.0],
+                                                        :inc [0 0 4.0 1.0]}},
                             :total-revenue {:average {:exc 1.25,
                                                       :inc 1.25},
-                                            :daily {:exc [0 4.0 1.0 0],
-                                                    :inc [0 4.0 1.0 0]}}}
+                                            :daily {:exc [0 0 4.0 1.0],
+                                                    :inc [0 0 4.0 1.0]}}}
                       (:status r) => 200))
 
               (fact "Can route to controller.api.metrics.get-promos"

@@ -1,5 +1,6 @@
 (ns api.controllers.metrics
-  (:require [api.models.metric :as metric]
+  (:require [clojure.tools.logging :as log]
+            [api.models.metric :as metric]
             [api.models.site :as site]
             [api.models.promo :as promo]
             [api.models.offer :as offer]
@@ -30,9 +31,10 @@
 
 (defn convert-date-to-site-tz
   [date site]
-  (let [date-local (t/from-time-zone (f/parse custom-formatter date)
-                                     (time-zone-for-id (:timezone site)))
+  (let [tz (time-zone-for-id (or (:timezone site) "UTC"))
+        date-local (t/from-time-zone (f/parse custom-formatter date) tz)
         date-utc (t/to-time-zone date-local (time-zone-for-id "UTC"))]
+    ;; (log/errorf "Using TZ %s %s" (:timezone site) tz)
     date-utc))
 
 (defn get-additional-revenue
