@@ -140,10 +140,11 @@
         coercer)))
 
 (defn record-event
-  [kinesis-comp {:keys [session params cookies cloudwatch-recorder] :as request}]
+  [kinesis-comp {:keys [session params cookies cloudwatch-recorder headers] :as request}]
   (cloudwatch-recorder "event-record" 1 :Count :dimensions {:endpoint "events"})
   ;; for debug
   ;; (prn "PARAMS" params)
+  (prn "HEADERS") headers
   (let [base-response {:context {:cloudwatch-endpoint "events-track"}}
         event-params (assoc params :control-group (= (:test-bucket (:session request)) :control))
         parsed (parse-event event-params)]
@@ -152,7 +153,7 @@
     (cond
      (= schema.utils.ErrorContainer (type parsed))
      (do
-       (log/logf :error "Event parse error: %s, params: %s" (pr-str parsed) params)
+       (log/logf :error "Event parse error: %s, PARAMS: %s, HEADERS: %s" (pr-str parsed) params headers)
        (cloudwatch-recorder "event-record-parse-error" 1 :Count :dimensions {:endpoint "events"})
        (merge base-response {:status 400 :session (:session request)}))
 
