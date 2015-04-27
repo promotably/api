@@ -142,9 +142,10 @@
 (defn record-event
   [kinesis-comp {:keys [session params cookies cloudwatch-recorder headers] :as request}]
   (cloudwatch-recorder "event-record" 1 :Count :dimensions {:endpoint "events"})
+  (when (= (-> session :user-agent :type) :robot)
+    (cloudwatch-recorder "event-record-by-robot" 1 :Count :dimensions {:endpoint "events"}))
   ;; for debug
   ;; (prn "PARAMS" params)
-  (prn "HEADERS") headers
   (let [base-response {:context {:cloudwatch-endpoint "events-track"}}
         event-params (assoc params :control-group (= (:test-bucket (:session request)) :control))
         parsed (parse-event event-params)]
