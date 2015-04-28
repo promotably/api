@@ -185,8 +185,9 @@
                      (assoc :session-id (:session/key request))
                      (assoc :control-group (= (:test-bucket session)
                                               :control))
+                     (assoc :user-agent (get headers "user-agent"))
                      coercer
-                     (assoc :event-format-version "1"))]
+                     (assoc :event-format-version "2"))]
          ;; For debugging
          ;; (clojure.pprint/pprint out)
          (when (= schema.utils.ErrorContainer (type out))

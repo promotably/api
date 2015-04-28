@@ -331,6 +331,7 @@
 (def-event OutboundEvent (-> BaseEvent
                              (assoc (s/required-key :site-id) s/Uuid)
                              (assoc (s/required-key :session-id) s/Uuid)
+                             (assoc (s/optional-key :user-agent) s/Str)
                              (dissoc (s/required-key :site)
                                      (s/required-key :auth))))
 
