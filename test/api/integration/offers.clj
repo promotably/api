@@ -84,9 +84,9 @@
                        (.contains (:body r) ":error") => true
                        (.contains (:body r) ":promo-id") => true))
 
-              (facts "Offer Create with no html param"
-                (let [r (create-offer (offers-f-hct/no-html-offer))]
-                  (:status r) => 400))
+              ;(facts "Offer Create with no html param"
+              ;  (let [r (create-offer (offers-f-hct/no-html-offer))]
+              ;    (:status r) => 400))
 
               (facts "List Offers"
                 (let [url (str "http://localhost:3000/api/v1/offers/?site-id="
@@ -286,3 +286,11 @@
                                    :is-limited-time true,
                                    :code string?,
                                    :active true})))))
+(fact-group :offers
+            ;(with-state-changes [(before :facts (do
+            ;                                      (migrate-or-truncate)
+            ;                                      (load-fixture-set offers-f-hct/fixture-set)))]
+            (fixture-then-facts offers-f-hct/fixture-set
+              (facts "Create offer with no html param"
+                     (let [r (create-offer (offers-f-hct/no-html-offer))]
+                       (:status r) => 400))))

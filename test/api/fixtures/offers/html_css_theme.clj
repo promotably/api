@@ -34,6 +34,7 @@
 
 (def fixture-set
   (set
+    base/fixture-set
     (table :sites
            (fixture :html-css-theme-site
                     :account_id :account-1
