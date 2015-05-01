@@ -121,16 +121,20 @@
         transform-auth)))
 
 (defn validate-promo
-  [{:keys [params body-params headers cloudwatch-recorder] :as request}]
+  [{:keys [code params body-params headers cloudwatch-recorder] :as request}]
   (let [base-response {:context {:cloudwatch-endpoint "promos-validate"}}
         matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
         coercer (c/coercer PromoValidationRequest matcher)
-        coerced-params (-> body-params
-                           (assoc :promotably-auth
-                             (or (:promotably-auth params)
-                                 (get headers "promotably-auth")))
-                           prep-incoming
-                           coercer)
+        _ (log/infof "Validating body param code '%s' param '%s'"
+                     (:code body-params)
+                     (:code params))
+        coerced-params (cond-> body-params
+                               (-> body-params :code nil?) (assoc :code (:code params))
+                               true (assoc :promotably-auth
+                                      (or (:promotably-auth params)
+                                          (get headers "promotably-auth")))
+                               true prep-incoming
+                               true coercer)
         site-id (-> coerced-params :site :site-id)
         the-site (site/find-by-site-uuid site-id)
         code (-> coerced-params :code clojure.string/upper-case)
