@@ -286,11 +286,10 @@
                                    :is-limited-time true,
                                    :code string?,
                                    :active true})))))
-(fact-group :offers
-            ;(with-state-changes [(before :facts (do
-            ;                                      (migrate-or-truncate)
-            ;                                      (load-fixture-set offers-f-hct/fixture-set)))]
-            (fixture-then-facts offers-f-hct/fixture-set
+(fact-group :integration2
+            (with-fixture offers-f-hct/fixture-set
               (facts "Create offer with no html param"
                      (let [r (create-offer (offers-f-hct/no-html-offer))]
                        (:status r) => 400))))
+
+
