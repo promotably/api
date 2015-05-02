@@ -86,7 +86,8 @@
 (def fix-cart-items
   (comp
    (fn [m]
-     (if (and (not (#{:productview :productadd :offershown} (:event-name m)))
+     (if (and (not (#{:pageview :productview :productadd :offershown}
+                    (:event-name m)))
               (not (contains? m :cart-items)))
        (assoc m :cart-items [])
        m))
@@ -143,24 +144,29 @@
   [kinesis-comp {:keys [session params cookies cloudwatch-recorder headers] :as request}]
   (cloudwatch-recorder "event-record" 1 :Count :dimensions {:endpoint "events"})
   (when (= (-> session :user-agent :type) :robot)
-    (cloudwatch-recorder "event-record-by-robot" 1 :Count :dimensions {:endpoint "events"}))
+    (cloudwatch-recorder "event-record-by-robot" 1 :Count :dimensions
+                         {:endpoint "events"}))
   ;; for debug
   ;; (prn "PARAMS" params)
   (let [base-response {:context {:cloudwatch-endpoint "events-track"}}
-        event-params (assoc params :control-group (= (:test-bucket (:session request)) :control))
+        event-params (assoc params :control-group
+                            (= (:test-bucket (:session request)) :control))
         parsed (parse-event event-params)]
     ;; for debug
     ;; (prn "PARSED" parsed)
     (cond
      (= schema.utils.ErrorContainer (type parsed))
      (do
-       (log/logf :error "Event parse error: %s, PARAMS: %s, HEADERS: %s" (pr-str parsed) params headers)
-       (cloudwatch-recorder "event-record-parse-error" 1 :Count :dimensions {:endpoint "events"})
+       (log/logf :error "Event parse error: %s, PARAMS: %s, HEADERS: %s"
+                 (pr-str parsed) params headers)
+       (cloudwatch-recorder "event-record-parse-error" 1 :Count :dimensions
+                            {:endpoint "events"})
        (merge base-response {:status 400 :session (:session request)}))
 
      (nil? (:site parsed))
      (do
-       (cloudwatch-recorder "event-record-unknown-site" 1 :Count :dimensions {:endpoint "events"})
+       (cloudwatch-recorder "event-record-unknown-site" 1 :Count :dimensions
+                            {:endpoint "events"})
        (merge base-response {:status 404 :session (:session request)}))
 
      (and
@@ -170,7 +176,8 @@
                         (:auth parsed)
                         request)))
      (do
-       (cloudwatch-recorder "event-record-auth-error" 1 :Count :dimensions {:endpoint "events"})
+       (cloudwatch-recorder "event-record-auth-error" 1 :Count :dimensions
+                            {:endpoint "events"})
        (merge base-response {:status 403 :session (:session request)}))
 
      :else

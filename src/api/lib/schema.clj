@@ -129,6 +129,7 @@
                        :cartview
                        :checkout
                        :thankyou
+                       :pageview
                        :offershown
                        :shopper-qualified-offers
                        :offer-made))
@@ -188,6 +189,10 @@
                         (merge
                          {(s/optional-key :seconds-remaining) (s/maybe s/Num)
                           (s/required-key :offer-id) (s/maybe s/Str)}))
+                    #(= (:event-name %) :pageview)
+                    (-> ~base-event
+                        (merge
+                         {(s/required-key :page) s/Str}))
                     #(= (:event-name %) :productview)
                     (merge ~base-event
                            {(s/required-key :sku) s/Str

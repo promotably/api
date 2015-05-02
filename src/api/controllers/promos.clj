@@ -125,9 +125,6 @@
   (let [base-response {:context {:cloudwatch-endpoint "promos-validate"}}
         matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
         coercer (c/coercer PromoValidationRequest matcher)
-        _ (log/infof "Validating body param code '%s' param '%s'"
-                     (:code body-params)
-                     (:code params))
         coerced-params (cond-> body-params
                                (-> body-params :code nil?) (assoc :code (:code params))
                                true (assoc :promotably-auth
@@ -138,8 +135,12 @@
         site-id (-> coerced-params :site :site-id)
         the-site (site/find-by-site-uuid site-id)
         code (-> coerced-params :code clojure.string/upper-case)
-        found-promo (promo/find-by-site-uuid-and-code site-id code)
-        [offer-id offer-promo] (fallback-to-exploding cloudwatch-recorder site-id code)
+        found-promo (if (and the-site code)
+                      (promo/find-by-site-uuid-and-code site-id code))
+        [offer-id offer-promo] (if (and the-site code)
+                                 (fallback-to-exploding cloudwatch-recorder
+                                                        site-id
+                                                        code))
         the-promo (or found-promo offer-promo)]
 
     ;; For debugging
