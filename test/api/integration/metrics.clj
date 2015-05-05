@@ -141,5 +141,9 @@
                              :revenue 170.0,
                              :avg-discount 4.0,
                              :discount 43.5}]
+                      (:status r) => 200))
+
+              (fact "Can route to controller.api.metrics.get-insights"
+                    (let [r (request-metrics "/metrics/insights" fix/site-id "20150220" "20150223")]
                       (:status r) => 200))))
 

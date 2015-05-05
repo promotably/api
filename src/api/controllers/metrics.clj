@@ -197,3 +197,9 @@
     (merge base-response {:status 200
                           :headers {"Cache-Control" "max-age=0, no-cache"}
                           :body body})))
+
+(defn get-insights
+  [{:keys [params] :as request}]
+  {:status 200
+   :headers {"Cache-Control" "max-age=0, no-cache"}
+   :body "OK"})

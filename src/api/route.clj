@@ -45,7 +45,8 @@
                                               update-account! create-site-for-account!
                                               update-site-for-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]
-            [api.controllers.metrics :refer [get-revenue get-additional-revenue get-lift get-promos get-rco]]
+            [api.controllers.metrics :refer [get-revenue get-additional-revenue get-lift
+                                             get-promos get-rco get-insights]]
             [api.lib.detector :as detector]
             [api.system :refer [current-system]]
             [api.vbucket :refer [wrap-vbucket wrap-record-vbucket-assignment]]
@@ -132,7 +133,8 @@
            (GET "/revenue" [] get-revenue)
            (GET "/lift" [] get-lift)
            (GET "/promos" [] get-promos)
-           (GET "/rco" [] get-rco)))
+           (GET "/rco" [] get-rco)
+           (GET "/insights" [] get-insights)))
 
 (defroutes secure-routes
   (context "/api/v1" []
