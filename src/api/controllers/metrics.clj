@@ -200,6 +200,14 @@
 
 (defn get-insights
   [{:keys [params] :as request}]
-  {:status 200
-   :headers {"Cache-Control" "max-age=0, no-cache"}
-   :body "OK"})
+  (let [base-response {:context {:cloudwatch-endpoint "metrics-rco"}}
+        {:keys [site-id start end]} params
+        site-uuid (java.util.UUID/fromString site-id)
+        the-site (site/find-by-site-uuid site-uuid)
+        start-date (convert-date-to-site-tz start the-site)
+        end-date (convert-date-to-site-tz end the-site)
+        m (metric/site-insights-by-days site-uuid start-date end-date)]
+    (prn m)
+    {:status 200
+     :headers {"Cache-Control" "max-age=0, no-cache"}
+     :body "OK"}))

@@ -94,3 +94,14 @@
                   (where {:measurement_hour [>= (to-sql-time start-day)]})
                   (where {:measurement_hour [<= (to-sql-time end-day)]}))]
     r))
+
+(defn site-insights-by-days
+  [site-uuid start-day end-day]
+  (let [r (select metrics-insights
+                  (fields [:data]
+                          [:measurement_hour :measurement-hour])
+                  (order :measurement_hour :ASC)
+                  (where {:site_id site-uuid})
+                  (where {:measurement_hour [>= (to-sql-time start-day)]})
+                  (where {:measurement_hour [<= (to-sql-time end-day)]}))]
+    r))
