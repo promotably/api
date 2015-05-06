@@ -10,7 +10,8 @@
             [clojure.repl :refer [pst]]
             [clojure.pprint :refer [pprint]]
             [clojure.string :as strng]
-            [compojure.core :refer [routes GET PUT HEAD POST DELETE ANY context defroutes]
+            [compojure.core :refer [routes GET PUT HEAD POST DELETE ANY
+                                    context defroutes]
              :as compojure]
             [compojure.route :refer [not-found]]
             [compojure.handler :as handler]
@@ -45,8 +46,16 @@
                                               update-account! create-site-for-account!
                                               update-site-for-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]
-            [api.controllers.metrics :refer [get-revenue get-additional-revenue get-lift get-promos get-rco]]
+            [api.controllers.metrics :refer [get-revenue get-additional-revenue
+                                             get-lift get-promos get-rco]]
+            [api.controllers.phone-home :as phone-home]
+            [api.controllers.static :refer [serve-cached-index
+                                            serve-cached-register
+                                            serve-cached-login]
+                                    :as static]
+            [api.models.static :refer [fetch-static]]
             [api.lib.detector :as detector]
+            [api.lib.util :as util]
             [api.system :refer [current-system]]
             [api.vbucket :refer [wrap-vbucket wrap-record-vbucket-assignment]]
             [clj-time.core :refer [before? after? now] :as t]
@@ -55,9 +64,6 @@
             [amazonica.aws.s3transfer]
             [slingshot.slingshot :refer [try+]]))
 
-(defonce cached-index (atom {:cached-at nil :content nil}))
-(defonce cached-register (atom {:cached-at nil :content nil}))
-(defonce cached-login (atom {:cached-at nil :content nil}))
 (def promotably-session-cookie-name "promotably-session")
 
 ;;;;;;;;;;;;;;;;;;;
@@ -65,10 +71,6 @@
 ;; Routes
 ;;
 ;;;;;;;;;;;;;;;;;;;
-
-(defn- get-api-secret
-  []
-  (get-in current-system [:config :auth-token-config :api :api-secret]))
 
 (def promo-code-regex #"[a-zA-Z0-9-_]{1,}")
 (def offer-code-regex #"[a-zA-Z0-9-_]{1,}")
@@ -101,6 +103,7 @@
 (defroutes api-routes
   (context "/api/v1" []
            (GET "/health-check" [] health-check)
+           (GET "/woocommerce/update" [] phone-home/update)
            (GET "/track" req (fn [r] (events/record-event (:kinesis current-system) r)))
            (POST "/email-subscribers" [] create-email-subscriber!)
            (GET "/rco" req (fn [r] (get-available-offers (:kinesis current-system) r)))
@@ -149,88 +152,6 @@
            promo-secure-routes
            offer-routes))
 
-(defn- fetch-static
-  [cloudwatch-recorder profile-name bucket filename cached]
-  (try
-    (cloudwatch-recorder "static-fetch" 1 :Count)
-    (let [^com.amazonaws.auth.AWSCredentialsProvider cp
-          (if profile-name
-            (ProfileCredentialsProvider. profile-name)
-            (DefaultAWSCredentialsProviderChain.))
-          _ (log/logf :info "Fetching s3://%s/%s using credentials '%s'."
-                      bucket
-                      filename
-                      profile-name)
-          resp (if profile-name
-                 (amazonica.aws.s3/get-object cp
-                                              :bucket-name bucket
-                                              :key filename)
-                 (amazonica.aws.s3/get-object bucket filename))
-          content (slurp (:object-content resp))]
-      (if cached
-        (reset! cached {:content content :cached-at (now)})
-        content))
-    (catch Throwable t
-      (cloudwatch-recorder "static-missing" 1 :Count)
-      (log/logf :error
-                "Can't fetch static file. Bucket %s, file '%s' exception %s."
-                bucket
-                filename
-                t))))
-
-(defn serve-cached-static
-  [{:keys [cloudwatch-recorder] :as req} profile-name bucket filename cached]
-  ;; if it's old, refresh it, but still return current copy
-  (let [expires (t/plus (now) (t/minutes 5))]
-    (if (or (nil? (:content @cached))
-            (after? (:cached-at @cached) expires))
-      (future (fetch-static cloudwatch-recorder profile-name bucket filename cached))))
-  (if (:content @cached)
-    (:content @cached)
-    {:status 404}))
-
-(defn serve-cached-index
-  [{:keys [cloudwatch-recorder] :as req}]
-  (cloudwatch-recorder "serve-index" 1 :Count)
-  (let [c (-> current-system :config)
-        api-secret (get-api-secret)]
-    (if (auth/authorized? req api-secret)
-      (serve-cached-static req
-                           (-> c :kinesis :aws-credential-profile)
-                           (-> c :dashboard :artifact-bucket)
-                           (-> c :dashboard :index-filename)
-                           cached-index)
-      {:status 303
-       :headers {"Location" "/login"}})))
-
-(defn serve-cached-register
-  [{:keys [cloudwatch-recorder] :as req}]
-  (cloudwatch-recorder "serve-register" 1 :Count)
-  (let [c (-> current-system :config)
-        api-secret (get-api-secret)]
-    (if-not (auth/authorized? req api-secret)
-      (serve-cached-static req
-                           (-> c :kinesis :aws-credential-profile)
-                           (-> c :dashboard :artifact-bucket)
-                           (-> c :dashboard :register-filename)
-                           cached-register)
-      {:status 303
-       :headers {"Location" "/"}})))
-
-(defn serve-cached-login
-  [{:keys [cloudwatch-recorder] :as req}]
-  (cloudwatch-recorder "serve-login" 1 :Count)
-  (let [c (-> current-system :config)
-        api-secret (get-api-secret)]
-    (if-not (auth/authorized? req api-secret)
-      (serve-cached-static req
-                           (-> c :kinesis :aws-credential-profile)
-                           (-> c :dashboard :artifact-bucket)
-                           (-> c :dashboard :login-filename)
-                           cached-login)
-      {:status 303
-       :headers {"Location" "/"}})))
-
 (defn serve-404-page
   [req]
   {:status 404 :body "<h1>Not Found</h1>"})
@@ -248,7 +169,7 @@
   (GET "/" [] serve-cached-index)
   (GET "/register" [] serve-cached-register)
   (GET "/login" [] serve-cached-login)
-  (auth/wrap-authorized secure-routes get-api-secret)
+  (auth/wrap-authorized secure-routes util/get-api-secret)
   (GET "*" [] serve-404-or-index))
 
 ;;;;;;;;;;;;;;;;;;
@@ -537,21 +458,25 @@
       (if (:stop! component)
         component
         (do
+          (phone-home/list-plugins cloudwatch-recorder
+                                   (-> config :kinesis :aws-credential-profile)
+                                   "promotably-public"
+                                   phone-home/cached-plugins)
           (fetch-static cloudwatch-recorder
                         (-> config :kinesis :aws-credential-profile)
                         (-> config :dashboard :artifact-bucket)
                         (-> config :dashboard :index-filename)
-                        cached-index)
+                        static/cached-index)
           (fetch-static cloudwatch-recorder
                         (-> config :kinesis :aws-credential-profile)
                         (-> config :dashboard :artifact-bucket)
                         (-> config :dashboard :register-filename)
-                        cached-register)
+                        static/cached-register)
           (fetch-static cloudwatch-recorder
                         (-> config :kinesis :aws-credential-profile)
                         (-> config :dashboard :artifact-bucket)
                         (-> config :dashboard :login-filename)
-                        cached-login)
+                        static/cached-login)
           (assoc component :ring-routes (ring-routes config session-cache))))))
   (stop
    [component]
