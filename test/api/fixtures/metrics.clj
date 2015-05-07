@@ -25,21 +25,21 @@
 (def offer-id-duo #uuid "3ca6424e-d955-4bfe-be80-7937d5817ab2")
 
 (def insights-base
-  {:total-discount 0M
-   :visits 33
-   :average-session-length 388
-   :abandon-count 1
-   :engagements 25
-   :cart-adds 6
-   :total-revenue 59.02M
-   :checkouts 4
-   :abandon-value 40.9M
-   :revenue-per-order 59.0200000000000000M
-   :order-count 1
-   :ssids 86
-   :product-views 25
-   :average-items-per-order 1.00000000000000000000M
-   :total-items 1M})
+  {:total-discount 0
+   :visits 3
+   :average-session-length 3
+   :abandon-count 3
+   :engagements 3
+   :cart-adds 0
+   :total-revenue 1.0
+   :checkouts 3
+   :abandon-value 3
+   :revenue-per-order 0
+   :order-count 3
+   :ssids 3
+   :product-views 3
+   :average-items-per-order 3.0
+   :total-items 3})
 
 (def fixture-set
   (set

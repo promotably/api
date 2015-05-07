@@ -144,6 +144,22 @@
                       (:status r) => 200))
 
               (fact "Can route to controller.api.metrics.get-insights"
-                    (let [r (request-metrics "/metrics/insights" fix/site-id "20150220" "20150223")]
+                    (let [r (request-metrics "/metrics/insights" fix/site-id "20150220" "20150223")
+                          b (json/read-str (:body r) :key-fn keyword)]
+                      b => {:total-discount 0.0
+                            :visits 9
+                            :average-session-length 3.0
+                            :abandon-count 9
+                            :engagements 9
+                            :cart-adds 0
+                            :total-revenue 3.0
+                            :checkouts 9
+                            :abandon-value 9
+                            :revenue-per-order 0.0
+                            :order-count 9
+                            :ssids 9
+                            :product-views 9
+                            :average-items-per-order 3.0
+                            :total-items 9}
                       (:status r) => 200))))
 
