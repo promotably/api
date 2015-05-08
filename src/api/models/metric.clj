@@ -120,22 +120,21 @@
   "The data in metrics_insights is a JSON structure. Some elements can simply be
    summed and others averaged. This is way too verbose so maybe a convention is in order."
   [data]
-  (let [n (count data)]
-    {:total-discount (round2 2 (sum-list (get-all :total-discount data)))
-     :visits (sum-list (get-all :visits data))
-     :average-session-length (average-list (get-all :average-session-length data))
-     :abandon-count (sum-list (get-all :abandon-count data))
-     :engagements (sum-list (get-all :engagements data))
-     :cart-adds (sum-list (get-all :cart-adds data))
-     :total-revenue (round2 2 (sum-list (get-all :total-revenue data)))
-     :checkouts (sum-list (get-all :checkouts data))
-     :abandon-value (sum-list (get-all :abandon-value data))
-     :revenue-per-order (average-list (get-all :revenue-per-order data))
-     :order-count (sum-list (get-all :order-count data))
-     :ssids (sum-list (get-all :ssids data))
-     :product-views (sum-list (get-all :product-views data))
-     :average-items-per-order (average-list (get-all :average-items-per-order data))
-     :total-items (sum-list (get-all :total-items data))}))
+  {:total-discount (round2 2 (sum-list (get-all :total-discount data)))
+   :visits (sum-list (get-all :visits data))
+   :average-session-length (average-list (get-all :average-session-length data))
+   :abandon-count (sum-list (get-all :abandon-count data))
+   :engagements (sum-list (get-all :engagements data))
+   :cart-adds (sum-list (get-all :cart-adds data))
+   :total-revenue (round2 2 (sum-list (get-all :total-revenue data)))
+   :checkouts (sum-list (get-all :checkouts data))
+   :abandon-value (sum-list (get-all :abandon-value data))
+   :revenue-per-order (average-list (get-all :revenue-per-order data))
+   :order-count (sum-list (get-all :order-count data))
+   :ssids (sum-list (get-all :ssids data))
+   :product-views (sum-list (get-all :product-views data))
+   :average-items-per-order (average-list (get-all :average-items-per-order data))
+   :total-items (sum-list (get-all :total-items data))})
 
 (defn site-insights-by-days
   [site-uuid start-day end-day]
