@@ -47,7 +47,7 @@
                                               update-site-for-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]
             [api.controllers.metrics :refer [get-revenue get-additional-revenue
-                                             get-lift get-promos get-rco]]
+                                             get-lift get-promos get-rco get-insights]]
             [api.controllers.phone-home :as phone-home]
             [api.controllers.static :refer [serve-cached-index
                                             serve-cached-register
@@ -135,7 +135,8 @@
            (GET "/revenue" [] get-revenue)
            (GET "/lift" [] get-lift)
            (GET "/promos" [] get-promos)
-           (GET "/rco" [] get-rco)))
+           (GET "/rco" [] get-rco)
+           (GET "/insights" [] get-insights)))
 
 (defroutes secure-routes
   (context "/api/v1" []

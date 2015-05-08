@@ -24,6 +24,23 @@
 (def offer-id-uno #uuid "3ca6424e-d955-4bfe-be80-7937d5817ab1")
 (def offer-id-duo #uuid "3ca6424e-d955-4bfe-be80-7937d5817ab2")
 
+(def insights-base
+  {:total-discount 0
+   :visits 3
+   :average-session-length 3
+   :abandon-count 3
+   :engagements 3
+   :cart-adds 0
+   :total-revenue 1.0
+   :checkouts 3
+   :abandon-value 3
+   :revenue-per-order 0
+   :order-count 3
+   :ssids 3
+   :product-views 3
+   :average-items-per-order 3.0
+   :total-items 3})
+
 (def fixture-set
   (set
     (table :metrics_revenue
@@ -320,4 +337,29 @@
                     :revenue_per_visit_exc 1.0
                     :order_count_inc 1
                     :order_count_exc 1
+                    :created_at (c/to-sql-time (t/now))))
+    (table :metrics_insights
+           (fixture :mi-zero
+                    :id 0
+                    :site_id site-id
+                    :measurement_hour (sql-time-day-hour 22 0)
+                    :data insights-base
+                    :created_at (c/to-sql-time (t/now)))
+           (fixture :mi-one
+                    :id 1
+                    :site_id site-id
+                    :measurement_hour (sql-time-day-hour 22 1)
+                    :data insights-base
+                    :created_at (c/to-sql-time (t/now)))
+           (fixture :mi-two
+                    :id 2
+                    :site_id site-id
+                    :measurement_hour (sql-time-day-hour 22 2)
+                    :data insights-base
+                    :created_at (c/to-sql-time (t/now)))
+           (fixture :mi-three
+                    :id 3
+                    :site_id site-id
+                    :measurement_hour (sql-time-day-hour 24 0)
+                    :data insights-base
                     :created_at (c/to-sql-time (t/now))))))

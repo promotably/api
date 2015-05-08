@@ -94,3 +94,57 @@
                   (where {:measurement_hour [>= (to-sql-time start-day)]})
                   (where {:measurement_hour [<= (to-sql-time end-day)]}))]
     r))
+
+(defn round2
+  "Round a double to the given precision (number of significant digits)"
+  [precision d]
+  (let [factor (Math/pow 10 precision)]
+    (/ (Math/round (* d factor)) factor)))
+
+(defn get-all
+  "For a list of maps, return all values for given key in a list"
+  [key list-of-maps]
+  (map #(get % key) list-of-maps))
+
+(defn average-list
+  "Average a list of numbers"
+  [values]
+  (round2 2 (/ (apply + values) (count values))))
+
+(defn sum-list
+  "Sum a list of numbers"
+  [values]
+  (apply + values))
+
+(defn insights-json-aggregate
+  "The data in metrics_insights is a JSON structure. Some elements can simply be
+   summed and others averaged. This is way too verbose so maybe a convention is in order."
+  [data]
+  {:total-discount (round2 2 (sum-list (get-all :total-discount data)))
+   :visits (sum-list (get-all :visits data))
+   :average-session-length (average-list (get-all :average-session-length data))
+   :abandon-count (sum-list (get-all :abandon-count data))
+   :engagements (sum-list (get-all :engagements data))
+   :cart-adds (sum-list (get-all :cart-adds data))
+   :total-revenue (round2 2 (sum-list (get-all :total-revenue data)))
+   :checkouts (sum-list (get-all :checkouts data))
+   :abandon-value (sum-list (get-all :abandon-value data))
+   :revenue-per-order (average-list (get-all :revenue-per-order data))
+   :order-count (sum-list (get-all :order-count data))
+   :ssids (sum-list (get-all :ssids data))
+   :product-views (sum-list (get-all :product-views data))
+   :average-items-per-order (average-list (get-all :average-items-per-order data))
+   :total-items (sum-list (get-all :total-items data))})
+
+(defn site-insights-by-days
+  [site-uuid start-day end-day]
+  (let [r (select metrics-insights
+                  (fields [:data]
+                          [:measurement_hour :measurement-hour])
+                  (order :measurement_hour :ASC)
+                  (where {:site_id site-uuid})
+                  (where {:measurement_hour [>= (to-sql-time start-day)]})
+                  (where {:measurement_hour [<= (to-sql-time end-day)]}))
+        i (map #(get % :data) r)]
+    (insights-json-aggregate i)))
+
