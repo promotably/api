@@ -59,10 +59,8 @@
   should always be present on environments deployed to AWS"
   []
   (let [event-stream-name (get-config-value "KINESIS_A")
-        promo-stream-name (get-config-value "KINESIS_B")
         credential-profile (get-config-value "CRED_PROFILE" nil)]
-    {:promo-stream-name promo-stream-name
-     :event-stream-name event-stream-name
+    {:event-stream-name event-stream-name
      :aws-credential-profile credential-profile}))
 
 (defn- get-cloudwatch-config
@@ -114,10 +112,7 @@
                 :redis {:host "localhost" :port 6379}
                 :kinesis (let [c (get-kinesis-config)]
                            (cond-> {:aws-credential-profile "promotably"
-                                    :promo-stream-name "dev-PromoStream"
                                     :event-stream-name "dev-PromotablyAPIEvents"}
-                                   (:promo-stream-name c)
-                                   (assoc :promo-stream-name (:promo-stream-name c))
                                    (:event-stream-name c)
                                    (assoc :event-stream-name (:event-stream-name c))))
                 :cloudwatch {:aws-credential-profile "promotably"
@@ -138,7 +133,6 @@
                            :make-pool? true}
                 :redis {:host "localhost" :port 6379}
                 :kinesis  {:aws-credential-profile "promotably"
-                           :promo-stream-name "dev-PromoStream"
                            :event-stream-name "dev-PromotablyAPIEvents"}
                 :cloudwatch {:aws-credential-profile "promotably"
                              :delay-seconds 30
