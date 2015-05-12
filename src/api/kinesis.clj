@@ -9,6 +9,7 @@
    [java.nio ByteBuffer])
   (:require
    [clojure.core.async :as async]
+   [clojure.data.json :as json]
    [com.stuartsierra.component :as component]
    [amazonica.aws.kinesis :refer (put-record)]
    [clj-time.core :as t]
@@ -20,17 +21,26 @@
 ;; Allow for some burstiness
 (def queue-size 50)
 
+(defn- wrap-message-envelope
+  [message-map]
+  {:v "1"
+   :env (:env current-system)
+   :src "api"
+   :type (or (:event-name message-map)
+             (:action message-map))
+   :msg message-map})
+
 (defn- record!
   "Records to an AWS Kinesis Stream."
   [^com.amazonaws.services.kinesis.AmazonKinesisClient kinesis-client
    stream-name message-map]
   (try
-    (let [^ByteArrayOutputStream out-stream (ByteArrayOutputStream. 4096)
-          writer (transit/writer out-stream :json)]
-      (transit/write writer message-map)
+    (let [msg (-> message-map
+                  wrap-message-envelope
+                  json/write-str)]
       (.putRecord kinesis-client
                   stream-name
-                  (ByteBuffer/wrap (.toByteArray out-stream))
+                  (ByteBuffer/wrap (.getBytes msg))
                   (str (java.util.UUID/randomUUID))))
     (catch Throwable t
       (log/errorf "Can't send kinesis message %s" (:event-name message-map))
@@ -108,4 +118,3 @@
     (dissoc this :client :queue :consumer)))
 
 ;; (future-cancel (-> api.system/current-system :kinesis :consumer))
-
