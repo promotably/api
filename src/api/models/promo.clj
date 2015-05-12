@@ -18,7 +18,6 @@
             [api.system :refer [current-system]]
             [korma.core :refer :all]
             [korma.db :refer [transaction] :as kdb]
-            [api.kinesis :as kinesis]
             [slingshot.slingshot :only [throw+] :as ss]
             [schema.core :as s]
             [schema.macros :as sm]
@@ -95,19 +94,9 @@
                         (where {:promos.uuid promo-uuid}))]
     (first (map db-to-promo results))))
 
-(defn to-kinesis!
-  [kinesis-comp action promo-id site-id]
-  (if-let [the-promo (first (find-by-id promo-id))]
-    (kinesis/record-promo-action! kinesis-comp
-                                  action
-                                  the-promo
-                                  (site/find-by-site-id site-id))
-    (ss/throw+ {:type ::missing-promo :promo-id promo-id :site-id site-id})))
-
 (sm/defn new-promo!
   "Creates a new promo in the database"
-  [kinesis-comp
-   {:keys [description seo-text code reward-type reward-applied-to
+  [{:keys [description seo-text code reward-type reward-applied-to
            reward-tax reward-amount site-id linked-products
            conditions promo-id active] :as params}]
   (transaction
@@ -140,7 +129,6 @@
                                (assoc :uuid (java.util.UUID/randomUUID))
                                (assoc :promo-id id))
                           linked-products)))
-       (to-kinesis! kinesis-comp :create id site-id)
        {:success true :promo (find-by-uuid promo-uuid)}))))
 
 ;; (sm/defn update-promo!
@@ -207,7 +195,6 @@
   [site-id promo-uuid :- s/Uuid]
   (let [found (find-by-site-and-uuid site-id promo-uuid)]
     (transaction
-     ;;(to-kinesis! :delete (:id found) site-id)
      (delete promos (where {:promos.uuid promo-uuid})))))
 
 (sm/defn ^:always-validate find-by-site-uuid-and-code
