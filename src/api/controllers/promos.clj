@@ -4,6 +4,7 @@
             [api.models.site :as site]
             [api.lib.coercion-helper :refer [transform-map
                                              remove-nils
+                                             remove-nested-nils
                                              make-trans
                                              custom-matcher
                                              underscore-to-dash-keys]]
@@ -114,6 +115,7 @@
     (-> params
         underscore-to-dash-keys
         remove-nils
+        remove-nested-nils
         coerce-site-id
         ;; (doto dbg)
         transform-auth)))
