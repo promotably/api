@@ -29,7 +29,10 @@
 
 (defn fallback-to-exploding
   [cloudwatch-recorder site-id code]
-  (let [{:keys [offer-id] :as offer-event} (event/find-outstanding-offer cloudwatch-recorder site-id code)]
+  (let [{:keys [offer-id]
+         :as offer-event} (event/find-outstanding-offer cloudwatch-recorder
+                                                        site-id
+                                                        code)]
     (when offer-event
       (let [offer-promo (promo/find-by-uuid (-> offer-event
                                                 :data
