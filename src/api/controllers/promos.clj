@@ -159,7 +159,8 @@
               (cloudwatch-recorder "promo-validate-not-found" 1 :Count)
               (cloudwatch-recorder "promo-validate-not-found" 1 :Count
                                    :dimensions {:site-id (str site-id)})
-              (merge base-response {:status 404 :body "Can't find that promo" :session (:session request)}))
+              (merge base-response {:status 404 :body "Can't find that promo"
+                                    :session (:session request)}))
 
             (not (auth-valid? site-id
                               (-> coerced-params :site :api-secret)
@@ -172,7 +173,8 @@
               (merge base-response {:status 403
                                     :session (:session request)}))
             :else
-            (let [[v errors] (promo/valid? the-promo (assoc coerced-params :site the-site))
+            (let [[v errors] (promo/valid? the-promo (assoc coerced-params
+                                                       :site the-site))
                   resp (merge {:uuid (:uuid the-promo) :code code}
                               (if errors
                                 {:valid false :messages errors}
