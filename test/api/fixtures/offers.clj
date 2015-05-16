@@ -39,7 +39,6 @@
 (def fixture-set
   (set
    base/fixture-set
-   offers-f-hct/fixture-set
    (table :sites
           (fixture :site-2
                    :account_id :account-1

@@ -1,12 +1,17 @@
-(ns api.fixtures.offers.html-css-theme
+; Just for demo purposes. Does not currently compile:
+; Caused by: java.lang.RuntimeException: No such namespace: core
+
+(ns api.integration.offers.no-html-params
   (:import org.postgresql.util.PGobject)
   (:refer-clojure :exclude [set load])
   (:require
+    [api.integration.helper :refer [build-auth-cookie-string with-fixture]]
+    [clj-http.client :as client]
+    [clojure.data.json :as json]
     [clj-time.core :as t]
     [clj-time.coerce :as c]
     [midje.sweet :refer :all]
     [api.q-fix :refer :all]))
-
 
 (def site-id #uuid "9595f5d5-1d9a-49f3-8f06-8311088e8623")
 (def shopper-id #uuid "9595e574-974e-4f48-87fd-5ada3a4cb2bb")
@@ -92,3 +97,19 @@
                     :type "dates"
                     :start_date (c/to-sql-time (t/minus (t/now) (t/days 1)))
                     :end_date (c/to-sql-time (t/plus (t/now) (t/days 1)))))))
+
+
+(defn- create-offer
+  [new-offer]
+  (client/post "http://localhost:3000/api/v1/offers"
+               {:body (json/write-str new-offer)
+                :headers {"Cookie" (build-auth-cookie-string)}
+                :content-type :json
+                :accept :json
+                :throw-exceptions false}))
+
+(fact-group :integration3
+            (with-fixture fixture-set
+                          (facts "Create offer with no html param"
+                                 (let [r (create-offer (no-html-offer))]
+                                   (:status r) => 400))))

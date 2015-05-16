@@ -64,6 +64,17 @@
                          result (jdbc/insert! t-con table-name xformed)]
                      (-> result first :id)))))))
 
+(defmacro with-fixture
+  [fixture & body]
+  `(facts
+     (with-state-changes [(before :contents
+                                  (do
+                                    (when (nil? system/current-system)
+                                      (core/go {:port 3000 :repl-port 55555}))
+                                    (truncate)
+                                      (load-fixture-set ~fixture)))]
+                         ~@body)))
+
 (defn test-user-id [] (str (:user_id (first (korma/exec-raw ["SELECT user_id from users WHERE email = 'global@promotably.com'"] :results)))))
 
 (defn auth-cookie-token []
