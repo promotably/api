@@ -54,19 +54,21 @@
      :login-filename (str (or path default-html-path) "/login.html")
      :register-filename (str (or path default-html-path) "/register.html")}))
 
+(defn- get-aws-config
+  []
+  (let [credential-profile (get-config-value "CRED_PROFILE" nil)]
+    {:credential-profile credential-profile}))
+
 (defn- get-kinesis-config
   "Checks environment variables for kinesis config settings. These
   should always be present on environments deployed to AWS"
   []
-  (let [event-stream-name (get-config-value "KINESIS_A")
-        credential-profile (get-config-value "CRED_PROFILE" nil)]
-    {:event-stream-name event-stream-name
-     :aws-credential-profile credential-profile}))
+  (let [event-stream-name (get-config-value "KINESIS_A")]
+    {:event-stream-name event-stream-name}))
 
 (defn- get-cloudwatch-config
   []
-  {:aws-credential-profile (get-config-value "CRED_PROFILE" nil)
-   :delay-seconds 30
+  {:delay-seconds 30
    :interval-seconds 30})
 
 (defn- get-database-config
@@ -110,13 +112,12 @@
                            :port 5432
                            :make-pool? true}
                 :redis {:host "localhost" :port 6379}
+                :aws {:credential-profile "promotably"}
                 :kinesis (let [c (get-kinesis-config)]
-                           (cond-> {:aws-credential-profile "promotably"
-                                    :event-stream-name "dev-PromotablyAPIEvents"}
+                           (cond-> {:event-stream-name "dev-PromotablyAPIEvents"}
                                    (:event-stream-name c)
                                    (assoc :event-stream-name (:event-stream-name c))))
-                :cloudwatch {:aws-credential-profile "promotably"
-                             :delay-seconds 30
+                :cloudwatch {:delay-seconds 30
                              :interval-seconds 30}
                 :dashboard (get-dashboard-config)
                 :logging {:base (base-log-config)
@@ -132,10 +133,9 @@
                            :port 5432
                            :make-pool? true}
                 :redis {:host "localhost" :port 6379}
-                :kinesis  {:aws-credential-profile "promotably"
-                           :event-stream-name "dev-PromotablyAPIEvents"}
-                :cloudwatch {:aws-credential-profile "promotably"
-                             :delay-seconds 30
+                :aws {:credential-profile "promotably"}
+                :kinesis  {:event-stream-name "dev-PromotablyAPIEvents"}
+                :cloudwatch {:delay-seconds 30
                              :interval-seconds 30}
                 :dashboard (get-dashboard-config)
                 :logging {:base (base-log-config)
@@ -145,6 +145,7 @@
                 :auth-token-config (auth-token-config)
                 :env :test}
    :staging    {:database (get-database-config)
+                :aws (get-aws-config)
                 :kinesis (get-kinesis-config)
                 :cloudwatch (get-cloudwatch-config)
                 :redis (get-redis-config)
@@ -159,6 +160,7 @@
                  :test-topic (or (get-config-value "TEST_RESULTS_SNS_TOPIC_NAME")
                                  "api-integration-test")
                  :redis (get-redis-config)
+                 :aws (get-aws-config)
                  :kinesis (get-kinesis-config)
                  :cloudwatch (get-cloudwatch-config)
                  :dashboard (get-dashboard-config)
@@ -170,6 +172,7 @@
                  :env :integration}
    :production {:database (get-database-config)
                 :redis (get-redis-config)
+                :aws (get-aws-config)
                 :kinesis (get-kinesis-config)
                 :cloudwatch (get-cloudwatch-config)
                 :dashboard (get-dashboard-config)

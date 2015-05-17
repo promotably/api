@@ -84,6 +84,25 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; AWS Component
+;;
+;;;;;;;;;;;;;;;;;;;;;;
+
+(defrecord AWSComponent [config logging]
+  component/Lifecycle
+  (start [this]
+    (let [credential-profile (-> config :aws :credential-profile)
+          cp (if-not (empty? credential-profile)
+               (ProfileCredentialsProvider. credential-profile)
+               (DefaultAWSCredentialsProviderChain.))]
+      (log/logf :info "AWS Component established.")
+      (assoc this :credential-provider cp)))
+  (stop [this]
+    (log/logf :info "AWS Component de-established.")
+    (dissoc this :credential-provider )))
+
+;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Database Component
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -206,16 +225,15 @@
 ;; AWS Cloudwatch Component
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defrecord Cloudwatch [config client scheduler recorder]
+(defrecord Cloudwatch [config logging aws]
   component/Lifecycle
   (start [this]
-    (let [{:keys [aws-credential-profile delay-seconds interval-seconds]} (:cloudwatch config)
-          c (apollo/create-async-cw-client :provider (if-not (empty? aws-credential-profile)
-                                                       (ProfileCredentialsProvider. aws-credential-profile)
-                                                       (DefaultAWSCredentialsProviderChain.)))
+    (let [{:keys [delay-seconds interval-seconds]} (:cloudwatch config)
+          cp (:credential-provider aws)
+          c (apollo/create-async-cw-client :provider cp)
           s (apollo/create-vacuum-scheduler)
           recorder-namespace (str "api-" (name (:env config)))]
-      (log/infof "Cloudwatch is starting with credential profile '%s'." aws-credential-profile)
+      (log/infof "Cloudwatch is starting with credential profile '%s'." (-> config :aws :credential-profile))
       (apollo/start-vacuum-scheduler! delay-seconds interval-seconds s c)
       (log/infof "Cloudwatch Recording Namespace: %s" recorder-namespace)
       (-> this
@@ -263,9 +281,10 @@
   (component/system-map
    :config        (component/using (config/map->Config options) [])
    :logging       (component/using (map->LoggingComponent {}) [:config])
+   :aws           (component/using (map->AWSComponent {}) [:config])
    :database      (component/using (map->DatabaseComponent {}) [:config :logging])
-   :kinesis       (component/using (kinesis/map->Kinesis {}) [:config :logging])
-   :cloudwatch    (component/using (map->Cloudwatch {}) [:config :logging])
+   :kinesis       (component/using (kinesis/map->Kinesis {}) [:config :logging :aws])
+   :cloudwatch    (component/using (map->Cloudwatch {}) [:config :logging :aws])
    :cider         (component/using (map->ReplComponent {:port (java.lang.Integer. repl-port)}) [:config :logging])
    :redis         (component/using (map->RedisComponent {}) [:config :logging])
    :session-cache (component/using (map->SessionCacheComponent {}) [:config :logging :redis :kinesis :cloudwatch])
