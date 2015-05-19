@@ -71,22 +71,22 @@
               (fact "Can route to controller.api.metrics.get-lift"
                     (let [r (request-metrics "/metrics/lift" fix/site-id "20150220" "20150224")
                           b (json/read-str (:body r) :key-fn keyword)]
-                      b => {:avg-order-revenue {:average {:exc 1.25,
-                                                          :inc 1.25},
-                                                :daily {:exc [0 0 4.0 1.0],
-                                                        :inc [0 0 4.0 1.0]}},
+                      b => {:avg-order-revenue {:average {:exc 1.0,
+                                                          :inc 1.0},
+                                                :daily {:exc [0.0 0.0 1.0 1.0],
+                                                        :inc [0.0 0.0 1.0 1.0]}},
                             :order-count {:average {:exc 1.25,
                                                     :inc 1.25},
-                                          :daily {:exc [0 0 4 1],
-                                                  :inc [0 0 4 1]}},
+                                          :daily {:exc [0.0 0.0 4.0 1.0],
+                                                  :inc [0.0 0.0 4.0 1.0]}},
                             :revenue-per-visit {:average {:exc 1.25,
                                                           :inc 1.25},
-                                                :daily {:exc [0 0 4.0 1.0],
-                                                        :inc [0 0 4.0 1.0]}},
+                                                :daily {:exc [0.0 0.0 4.0 1.0],
+                                                        :inc [0.0 0.0 4.0 1.0]}},
                             :total-revenue {:average {:exc 1.25,
                                                       :inc 1.25},
-                                            :daily {:exc [0 0 4.0 1.0],
-                                                    :inc [0 0 4.0 1.0]}}}
+                                            :daily {:exc [0.0 0.0 4.0 1.0],
+                                                    :inc [0.0 0.0 4.0 1.0]}}}
                       (:status r) => 200))
 
               (fact "Can route to controller.api.metrics.get-promos"

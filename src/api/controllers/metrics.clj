@@ -68,6 +68,18 @@
     (metric/round2 2 (/ (reduce + (list-of-days-from-rows column rows begin end))
                  (float days)))))
 
+(defn safe-quot
+  [num denom]
+  (try (quot num denom)
+       (catch ArithmeticException _
+         0.0)))
+
+(defn safe-divide
+  [num denom]
+  (try (/ num denom)
+       (catch ArithmeticException _
+         0.0)))
+
 (defn get-revenue
   [{:keys [params] :as request}]
   (let [base-response {:context {:cloudwatch-endpoint "metrics-revenue"}}
@@ -102,34 +114,56 @@
         start-date (convert-date-to-site-tz start the-site)
         end-date (convert-date-to-site-tz end the-site)
         r (metric/site-lift-by-days site-uuid start-date end-date)
-        body {:total-revenue {
-                :daily {
-                  :inc (list-of-days-from-rows :total-revenue-inc r start-date end-date)
-                  :exc (list-of-days-from-rows :total-revenue-exc r start-date end-date)}
-                :average {
-                  :inc (average-from-rows :total-revenue-inc r start-date end-date)
-                  :exc (average-from-rows :total-revenue-exc r start-date end-date)}}
-              :avg-order-revenue {
-                :daily {
-                  :inc (list-of-days-from-rows :avg-order-revenue-inc r start-date end-date)
-                  :exc (list-of-days-from-rows :avg-order-revenue-exc r start-date end-date)}
-                :average {
-                  :inc (average-from-rows :avg-order-revenue-inc r start-date end-date)
-                  :exc (average-from-rows :avg-order-revenue-exc r start-date end-date)}}
-              :revenue-per-visit {
-                :daily {
-                  :inc (list-of-days-from-rows :revenue-per-visit-inc r start-date end-date)
-                  :exc (list-of-days-from-rows :revenue-per-visit-exc r start-date end-date)}
-                :average {
-                  :inc (average-from-rows :revenue-per-visit-inc r start-date end-date)
-                  :exc (average-from-rows :revenue-per-visit-exc r start-date end-date)}}
-              :order-count {
-                :daily {
-                  :inc (list-of-days-from-rows :order-count-inc r start-date end-date)
-                  :exc (list-of-days-from-rows :order-count-exc r start-date end-date)}
-                :average {
-                  :inc (average-from-rows :order-count-inc r start-date end-date)
-                  :exc (average-from-rows :order-count-exc r start-date end-date)}}}]
+        daily-rev-inc (map float (list-of-days-from-rows
+                                  :total-revenue-inc
+                                  r start-date end-date))
+        daily-orders-inc (map float (list-of-days-from-rows
+                                     :order-count-inc
+                                     r start-date end-date))
+        daily-rev-exc (map float (list-of-days-from-rows
+                                  :total-revenue-exc
+                                  r start-date end-date))
+        daily-orders-exc (map float (list-of-days-from-rows
+                                     :order-count-exc
+                                     r start-date end-date))
+        daily-rev-per-order-inc (map safe-divide daily-rev-inc daily-orders-inc)
+        daily-rev-per-order-exc (map safe-divide daily-rev-exc daily-orders-exc)
+        daily-rpv-inc (map float (list-of-days-from-rows
+                                  :revenue-per-visit-inc
+                                  r start-date end-date))
+        daily-rpv-exc (map float (list-of-days-from-rows
+                                  :revenue-per-visit-exc
+                                  r start-date end-date))
+        body {:total-revenue
+              {:daily {:inc daily-rev-inc
+                       :exc daily-rev-exc}
+               :average {:inc (safe-divide (apply + daily-rev-inc)
+                                         (count daily-rev-inc))
+                         :exc (safe-divide (apply + daily-rev-exc)
+                                         (count daily-rev-exc))}}
+              :avg-order-revenue
+              {:daily {:inc daily-rev-per-order-inc
+                       :exc daily-rev-per-order-exc}
+               :average {:inc (safe-divide (apply + daily-rev-inc)
+                                         (apply + daily-orders-inc))
+                         :exc (safe-divide (apply + daily-rev-exc)
+                                         (apply + daily-orders-exc))}}
+              ;; TODO: Calculating average RPV this way is busted; need
+              ;; actual count of visits on a daily basis. Fine for now.
+              :revenue-per-visit
+              {:daily {:inc daily-rpv-inc
+                       :exc daily-rpv-exc}
+               :average {:inc (safe-divide (apply + daily-rpv-inc)
+                                         (count daily-rpv-inc))
+                         :exc (safe-divide (apply + daily-rpv-exc)
+                                         (count daily-rpv-exc))}}
+              :order-count
+              {:daily {:inc daily-orders-inc
+                       :exc daily-orders-exc}
+               :average {:inc (safe-divide (apply + daily-orders-inc)
+                                         (count daily-orders-inc))
+                         :exc (safe-divide (apply + daily-orders-exc)
+                                         (count daily-orders-exc))}}}]
     (merge base-response {:status 200
                           :headers {"Cache-Control" "max-age=0, no-cache"}
                           :body body})))

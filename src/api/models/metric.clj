@@ -29,7 +29,7 @@
             (aggregate (sum :less_commission_and_discount) :less-commission-and-discount)
             (where {:site_id site-uuid})
             (where {:measurement_hour [>= (to-sql-time start-day)]})
-            (where {:measurement_hour [<= (to-sql-time end-day)]}))]
+            (where {:measurement_hour [< (to-sql-time end-day)]}))]
     r))
 
 (defn site-revenue-by-days
@@ -43,7 +43,7 @@
                   (order :measurement_hour :ASC)
                   (where {:site_id site-uuid})
                   (where {:measurement_hour [>= (to-sql-time start-day)]})
-                  (where {:measurement_hour [<= (to-sql-time end-day)]}))]
+                  (where {:measurement_hour [< (to-sql-time end-day)]}))]
     r))
 
 (defn site-promos-by-days
@@ -56,7 +56,7 @@
             (order :revenue :DESC)
             (where {:site_id site-uuid})
             (where {:measurement_hour [>= (to-sql-time start-day)]})
-            (where {:measurement_hour [<= (to-sql-time end-day)]}))]
+            (where {:measurement_hour [< (to-sql-time end-day)]}))]
     r))
 
 (defn site-rcos-by-days
@@ -74,7 +74,7 @@
                   (order :revenue :DESC)
                   (where {:site_id site-uuid})
                   (where {:measurement_hour [>= (to-sql-time start-day)]})
-                  (where {:measurement_hour [<= (to-sql-time end-day)]}))]
+                  (where {:measurement_hour [< (to-sql-time end-day)]}))]
     r))
 
 (defn site-lift-by-days
@@ -92,7 +92,7 @@
                   (order :measurement_hour :ASC)
                   (where {:site_id site-uuid})
                   (where {:measurement_hour [>= (to-sql-time start-day)]})
-                  (where {:measurement_hour [<= (to-sql-time end-day)]}))]
+                  (where {:measurement_hour [< (to-sql-time end-day)]}))]
     r))
 
 (defn safe-quot
@@ -150,7 +150,7 @@
                   (order :measurement_hour :ASC)
                   (where {:site_id site-uuid})
                   (where {:measurement_hour [>= (to-sql-time start-day)]})
-                  (where {:measurement_hour [<= (to-sql-time end-day)]}))
+                  (where {:measurement_hour [< (to-sql-time end-day)]}))
         i (map #(get % :data) r)]
     (insights-json-aggregate i)))
 
