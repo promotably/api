@@ -68,12 +68,6 @@
     (metric/round2 2 (/ (reduce + (list-of-days-from-rows column rows begin end))
                  (float days)))))
 
-(defn safe-quot
-  [num denom]
-  (try (quot num denom)
-       (catch ArithmeticException _
-         0.0)))
-
 (defn get-revenue
   [{:keys [params] :as request}]
   (let [base-response {:context {:cloudwatch-endpoint "metrics-revenue"}}
@@ -159,7 +153,7 @@
                (metric/site-promos-by-days site-uuid start-date end-date)
                (map #(-> % (rename-keys {:promo_id :id})))
                (add-deleted-property promo/find-existing)
-               (map #(-> % (assoc :revenue-per-order (safe-quot (:revenue %) (:redemptions %))))))]
+               (map #(-> % (assoc :revenue-per-order (metric/safe-quot (:revenue %) (:redemptions %))))))]
     (merge base-response {:status 200
                           :headers {"Cache-Control" "max-age=0, no-cache"}
                           :body body})))
@@ -176,16 +170,16 @@
               (metric/site-rcos-by-days site-uuid start-date end-date)
               (map #(rename-keys % {:offer_id :id}))
               (add-deleted-property offer/find-existing)
-              (map #(assoc % :avg-revenue (safe-quot (:revenue %)
+              (map #(assoc % :avg-revenue (metric/safe-quot (:revenue %)
                                                      (:orders %))))
               (map #(assoc % :redemption-rate (percentage (:redeemed %)
                                                           (:offered %))))
               (map #(assoc % :conversion-rate (percentage (:orders %)
                                                           (:visits %))))
-              (map #(assoc % :avg-items-in-cart (safe-quot
+              (map #(assoc % :avg-items-in-cart (metric/safe-quot
                                                  (:total-items-in-cart %)
                                                  (:orders %))))
-              (map #(assoc % :avg-discount (safe-quot (:discount %)
+              (map #(assoc % :avg-discount (metric/safe-quot (:discount %)
                                                       (:orders %))))
               (map #(dissoc % :total-items-in-cart)))]
     (merge base-response {:status 200

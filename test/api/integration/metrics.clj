@@ -163,3 +163,31 @@
                             :total-items 9}
                       (:status r) => 200))))
 
+(against-background [(before :contents
+                             (do (when (nil? system/current-system)
+                                   (core/go {:port 3000 :repl-port 55555}))
+                                 (migrate-or-truncate)))
+                     (after :contents
+                            (comment migrate-down))]
+
+                    (fact-group :integration
+                                (fact "Can serve empty metrics"
+                                      (let [r (request-metrics "/metrics/insights" fix/site-id "20150220" "20150223")
+                                            b (json/read-str (:body r) :key-fn keyword)]
+                                        b => {:total-discount 0.0
+                                              :visits 0
+                                              :average-session-length 0.0
+                                              :abandon-count 0
+                                              :engagements 0
+                                              :cart-adds 0
+                                              :total-revenue 0.0
+                                              :checkouts 0
+                                              :abandon-value 0
+                                              :revenue-per-order 0.0
+                                              :order-count 0
+                                              :ssids 0
+                                              :product-views 0
+                                              :average-items-per-order 0.0
+                                              :total-items 0}
+                                        (:status r) => 200))))
+
