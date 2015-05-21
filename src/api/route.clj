@@ -449,7 +449,7 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defrecord Router [config logging session-cache cloudwatch]
+(defrecord Router [config logging session-cache aws cloudwatch]
   component/Lifecycle
   (start [component]
     (let [cloudwatch-recorder (:recorder cloudwatch)]
@@ -457,21 +457,21 @@
         component
         (do
           (phone-home/list-plugins cloudwatch-recorder
-                                   (-> config :kinesis :aws-credential-profile)
+                                   aws
                                    "promotably-public"
                                    phone-home/cached-plugins)
           (fetch-static cloudwatch-recorder
-                        (-> config :kinesis :aws-credential-profile)
+                        aws
                         (-> config :dashboard :artifact-bucket)
                         (-> config :dashboard :index-filename)
                         static/cached-index)
           (fetch-static cloudwatch-recorder
-                        (-> config :kinesis :aws-credential-profile)
+                        aws
                         (-> config :dashboard :artifact-bucket)
                         (-> config :dashboard :register-filename)
                         static/cached-register)
           (fetch-static cloudwatch-recorder
-                        (-> config :kinesis :aws-credential-profile)
+                        aws
                         (-> config :dashboard :artifact-bucket)
                         (-> config :dashboard :login-filename)
                         static/cached-login)

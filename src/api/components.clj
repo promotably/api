@@ -96,10 +96,12 @@
                (ProfileCredentialsProvider. credential-profile)
                (DefaultAWSCredentialsProviderChain.))]
       (log/logf :info "AWS Component established.")
-      (assoc this :credential-provider cp)))
+      (-> this
+          (assoc :credential-provider cp)
+          (assoc :credential-profile credential-profile))))
   (stop [this]
     (log/logf :info "AWS Component de-established.")
-    (dissoc this :credential-provider )))
+    (dissoc this :credential-provider :credential-profile)))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -288,5 +290,5 @@
    :cider         (component/using (map->ReplComponent {:port (java.lang.Integer. repl-port)}) [:config :logging])
    :redis         (component/using (map->RedisComponent {}) [:config :logging])
    :session-cache (component/using (map->SessionCacheComponent {}) [:config :logging :redis :kinesis :cloudwatch])
-   :router        (component/using (route/map->Router {}) [:config :logging :session-cache :cloudwatch])
+   :router        (component/using (route/map->Router {}) [:config :logging :session-cache :aws :cloudwatch])
    :server        (component/using (map->Server {:port (java.lang.Integer. port)}) [:config :logging :router])))
