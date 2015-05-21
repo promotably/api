@@ -11,7 +11,7 @@
 (defn request-metrics [path site-id start end]
   (let [start_param (str "?start=" start)
         end_param (str "&end=" end)]
-        (client/get (str "http://localhost:3000/api/v1/sites/" site-id path start_param end_param)
+        (client/get (str (test-target-url) "/api/v1/sites/" site-id path start_param end_param)
                     {:body nil
                      :headers {"Cookie" (build-auth-cookie-string)}
                      :content-type :json
@@ -19,9 +19,7 @@
                      :throw-exceptions true})))
 
 (against-background [(before :contents
-                             (do (when (nil? system/current-system)
-                                   (core/go {:port 3000 :repl-port 55555}))
-                                 (migrate-or-truncate)
+                             (do (init!)
                                  (load-fixture-set fix/fixture-set)))
                      (after :contents
                             (comment migrate-down))]

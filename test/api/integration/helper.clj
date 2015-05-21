@@ -12,6 +12,7 @@
    [api.q-fix :as qfix]
    [api.db :as db]
    [api.lib.seal :refer [hmac-sha1 url-encode]]
+   [api.core :as core]
    [clj-time.format :as tf]
    [clj-time.coerce :refer (to-sql-time)]
    [clojure.java.jdbc :as jdbc]
@@ -24,6 +25,13 @@
    [ring.adapter.jetty :refer (run-jetty)]))
 
 (def expected-db-version 20150428111034)
+
+(def test-target-host (atom "localhost"))
+(def test-target-port (atom "3000"))
+
+(defn test-target-url
+  []
+  (str "http://" @test-target-host ":" @test-target-port))
 
 (defn truncate
   []
@@ -78,7 +86,7 @@
 
 (defn create-promo
   [new-promo]
-  (client/post "http://localhost:3000/api/v1/promos"
+  (client/post (str (test-target-url) "/api/v1/promos")
                {:headers {"cookie" (build-auth-cookie-string)}
                 :body (json/write-str new-promo)
                 :content-type :json
@@ -87,7 +95,7 @@
 
 (defn lookup-promos
   [sid]
-  (client/get "http://localhost:3000/api/v1/promos"
+  (client/get (str (test-target-url) "/api/v1/promos")
               {:headers {"cookie" (build-auth-cookie-string)}
                :query-params {:site-id sid}
                :content-type :json
@@ -96,7 +104,7 @@
 
 (defn update-promo
   [promo-id value]
-  (client/put (str "http://localhost:3000/api/v1/promos/" promo-id)
+  (client/put (str (test-target-url) "/api/v1/promos/" promo-id)
               {:headers {"cookie" (build-auth-cookie-string)}
                :body (json/write-str value)
                :content-type :json
@@ -105,7 +113,7 @@
 
 (defn show-promo
   [sid promo-id]
-  (client/get (str "http://localhost:3000/api/v1/promos/" promo-id)
+  (client/get (str (test-target-url) "/api/v1/promos/" promo-id)
               {:headers {"cookie" (build-auth-cookie-string)}
                :query-params {:site-id sid}
                :accept :json
@@ -113,7 +121,7 @@
 
 (defn lookup-promo-by-code
   [code sid]
-  (client/get (str "http://localhost:3000/api/v1/promos/query/" code)
+  (client/get (str (test-target-url) "/api/v1/promos/query/" code)
               {:headers {"cookie" (build-auth-cookie-string)}
                :query-params {:site-id sid}
                :content-type :json
@@ -122,7 +130,7 @@
 
 (defn validate-promo
   [code sid body sig]
-  (client/post (str "http://localhost:3000/api/v1/promos/validation/" code)
+  (client/post (str (test-target-url) "/api/v1/promos/validation/" code)
                {:body body
                 :headers {:promotably-auth sig}
                 :content-type :json
@@ -133,7 +141,7 @@
 
 (defn query-promo
   [code sid body sig]
-  (client/get (str "http://localhost:3000/api/v1/promos/query/" code)
+  (client/get (str (test-target-url) "/api/v1/promos/query/" code)
               {:body body
                :headers {:promotably-auth sig}
                :content-type :json
@@ -160,3 +168,18 @@
                                              "" "\n"
                                              "" "\n")))]
     (str "hmac-sha1///" time-val "/" sig-str)))
+
+
+
+(defn init!
+  []
+  (let [target-host (or (System/getenv "TARGET_HOST")
+                        (System/getProperty "TARGET_HOST"))
+        target-port (or (System/getenv "TARGET_PORT")
+                        (System/getProperty "TARGET_PORT"))]
+    (if-not (or (nil? target-host) (nil? target-port))
+      (do (reset! test-target-host target-host)
+          (reset! test-target-port target-port))
+      (when (nil? system/current-system)
+        (core/go {:port 3000 :repl-port 55555}))))
+  (migrate-or-truncate))

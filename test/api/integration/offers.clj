@@ -4,8 +4,6 @@
    [api.fixtures.offers.html-css-theme :as offers-f-hct]
    [api.integration.helper :refer :all]
    [api.route :as route]
-   [api.system :as system]
-   [api.core :as core]
    [api.models.site]
    [api.models.promo :as promo]
    [api.models.offer :as offer]
@@ -16,9 +14,7 @@
    [midje.sweet :refer :all]))
 
 (against-background [(before :contents
-                             (do (when (nil? system/current-system)
-                                   (core/go {:port 3000 :repl-port 55555}))
-                                 (migrate-or-truncate)
+                             (do (init!)
                                  (load-fixture-set offers-fixture/fixture-set)))
                      (after :contents
                             (comment migrate-down))]
@@ -45,7 +41,7 @@
 
   (defn- create-offer
     [new-offer]
-    (client/post "http://localhost:3000/api/v1/offers"
+    (client/post (str (test-target-url) "/api/v1/offers")
                  {:body (json/write-str new-offer)
                   :headers {"Cookie" (build-auth-cookie-string)}
                   :content-type :json
@@ -53,7 +49,7 @@
                   :throw-exceptions false}))
   (defn- update-offer
     [offer-id offer]
-    (client/put (str "http://localhost:3000/api/v1/offers/" offer-id)
+    (client/put (str (test-target-url) "/api/v1/offers/" offer-id)
                 {:body (json/write-str offer)
                  :headers {"Cookie" (build-auth-cookie-string)}
                  :content-type :json
@@ -61,7 +57,7 @@
                  :throw-exceptions false}))
   (defn- get-rcos
     [site-id site-shopper-id & {:keys [cookies] :as opts}]
-    (client/get "http://localhost:3000/api/v1/rco"
+    (client/get (str (test-target-url) "/api/v1/rco")
                 (assoc-in (merge {:throw-exceptions false
                                   :query-params {"site-id" (str site-id)
                                                  "site-shopper-id" (str site-shopper-id)}}
@@ -89,7 +85,7 @@
                   (:status r) => 400))
 
               (facts "List Offers"
-                (let [url (str "http://localhost:3000/api/v1/offers/?site-id="
+                (let [url (str (test-target-url) "/api/v1/offers/?site-id="
                                (:site-id site))
                       r (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r) keyword)]
@@ -128,7 +124,7 @@
                   (:status r) => 200))
 
               (facts "Offer Update"
-                (let [url (str "http://localhost:3000/api/v1/offers/?site-id="
+                (let [url (str (test-target-url) "/api/v1/offers/?site-id="
                                (str site-id))
                       r (client/get url {:headers {"cookie" (build-auth-cookie-string)}})
                       listed (parse-string (:body r) keyword)

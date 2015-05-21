@@ -16,9 +16,7 @@
    [midje.sweet :refer :all]))
 
 (against-background [(before :contents
-                             (do (when (nil? system/current-system)
-                                   (core/go {:port 3000 :repl-port 55555}))
-                                 (migrate-or-truncate)
+                             (do (init!)
                                  (load-fixture-set base/fixture-set)))
                      (after :contents
                             (comment migrate-down))]

@@ -3,31 +3,27 @@
    [api.integration.helper :refer :all]
    [api.fixtures.basic :as base]
    [api.route :as route]
-   [api.system :as system]
-   [api.core :as core]
    [clj-http.client :as client]
    [midje.sweet :refer :all]))
 
 (against-background [(before :contents
-                             (do (when (nil? system/current-system)
-                                   (core/go {:port 3000 :repl-port 55555}))
-                                 (migrate-or-truncate)
+                             (do (init!)
                                  (load-fixture-set base/fixture-set)))
                      (after :contents
                             (comment migrate-down))]
 
   (facts "Index file"
-    (let [resp (client/get "http://localhost:3000/")]
+    (let [resp (client/get (str (test-target-url) "/"))]
       (:body resp) => string?
       (:status resp) => 200
       (get (:cookies resp) "promotably") => truthy))
   (facts "Register file"
-    (let [resp (client/get "http://localhost:3000/register"
+    (let [resp (client/get (str (test-target-url) "/register")
                            {:throw-exceptions false})]
       (:status resp) => 200
       (get (:cookies resp) "promotably") => truthy))
   (facts "Login file"
-    (let [resp (client/get "http://localhost:3000/login"
+    (let [resp (client/get (str (test-target-url) "/login")
                            {:throw-exceptions false})]
       (:status resp) => 200
       (get (:cookies resp) "promotably") => truthy)))
