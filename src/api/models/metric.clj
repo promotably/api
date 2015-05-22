@@ -120,7 +120,7 @@
 (defn sum-list
   "Sum a list of numbers"
   [values]
-  (apply + values))
+  (apply + (remove nil? values)))
 
 (defn insights-json-aggregate
   "The data in metrics_insights is a JSON structure. Some elements can simply be
