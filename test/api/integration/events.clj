@@ -51,7 +51,7 @@
     (fact "Should work when :uuid is :site-id"
       (let [api-secret (str (:api-secret site))
             path (url-encode "/api/v1/track")
-            sig-hash (compute-sig-hash @test-target-host
+            sig-hash (compute-sig-hash (.getHost @test-target)
                                        "GET"
                                        path
                                        nil
@@ -71,7 +71,7 @@
     (fact "Track thankyou"
       (let [api-secret (str (:api-secret site))
             path (url-encode "/api/v1/track")
-            sig-hash (compute-sig-hash @test-target-host
+            sig-hash (compute-sig-hash (.getHost @test-target)
                                        "GET"
                                        path
                                        nil

@@ -64,7 +64,7 @@
                        api-secret (str (:api-secret site))
                        rq-body (json/write-str (basic-request-data site-id code))
                        path (url-encode (str "/api/v1/promos/validation/" code))
-                       sig-hash (compute-sig-hash @test-target-host
+                       sig-hash (compute-sig-hash (.getHost @test-target)
                                                   "POST"
                                                   path
                                                   rq-body
@@ -82,7 +82,7 @@
                          api-secret (str (:api-secret site))
                          rq-body (json/write-str (basic-request-data site-id code))
                          path (url-encode (str "/api/v1/promos/validation/" code))
-                         sig-hash (compute-sig-hash @test-target-host
+                         sig-hash (compute-sig-hash (.getHost @test-target)
                                                     "POST"
                                                     path
                                                     rq-body
@@ -100,7 +100,7 @@
                          api-secret (str (:api-secret site))
                          rq-body (json/write-str (basic-request-data site-id code))
                          path (url-encode (str "/api/v1/promos/validation/" code))
-                         sig-hash (compute-sig-hash @test-target-host
+                         sig-hash (compute-sig-hash (.getHost @test-target)
                                                     "POST"
                                                     path
                                                     rq-body
@@ -118,7 +118,7 @@
                        api-secret (str (:api-secret site))
                        rq-body (json/write-str (basic-request-data site-id code))
                        path (url-encode (str "/api/v1/promos/validation/" code))
-                       sig-hash (compute-sig-hash @test-target-host
+                       sig-hash (compute-sig-hash (.getHost @test-target)
                                                   "POST"
                                                   path
                                                   rq-body
@@ -136,7 +136,7 @@
                        api-secret (str (:api-secret site))
                        rq-body (json/write-str (basic-request-data site-id code))
                        path (url-encode (str "/api/v1/promos/validation/" code))
-                       sig-hash (compute-sig-hash @test-target-host
+                       sig-hash (compute-sig-hash (.getHost @test-target)
                                                   "POST"
                                                   path
                                                   rq-body
@@ -152,7 +152,7 @@
                          api-secret (str (:api-secret site))
                          rq-body (json/write-str (basic-request-data site-id code))
                          path (url-encode (str "/api/v1/promos/validation/" code))
-                         sig-hash (compute-sig-hash @test-target-host
+                         sig-hash (compute-sig-hash (.getHost @test-target)
                                                     "POST"
                                                     path
                                                     rq-body
@@ -170,7 +170,7 @@
                          api-secret (str (:api-secret site))
                          rq-body (json/write-str (basic-request-data site-id code))
                          path (url-encode (str "/api/v1/promos/validation/" code))
-                         sig-hash (compute-sig-hash @test-target-host
+                         sig-hash (compute-sig-hash (.getHost @test-target)
                                                     "POST"
                                                     path
                                                     rq-body
@@ -188,7 +188,7 @@
                        api-secret (str (:api-secret site))
                        rq-body (json/write-str (basic-request-data site-id code))
                        path (url-encode (str "/api/v1/promos/validation/" code))
-                       sig-hash (compute-sig-hash @test-target-host
+                       sig-hash (compute-sig-hash (.getHost @test-target)
                                                   "POST"
                                                   path
                                                   rq-body

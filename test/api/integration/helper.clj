@@ -26,12 +26,11 @@
 
 (def expected-db-version 20150428111034)
 
-(def test-target-host (atom "localhost"))
-(def test-target-port (atom "3000"))
+(def test-target (atom (java.net.URL. "http://localhost:3000")))
 
 (defn test-target-url
   []
-  (str "http://" @test-target-host ":" @test-target-port))
+  (str @test-target))
 
 (defn truncate
   []
@@ -173,13 +172,10 @@
 
 (defn init!
   []
-  (let [target-host (or (System/getenv "TARGET_HOST")
-                        (System/getProperty "TARGET_HOST"))
-        target-port (or (System/getenv "TARGET_PORT")
-                        (System/getProperty "TARGET_PORT"))]
-    (if-not (or (nil? target-host) (nil? target-port))
-      (do (reset! test-target-host target-host)
-          (reset! test-target-port target-port))
+  (let [target-url (or (System/getenv "TARGET_URL")
+                       (System/getProperty "TARGET_URL"))]
+    (if-not (or (nil? target-url))
+      (do (reset! test-target (java.net.URL. target-url)))
       (when (nil? system/current-system)
         (core/go {:port 3000 :repl-port 55555}))))
   (migrate-or-truncate))

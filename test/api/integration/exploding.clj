@@ -66,7 +66,7 @@
                   (let [rq-body (json/write-str (basic-request-data fix/dynamic-site-id-2
                                                                     code))
                         path (url-encode (str "/api/v1/promos/query/" code))
-                        sig-hash (compute-sig-hash @test-target-host
+                        sig-hash (compute-sig-hash (.getHost @test-target)
                                                    "GET"
                                                    path
                                                    rq-body
@@ -114,7 +114,7 @@
                           (-> e :data :code) => code))))
                   (let [rq-body (json/write-str (basic-request-data site-id code))
                         path (url-encode (str "/api/v1/promos/query/" code))
-                        sig-hash (compute-sig-hash @test-target-host
+                        sig-hash (compute-sig-hash (.getHost @test-target)
                                                    "GET"
                                                    path
                                                    rq-body
