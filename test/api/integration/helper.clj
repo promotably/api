@@ -6,6 +6,7 @@
    [api.fixtures.basic :as base]
    [api.route :as route]
    [api.system :as system]
+   [api.config :as config]
    [api.lib.crypto :as cr]
    [korma.db :as kdb]
    [korma.core :as korma]
@@ -22,7 +23,9 @@
    [midje.sweet :refer :all]
    [clj-http.client :as client]
    [clojure.data.json :as json]
-   [ring.adapter.jetty :refer (run-jetty)]))
+   [ring.adapter.jetty :refer (run-jetty)]
+   [com.stuartsierra.component :as component]
+   [api.components :as c]))
 
 (def expected-db-version 20150428111034)
 
@@ -169,13 +172,22 @@
     (str "hmac-sha1///" time-val "/" sig-str)))
 
 
+(defn targeted-integration-test-system
+  []
+  (component/system-map
+   :config       (component/using (config/map->Config {}) [])
+   :logging      (component/using (c/map->LoggingComponent {}) [:config])
+   :database     (component/using (c/map->DatabaseComponent {}) [:config :logging])))
 
 (defn init!
   []
   (let [target-url (or (System/getenv "TARGET_URL")
                        (System/getProperty "TARGET_URL"))]
     (if-not (or (nil? target-url))
-      (do (reset! test-target (java.net.URL. target-url)))
+      (do (reset! test-target (java.net.URL. target-url))
+          (when (nil? api.system/current-system)
+            (alter-var-root #'api.system/current-system (constantly (targeted-integration-test-system)))
+            (alter-var-root #'api.system/current-system component/start)))
       (when (nil? system/current-system)
         (core/go {:port 3000 :repl-port 55555}))))
   (migrate-or-truncate))
