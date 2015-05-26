@@ -193,17 +193,22 @@
           finish (System/currentTimeMillis)
           total  (- finish start)]
       (when #((get-in current-system [:config :env]) #{:dev :test :integration})
-        (log/info (format "%-6s %-4d %s (%dms)"
+        (log/info (format "%-6s %-6s %-4d %s (%dms)"
+                          (get-in current-system [:config :env])
                           request-method
                           (:status resp)
                           uri
                           total)))
       (when-let [ep (:cloudwatch-endpoint context)]
-        (cloudwatch-recorder "response-time" total :Milliseconds :dimensions {:endpoint ep})
-        (cloudwatch-recorder (str "status-" status) 1 :Count :dimensions {:endpoint ep})
+        (cloudwatch-recorder "response-time" total :Milliseconds :dimensions
+                             {:endpoint ep})
+        (cloudwatch-recorder (str "status-" status) 1 :Count :dimensions
+                             {:endpoint ep})
         (when-let [site-id (:site-id params)]
-          (cloudwatch-recorder "response-time" total :Milliseconds :dimensions {:endpoint ep :site-id site-id})
-          (cloudwatch-recorder (str "status-"status) 1 :Count :dimensions {:endpoint ep :site-id site-id})))
+          (cloudwatch-recorder "response-time" total :Milliseconds :dimensions
+                               {:endpoint ep :site-id site-id})
+          (cloudwatch-recorder (str "status-"status) 1 :Count :dimensions
+                               {:endpoint ep :site-id site-id})))
       (dissoc resp :context))))
 
 
