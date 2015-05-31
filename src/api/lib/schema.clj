@@ -193,10 +193,13 @@
                     (-> ~base-event
                         (merge
                          {(s/optional-key :offer-id) (s/maybe s/Str)
+                          (s/optional-key :referer) (s/maybe s/Str)
                           (s/required-key :page) s/Str}))
                     #(= (:event-name %) :productview)
                     (merge ~base-event
                            {(s/required-key :sku) s/Str
+                            (s/optional-key :page) (s/maybe s/Str)
+                            (s/optional-key :referer) (s/maybe s/Str)
                             (s/optional-key :title) (s/maybe s/Str)
                             (s/optional-key :offer-id) (s/maybe s/Str)
                             (s/optional-key :item-count) (s/maybe s/Str)
