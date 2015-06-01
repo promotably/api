@@ -282,7 +282,7 @@
 
     (cond-> {:category :unknown :data (merge utms data)}
 
-            (and (not social?) (not email?) (not tagged?) paid?)
+            (and (not social?) (not email?) paid?)
             (assoc :category :paid)
 
             (and (not social?) (not email?) (not paid?) tagged?)
