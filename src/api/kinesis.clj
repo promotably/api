@@ -6,7 +6,8 @@
    [com.amazonaws.services.kinesis AmazonKinesisClient]
    [com.amazonaws.auth.profile ProfileCredentialsProvider]
    [com.amazonaws.auth DefaultAWSCredentialsProviderChain]
-   [java.nio ByteBuffer])
+   [java.nio ByteBuffer]
+   [java.util UUID])
   (:require
    [clojure.core.async :as async]
    [clojure.data.json :as json]
@@ -37,11 +38,20 @@
   (try
     (let [msg (-> message-map
                   wrap-message-envelope
-                  json/write-str)]
+                  (json/write-str :value-fn (fn [k v]
+                                              (if (instance? java.util.UUID v)
+                                                (str v)
+                                                (if (and (coll? v)
+                                                         (not (map? v)))
+                                                  (map (fn [cv]
+                                                         (if (instance? java.util.UUID cv)
+                                                           (str cv)
+                                                           cv)) v)
+                                                  v)))))]
       (.putRecord kinesis-client
                   stream-name
                   (ByteBuffer/wrap (.getBytes msg))
-                  (str (java.util.UUID/randomUUID))))
+                  (str (UUID/randomUUID))))
     (catch Throwable t
       (log/errorf "Can't send kinesis message %s" (:event-name message-map))
       (log/warn t (format "Failed to send Kinesis message to %s: %s"
@@ -75,7 +85,7 @@
   (enqueue! (:client kinesis)
             (:queue kinesis)
             (get-in kinesis [:config :kinesis :event-stream-name])
-            {:message-id (java.util.UUID/randomUUID)
+            {:message-id (UUID/randomUUID)
              :recorded-at (tf/unparse (tf/formatters :basic-date-time-no-ms) (t/now))
              :event-name event-name
              :attributes attributes}))
@@ -85,7 +95,7 @@
   (enqueue! (:client kinesis)
             (:queue kinesis)
             (get-in kinesis [:config :kinesis :promo-stream-name])
-            {:message-id (java.util.UUID/randomUUID)
+            {:message-id (UUID/randomUUID)
              :recorded-at (tf/unparse (tf/formatters :basic-date-time-no-ms) (t/now))
              :action action
              :promo promo
