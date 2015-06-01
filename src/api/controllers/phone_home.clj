@@ -73,15 +73,13 @@
     (.close z)))
 
 (defn list-plugins
-  [cloudwatch-recorder profile-name bucket cached]
+  [cloudwatch-recorder aws bucket cached]
   (try
     (cloudwatch-recorder "plugins-list" 1 :Count)
-    (let [^com.amazonaws.auth.AWSCredentialsProvider cp
-          (util/get-profile profile-name)
-          _ (log/logf :info "Listing s3://%s using credentials '%s'."
+    (let [_ (log/logf :info "Listing s3://%s using credentials '%s'."
                       bucket
-                      profile-name)
-          resp (amazonica.aws.s3/list-objects cp
+                      (:credential-profile aws))
+          resp (amazonica.aws.s3/list-objects (:credential-provider aws)
                                               :bucket-name bucket
                                               :prefix "woocommerce")
           latest-v (->> resp
@@ -96,7 +94,7 @@
                       (filter #(re-find latest-v (:key %)))
                       first)]
       (fetch-static cloudwatch-recorder
-                    profile-name
+                    aws
                     bucket
                     (:key latest)
                     cached

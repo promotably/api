@@ -96,18 +96,13 @@
 ;; AWS Kinesis Component
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defrecord Kinesis [config logging]
+(defrecord Kinesis [config logging aws]
   component/Lifecycle
   (start [this]
     (log/logf :info
               "Kinesis is starting, using credentials for '%s'."
-              (-> config :kinesis :aws-credential-profile))
-    (let [creds (-> config :kinesis :aws-credential-profile)
-          ^com.amazonaws.auth.AWSCredentialsProvider cp
-          (if-not (nil? creds)
-            (ProfileCredentialsProvider. creds)
-            (DefaultAWSCredentialsProviderChain.))
+              (-> config :aws :credential-profile))
+    (let [cp (:credential-provider aws)
           c (com.amazonaws.services.kinesis.AmazonKinesisClient. cp)
           q (async/chan queue-size)
           consumer (start-consumer q)]

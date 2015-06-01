@@ -29,7 +29,10 @@
 
 (defn fallback-to-exploding
   [cloudwatch-recorder site-id code]
-  (let [{:keys [offer-id] :as offer-event} (event/find-outstanding-offer cloudwatch-recorder site-id code)]
+  (let [{:keys [offer-id]
+         :as offer-event} (event/find-outstanding-offer cloudwatch-recorder
+                                                        site-id
+                                                        code)]
     (when offer-event
       (let [offer-promo (promo/find-by-uuid (-> offer-event
                                                 :data
@@ -313,6 +316,7 @@
         promo (promo/find-by-uuid promo-id)
         code (-> (random/url-part 4)
                  clojure.string/upper-case
-                 (clojure.string/replace #"[O0]" "9"))
+                 (clojure.string/replace #"[O0]" "9")
+                 (clojure.string/replace #"_" "7"))
         expiry (t-coerce/to-string (t/plus (t/now) (t/minutes expiry-in-minutes)))]
     [code expiry]))

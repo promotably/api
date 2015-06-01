@@ -11,7 +11,7 @@
 (defn request-metrics [path site-id start end]
   (let [start_param (str "?start=" start)
         end_param (str "&end=" end)]
-        (client/get (str "http://localhost:3000/api/v1/sites/" site-id path start_param end_param)
+        (client/get (str (test-target-url) "/api/v1/sites/" site-id path start_param end_param)
                     {:body nil
                      :headers {"Cookie" (build-auth-cookie-string)}
                      :content-type :json
@@ -19,9 +19,7 @@
                      :throw-exceptions true})))
 
 (against-background [(before :contents
-                             (do (when (nil? system/current-system)
-                                   (core/go {:port 3000 :repl-port 55555}))
-                                 (migrate-or-truncate)
+                             (do (init!)
                                  (load-fixture-set fix/fixture-set)))
                      (after :contents
                             (comment migrate-down))]
@@ -71,22 +69,22 @@
               (fact "Can route to controller.api.metrics.get-lift"
                     (let [r (request-metrics "/metrics/lift" fix/site-id "20150220" "20150224")
                           b (json/read-str (:body r) :key-fn keyword)]
-                      b => {:avg-order-revenue {:average {:exc 1.25,
-                                                          :inc 1.25},
-                                                :daily {:exc [0 0 4.0 1.0],
-                                                        :inc [0 0 4.0 1.0]}},
+                      b => {:avg-order-revenue {:average {:exc 1.0,
+                                                          :inc 1.0},
+                                                :daily {:exc [0.0 0.0 1.0 1.0],
+                                                        :inc [0.0 0.0 1.0 1.0]}},
                             :order-count {:average {:exc 1.25,
                                                     :inc 1.25},
-                                          :daily {:exc [0 0 4 1],
-                                                  :inc [0 0 4 1]}},
+                                          :daily {:exc [0.0 0.0 4.0 1.0],
+                                                  :inc [0.0 0.0 4.0 1.0]}},
                             :revenue-per-visit {:average {:exc 1.25,
                                                           :inc 1.25},
-                                                :daily {:exc [0 0 4.0 1.0],
-                                                        :inc [0 0 4.0 1.0]}},
+                                                :daily {:exc [0.0 0.0 4.0 1.0],
+                                                        :inc [0.0 0.0 4.0 1.0]}},
                             :total-revenue {:average {:exc 1.25,
                                                       :inc 1.25},
-                                            :daily {:exc [0 0 4.0 1.0],
-                                                    :inc [0 0 4.0 1.0]}}}
+                                            :daily {:exc [0.0 0.0 4.0 1.0],
+                                                    :inc [0.0 0.0 4.0 1.0]}}}
                       (:status r) => 200))
 
               (fact "Can route to controller.api.metrics.get-promos"
@@ -162,4 +160,32 @@
                             :average-items-per-order 3.0
                             :total-items 9}
                       (:status r) => 200))))
+
+(against-background [(before :contents
+                             (do (when (nil? system/current-system)
+                                   (core/go {:port 3000 :repl-port 55555}))
+                                 (migrate-or-truncate)))
+                     (after :contents
+                            (comment migrate-down))]
+
+                    (fact-group :integration
+                                (fact "Can serve empty metrics"
+                                      (let [r (request-metrics "/metrics/insights" fix/site-id "20150220" "20150223")
+                                            b (json/read-str (:body r) :key-fn keyword)]
+                                        b => {:total-discount 0.0
+                                              :visits 0
+                                              :average-session-length 0.0
+                                              :abandon-count 0
+                                              :engagements 0
+                                              :cart-adds 0
+                                              :total-revenue 0.0
+                                              :checkouts 0
+                                              :abandon-value 0
+                                              :revenue-per-order 0.0
+                                              :order-count 0
+                                              :ssids 0
+                                              :product-views 0
+                                              :average-items-per-order 0.0
+                                              :total-items 0}
+                                        (:status r) => 200))))
 

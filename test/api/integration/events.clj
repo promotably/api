@@ -8,13 +8,11 @@
     [midje.sweet :refer :all]
     [api.integration.helper :refer :all]
     [api.route :as route]
-    [api.system :refer [current-system] :as system]
-    [api.config :as config]
-    [api.core :as core]))
+    [api.config :as config]))
 
 (defn track
   [sig params]
-  (client/get "http://localhost:3000/api/v1/track"
+  (client/get (str (test-target-url) "/api/v1/track")
               {:body nil
                :headers {:promotably-auth sig}
                :query-params params
@@ -27,9 +25,7 @@
                :conn-timeout 10000}))
 
 (against-background [(before :contents
-                             (do (when (nil? system/current-system)
-                                   (core/go {:port 3000 :repl-port 55555}))
-                                 (migrate-or-truncate)
+                             (do (init!)
                                  (load-fixture-set fix/fixture-set)))
                      (after :contents
                             (comment migrate-down))]
@@ -55,7 +51,7 @@
     (fact "Should work when :uuid is :site-id"
       (let [api-secret (str (:api-secret site))
             path (url-encode "/api/v1/track")
-            sig-hash (compute-sig-hash "localhost"
+            sig-hash (compute-sig-hash (.getHost @test-target)
                                        "GET"
                                        path
                                        nil
@@ -75,7 +71,7 @@
     (fact "Track thankyou"
       (let [api-secret (str (:api-secret site))
             path (url-encode "/api/v1/track")
-            sig-hash (compute-sig-hash "localhost"
+            sig-hash (compute-sig-hash (.getHost @test-target)
                                        "GET"
                                        path
                                        nil

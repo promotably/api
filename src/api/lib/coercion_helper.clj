@@ -1,5 +1,5 @@
 (ns api.lib.coercion-helper
-  (:require [clojure.walk :refer [postwalk prewalk]]
+  (:require [clojure.walk :refer [postwalk prewalk walk]]
             [clj-time.coerce :refer [from-sql-date from-sql-time
                                      from-date to-sql-date to-sql-time
                                      to-date]]
@@ -91,3 +91,11 @@
 (def remove-nils
   (make-trans (constantly true)
               #(if (nil? %2) nil [%1 %2])))
+
+(defn remove-nested-nils
+  [m]
+  (walk (fn [x]
+          (if (and (vector? x) (vector? (second x)))
+            [(first x)
+             (into [] (filter #(not (nil? %)) (second x)))]
+            x)) identity m))

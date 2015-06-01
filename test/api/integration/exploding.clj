@@ -17,9 +17,7 @@
    [midje.sweet :refer :all]))
 
 (against-background [(before :contents
-                             (do (when (nil? system/current-system)
-                                   (core/go {:port 3000 :repl-port 55555}))
-                                 (migrate-or-truncate)
+                             (do (init!)
                                  (load-fixture-set fix/fixture-set)))
                      (after :contents
                             (comment migrate-down))]
@@ -39,7 +37,7 @@
 
   (defn- get-rcos
     [site-id site-shopper-id & {:keys [cookies] :as opts}]
-    (client/get "http://localhost:3000/api/v1/rco"
+    (client/get (str (test-target-url) "/api/v1/rco")
                 (assoc-in (merge {:throw-exceptions false
                                   :query-params {"site-id" (str site-id)
                                                  "site-shopper-id" (str site-shopper-id)}}
@@ -68,7 +66,7 @@
                   (let [rq-body (json/write-str (basic-request-data fix/dynamic-site-id-2
                                                                     code))
                         path (url-encode (str "/api/v1/promos/query/" code))
-                        sig-hash (compute-sig-hash "localhost"
+                        sig-hash (compute-sig-hash (.getHost @test-target)
                                                    "GET"
                                                    path
                                                    rq-body
@@ -116,7 +114,7 @@
                           (-> e :data :code) => code))))
                   (let [rq-body (json/write-str (basic-request-data site-id code))
                         path (url-encode (str "/api/v1/promos/query/" code))
-                        sig-hash (compute-sig-hash "localhost"
+                        sig-hash (compute-sig-hash (.getHost @test-target)
                                                    "GET"
                                                    path
                                                    rq-body

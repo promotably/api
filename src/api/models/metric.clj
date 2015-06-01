@@ -29,7 +29,7 @@
             (aggregate (sum :less_commission_and_discount) :less-commission-and-discount)
             (where {:site_id site-uuid})
             (where {:measurement_hour [>= (to-sql-time start-day)]})
-            (where {:measurement_hour [<= (to-sql-time end-day)]}))]
+            (where {:measurement_hour [< (to-sql-time end-day)]}))]
     r))
 
 (defn site-revenue-by-days
@@ -43,7 +43,7 @@
                   (order :measurement_hour :ASC)
                   (where {:site_id site-uuid})
                   (where {:measurement_hour [>= (to-sql-time start-day)]})
-                  (where {:measurement_hour [<= (to-sql-time end-day)]}))]
+                  (where {:measurement_hour [< (to-sql-time end-day)]}))]
     r))
 
 (defn site-promos-by-days
@@ -56,7 +56,7 @@
             (order :revenue :DESC)
             (where {:site_id site-uuid})
             (where {:measurement_hour [>= (to-sql-time start-day)]})
-            (where {:measurement_hour [<= (to-sql-time end-day)]}))]
+            (where {:measurement_hour [< (to-sql-time end-day)]}))]
     r))
 
 (defn site-rcos-by-days
@@ -74,7 +74,7 @@
                   (order :revenue :DESC)
                   (where {:site_id site-uuid})
                   (where {:measurement_hour [>= (to-sql-time start-day)]})
-                  (where {:measurement_hour [<= (to-sql-time end-day)]}))]
+                  (where {:measurement_hour [< (to-sql-time end-day)]}))]
     r))
 
 (defn site-lift-by-days
@@ -92,8 +92,14 @@
                   (order :measurement_hour :ASC)
                   (where {:site_id site-uuid})
                   (where {:measurement_hour [>= (to-sql-time start-day)]})
-                  (where {:measurement_hour [<= (to-sql-time end-day)]}))]
+                  (where {:measurement_hour [< (to-sql-time end-day)]}))]
     r))
+
+(defn safe-quot
+  [num denom]
+  (try (quot num denom)
+       (catch ArithmeticException _
+         0.0)))
 
 (defn round2
   "Round a double to the given precision (number of significant digits)"
@@ -109,12 +115,12 @@
 (defn average-list
   "Average a list of numbers"
   [values]
-  (round2 2 (/ (apply + values) (count values))))
+  (round2 2 (safe-quot (apply + values) (count values))))
 
 (defn sum-list
   "Sum a list of numbers"
   [values]
-  (apply + values))
+  (apply + (remove nil? values)))
 
 (defn insights-json-aggregate
   "The data in metrics_insights is a JSON structure. Some elements can simply be
@@ -144,7 +150,7 @@
                   (order :measurement_hour :ASC)
                   (where {:site_id site-uuid})
                   (where {:measurement_hour [>= (to-sql-time start-day)]})
-                  (where {:measurement_hour [<= (to-sql-time end-day)]}))
+                  (where {:measurement_hour [< (to-sql-time end-day)]}))
         i (map #(get % :data) r)]
     (insights-json-aggregate i)))
 
