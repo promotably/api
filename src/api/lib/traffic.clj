@@ -278,7 +278,9 @@
         paid? (or
                (seq (filter #(re-find #"ppc|cpc|adword" %) (vals utms)))
                (:gclid params)
-               (and (seq utms) (re-find #"google\.com" referer)))]
+               (and has-referer?
+                    (seq utms)
+                    (re-find #"google\.com" (or referer ""))))]
 
     (cond-> {:category :unknown :data (merge utms data)}
 
