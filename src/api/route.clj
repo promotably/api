@@ -192,9 +192,8 @@
           {:keys [context status] :as resp} (handler req)
           finish (System/currentTimeMillis)
           total  (- finish start)]
-      (when #((get-in current-system [:config :env]) #{:dev :test :integration})
-        (log/info (format "%-6s %-6s %-4d %s (%dms)"
-                          (get-in current-system [:config :env])
+      (when ((get-in current-system [:config :env]) #{:dev :test :integration})
+        (log/info (format "%-6s %-4d %s (%dms)"
                           request-method
                           (:status resp)
                           uri
