@@ -25,7 +25,7 @@
 (defn- wrap-message-envelope
   [message-map]
   {:v "1"
-   :env (:env current-system)
+   :env (name (get-in current-system [:config :env]))
    :src "api"
    :type (or (:event-name message-map)
              (:action message-map))
