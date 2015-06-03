@@ -13,6 +13,7 @@
             [api.models.offer :as offer :refer [fallback-to-exploding
                                                 lookup-exploding]]
             [api.lib.schema :refer :all]
+            [api.lib.traffic :refer [source] :as traffic]
             [api.lib.coercion-helper :refer [transform-map
                                              make-trans
                                              remove-nils
@@ -195,31 +196,46 @@
                      (assoc :user-agent (get headers "user-agent"))
                      coercer
                      (assoc :event-format-version "2"))]
+
          ;; For debugging
          ;; (clojure.pprint/pprint out)
-         (when (= schema.utils.ErrorContainer (type out))
-           (log/logf :error
-                     "Tracking event in invalid format: %s %s"
-                     (pr-str parsed)
-                     (pr-str out))
-           (cloudwatch-recorder "event-format-invalid" 1 :Count)
-           (cloudwatch-recorder "event-format-invalid" 1 :Count
-                                :dimensions {:event-name (:event-name out)
-                                             :site-id (-> parsed :site :site-id str)}))
-         (kinesis/record-event! kinesis-comp (:event-name out) out)
-         (cloudwatch-recorder "event-record-success" 1 :Count
-                              :dimensions {:event-name (:event-name out)
-                                           :site-id (-> parsed :site :site-id str)})
-         (cloudwatch-recorder "event-record-success" 1 :Count)
-         (let [session (cond-> (:session request)
-                               (#{:productadd :cartview :cartupdate :checkout}
-                                (:event-name out))
-                                 (assoc :last-cart-event out)
-                               true
+
+         ;; Make sure it's not busted.
+         (if (= schema.utils.ErrorContainer (type out))
+           (do
+             (log/logf :error
+                       "Tracking event in invalid format: %s %s"
+                       (pr-str parsed)
+                       (pr-str out))
+             (cloudwatch-recorder "event-format-invalid" 1 :Count)
+             (cloudwatch-recorder "event-format-invalid" 1 :Count
+                                  :dimensions {:event-name (:event-name out)
+                                               :site-id (-> parsed :site :site-id str)}))
+           (let [source (traffic/source out)
+                 needs-source? (and (#{:productview :pageview} (:event-name out))
+                                    (not (-> request :session :traffic-source)))
+                 out* (if needs-source?
+                        (assoc out :source source)
+                        out)
+                 session (cond-> (:session request)
+
+                                 (#{:productadd :cartview :cartupdate :checkout}
+                                  (:event-name out*))
+                                 (assoc :last-cart-event out*)
+
+                                 needs-source?
+                                 (assoc :traffic-source source)
+
+                                 true
                                  (assoc :last-event-at (t-coerce/to-string (t/now))))
-               response (merge base-response {:headers {"Content-Type"
-                                                        "text/javascript"}
-                                              :body ""
-                                              :session session
-                                              :status 200})]
-           response))))))
+                 response (merge base-response {:headers {"Content-Type"
+                                                          "text/javascript"}
+                                                :body ""
+                                                :session session
+                                                :status 200})]
+             (kinesis/record-event! kinesis-comp (:event-name out*) out*)
+             (cloudwatch-recorder "event-record-success" 1 :Count
+                                  :dimensions {:event-name (:event-name out*)
+                                               :site-id (-> parsed :site :site-id str)})
+             (cloudwatch-recorder "event-record-success" 1 :Count)
+             response)))))))

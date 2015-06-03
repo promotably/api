@@ -94,14 +94,25 @@
 ;; TODO: Check auth
 (defn query-promo
   [{:keys [params cloudwatch-recorder] :as request}]
-  (let [matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
+  (let [base-response {:context {:cloudwatch-endpoint "promos-query"}}
+        matcher (c/first-matcher [custom-matcher c/string-coercion-matcher])
         coercer (c/coercer query-schema matcher)
-        {:keys [site-id code] :as coerced-params} (coercer params)
-        code (clojure.string/upper-case code)
-        the-promo (promo/find-by-site-uuid-and-code site-id code)
-        [offer-id offer-promo] (fallback-to-exploding cloudwatch-recorder
-                                                      site-id code)]
-    (shape-promo {:promo (or the-promo offer-promo)})))
+        {:keys [site-id code] :as coerced-params} (coercer params)]
+    (cond
+     (or (nil? code) (= "" code))
+     (do
+       (cloudwatch-recorder "promo-query-error" 1 :Count)
+       (cloudwatch-recorder "promo-query-error" 1 :Count
+                            :dimensions {:site-id (str site-id)})
+       (log/logf :error "Nil or empty promo code. Params: %s" params)
+       (merge base-response {:status 400
+                             :session (:session request)}))
+     :else
+     (let [code (clojure.string/upper-case code)
+           the-promo (promo/find-by-site-uuid-and-code site-id code)
+           [offer-id offer-promo] (fallback-to-exploding cloudwatch-recorder
+                                                         site-id code)]
+       (shape-promo {:promo (or the-promo offer-promo)})))))
 
 (def coerce-site-id
   (make-trans #{:site-id}
