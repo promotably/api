@@ -11,6 +11,7 @@
    [clj-http.client :as client]
    [midje.sweet :refer :all]))
 
+(comment
 (against-background [(before :contents
                              (do (when (nil? system/current-system)
                                    (core/go {:port 3000 :repl-port 55555}))
@@ -35,4 +36,4 @@
                           (.setObject 9 false)) ;; control_group
               result (.execute statement)]
           result => truthy
-          (count (jdbc/query c ["select * from promo_redemptions"])) => 1)))))
+          (count (jdbc/query c ["select * from promo_redemptions"])) => 1))))))

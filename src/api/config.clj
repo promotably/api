@@ -105,7 +105,7 @@
 
 (defn app-config
   []
-  {:dev        {:database {:db "promotably_dev"
+  {:dev        {:database {:db "promotably_mig"
                            :user "p_user"
                            :password "pr0m0"
                            :host "localhost"
