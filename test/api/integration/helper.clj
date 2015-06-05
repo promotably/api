@@ -47,19 +47,9 @@
   []
   ())
 
-(defn migrate-up
-  []
-  (let [c (get-in system/current-system [:config :database])
-        host (:host c)
-        port (:port c)
-        user (:user c)
-        password (:password c)
-        database (:db c)]
-    (mig/migrate host port user password database)))
 
 (defn migrate-or-truncate
   []
-  (migrate-up)
   (truncate))
 
 (defn load-fixture-set

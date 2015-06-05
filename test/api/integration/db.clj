@@ -10,7 +10,6 @@
    [api.core :as core]
    [clj-http.client :as client]
    [midje.sweet :refer :all]))
-
 (comment
 (against-background [(before :contents
                              (do (when (nil? system/current-system)
