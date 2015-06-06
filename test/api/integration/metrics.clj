@@ -146,7 +146,7 @@
                           b (json/read-str (:body r) :key-fn keyword)]
                       b => {:total-discount 0.0
                             :visits 9
-                            :average-session-length 3.0
+                            :average-session-length 5.0
                             :abandon-count 9
                             :engagements 9
                             :cart-adds 0

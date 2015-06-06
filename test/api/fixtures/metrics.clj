@@ -27,7 +27,7 @@
 (def insights-base
   {:total-discount 0
    :visits 3
-   :average-session-length 3
+   :average-session-length 300000
    :abandon-count 3
    :engagements 3
    :cart-adds 0

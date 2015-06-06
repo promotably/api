@@ -122,13 +122,17 @@
   [values]
   (apply + (remove nil? values)))
 
+(defn ms-to-m
+  [t]
+  (round2 2 (safe-quot (safe-quot t 1000) 60)))
+
 (defn insights-json-aggregate
   "The data in metrics_insights is a JSON structure. Some elements can simply be
    summed and others averaged. This is way too verbose so maybe a convention is in order."
   [data]
   {:total-discount (round2 2 (sum-list (get-all :total-discount data)))
    :visits (sum-list (get-all :visits data))
-   :average-session-length (average-list (get-all :average-session-length data))
+   :average-session-length (ms-to-m (average-list (get-all :average-session-length data)))
    :abandon-count (sum-list (get-all :abandon-count data))
    :engagements (sum-list (get-all :engagements data))
    :cart-adds (sum-list (get-all :cart-adds data))
