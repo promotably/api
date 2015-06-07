@@ -25,9 +25,8 @@
    [clojure.data.json :as json]
    [ring.adapter.jetty :refer (run-jetty)]
    [com.stuartsierra.component :as component]
-   [api.components :as c]))
-
-(def expected-db-version 20150524184432)
+   [api.components :as c]
+   [mig.core :as mig]))
 
 (def test-target (atom (java.net.URL. "http://localhost:3000")))
 
@@ -46,22 +45,12 @@
 
 (defn migrate-down
   []
-  (with-out-str (drift.execute/migrate 0 [])))
+  ())
 
-(defn migrate-up
-  []
-  (with-out-str (drift.execute/migrate Long/MAX_VALUE [])))
 
 (defn migrate-or-truncate
   []
-  (if-not (= expected-db-version (db/db-version))
-    (do
-      (migrate-down)
-      (migrate-up)
-      (when-not (= expected-db-version (db/db-version))
-        (log/logf :fatal "Expected db version %s" (str expected-db-version))
-        (System/exit 0)))
-    (truncate)))
+  (truncate))
 
 (defn load-fixture-set
   [fset]
