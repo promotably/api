@@ -43,12 +43,12 @@
                                             lookup-offers get-available-offers
                                             wrap-record-rco-events]]
             [api.controllers.accounts :refer [get-account create-new-account!
-                                              update-account! create-site-for-account!
-                                              update-site-for-account!]]
+                                              update-account!]]
             [api.controllers.email-subscribers :refer [create-email-subscriber!]]
             [api.controllers.metrics :refer [get-revenue get-additional-revenue
                                              get-lift get-promos get-rco get-insights]]
             [api.controllers.phone-home :as phone-home]
+            [api.controllers.sites :refer [get-site create-site! update-site!]]
             [api.controllers.static :refer [serve-cached-index
                                             serve-cached-register
                                             serve-cached-login]
@@ -144,8 +144,9 @@
            (POST "/users" [] create-new-user!)
            (PUT "/users/:user-id" [] update-user!)
            (context "/sites" []
-                    (POST "/" [] create-site-for-account!)
-                    (PUT "/:site-id" [] update-site-for-account!)
+                    (GET "/:site-id" [] get-site)
+                    (POST "/" [] create-site!)
+                    (PUT "/:site-id" [] update-site!)
                     metrics-secure-routes)
            promo-secure-routes
            offer-routes))

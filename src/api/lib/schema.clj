@@ -26,6 +26,8 @@
    :site-code :site-code
    :site-name :name
    :site-url :site-url
+   :account-id (fn [site]
+                 (str (:account-id site)))
    :api-secret (fn [site] ; uuid coerced to string
                  (str (:api-secret site)))
    :country :country
@@ -773,4 +775,3 @@
    (s/required-key :revenue) s/Num
    (s/required-key :less-commission-and-discount) s/Num
    (s/required-key :created-at) (s/maybe org.joda.time.DateTime)})
-
