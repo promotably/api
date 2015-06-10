@@ -23,11 +23,11 @@
 (defn get-site
   [{:keys [params user-id] :as request}]
   (let [base-response {:context {:cloudwatch-endpoint "sites-get"}}
-        {:keys [user-id site-id]} (shape-to-spec (assoc params :user-id user-id)
-                                                 inbound-site-spec)]
+        {:keys [user-id site-id account-id]} (shape-to-spec (assoc params :user-id user-id)
+                                                            inbound-site-spec)]
     (if-let [site* (site/find-by-site-uuid site-id)]
-      (if (user-access-to-account? user-id (:account-id site*))
-        (merge base-response (build-response 200 :site site*))
+      (if (user-access-to-account? user-id account-id)
+        (merge base-response (build-response 200 :site (merge site* {:account-id account-id})))
         (merge base-response (build-response 403 :error "User does not have access to the account for this site.")))
       (merge base-response (build-response 404 :error "Site with this ID does not exist.")))))
 
@@ -43,7 +43,7 @@
                               (s/replace ".com" "")
                               (s/replace "." "-"))]
         (if-not (site/find-by-site-code new-site-code)
-          (if-let [result (site/create-site-for-account! id (assoc site :site-code new-site-code))]
+          (if-let [result (merge (site/create-site-for-account! id (assoc site :site-code new-site-code)) {:account-id (:account-id site)})]
             (merge base-response (build-response 201 :site result))
             (merge base-response (build-response 400 :error "Unable to create site, invalid or missing parameters.")))
           (merge base-response (build-response 409 :error "Site with this URL already exists."))))
@@ -57,7 +57,7 @@
         id (:account-id (site/find-by-site-uuid (:site-id site)))
         account-id (:account-id (account/find-by-id id))]
     (if (user-access-to-account? (:user-id site) account-id)
-      (if-let [result (site/update-site-for-account! id site)]
+      (if-let [result (merge (site/update-site-for-account! id site) {:account-id account-id})]
         (merge base-response (build-response 200 :site result))
         (merge base-response (build-response 400 :error "Unable to update site, invalid or missing parameters.")))
       (merge base-response (build-response 403 :error "User does not have access to this account.")))))
