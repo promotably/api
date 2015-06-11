@@ -187,7 +187,9 @@
                (metric/site-promos-by-days site-uuid start-date end-date)
                (map #(-> % (rename-keys {:promo_id :id})))
                (add-deleted-property promo/find-existing)
-               (map #(-> % (assoc :revenue-per-order (metric/safe-quot (:revenue %) (:redemptions %))))))]
+               (map #(-> % (assoc :revenue-per-order (metric/safe-quot
+                                                      (:revenue %)
+                                                      (:redemptions %))))))]
     (merge base-response {:status 200
                           :headers {"Cache-Control" "max-age=0, no-cache"}
                           :body body})))
@@ -205,7 +207,7 @@
               (map #(rename-keys % {:offer_id :id}))
               (add-deleted-property offer/find-existing)
               (map #(assoc % :avg-revenue (metric/safe-quot (:revenue %)
-                                                     (:orders %))))
+                                                            (:orders %))))
               (map #(assoc % :redemption-rate (percentage (:redeemed %)
                                                           (:offered %))))
               (map #(assoc % :conversion-rate (percentage (:orders %)
@@ -213,7 +215,7 @@
               (map #(assoc % :avg-items-in-cart (metric/safe-quot
                                                  (:total-items-in-cart %)
                                                  (:orders %))))
-              (map #(assoc % :avg-discount (metric/safe-quot (:discount %)
+              (map #(assoc % :avg-discount (metric/safe-divide (:discount %)
                                                       (:orders %))))
               (map #(dissoc % :total-items-in-cart)))]
     (merge base-response {:status 200

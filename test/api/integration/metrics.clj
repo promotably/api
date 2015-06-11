@@ -122,7 +122,7 @@
                              :avg-items-in-cart 3,
                              :avg-revenue 33.0,
                              :revenue 200.0,
-                             :avg-discount 6.0,
+                             :avg-discount 0.0,
                              :discount 41.0},
                             {:id (str fix/offer-id-uno),
                              :deleted true,
@@ -137,7 +137,7 @@
                              :avg-items-in-cart 3,
                              :avg-revenue 18.0,
                              :revenue 170.0,
-                             :avg-discount 4.0,
+                             :avg-discount 0.0,
                              :discount 43.5}]
                       (:status r) => 200))
 
@@ -153,11 +153,11 @@
                             :total-revenue 3.0
                             :checkouts 9
                             :abandon-value 9
-                            :revenue-per-order 0.0
+                            :revenue-per-order 0.33
                             :order-count 9
                             :ssids 9
                             :product-views 9
-                            :average-items-per-order 3.0
+                            :average-items-per-order 1.0
                             :total-items 9}
                       (:status r) => 200))))
 

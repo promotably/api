@@ -95,6 +95,12 @@
                   (where {:measurement_hour [< (to-sql-time end-day)]}))]
     r))
 
+(defn safe-divide
+  [num denom]
+  (try (/ num denom)
+       (catch ArithmeticException _
+         0.0)))
+
 (defn safe-quot
   [num denom]
   (try (quot num denom)
@@ -115,7 +121,7 @@
 (defn average-list
   "Average a list of numbers"
   [values]
-  (round2 2 (safe-quot (apply + values) (count values))))
+  (round2 2 (safe-divide (apply + values) (count values))))
 
 (defn sum-list
   "Sum a list of numbers"
@@ -126,21 +132,26 @@
   "The data in metrics_insights is a JSON structure. Some elements can simply be
    summed and others averaged. This is way too verbose so maybe a convention is in order."
   [data]
-  {:total-discount (round2 2 (sum-list (get-all :total-discount data)))
-   :visits (sum-list (get-all :visits data))
-   :average-session-length (average-list (get-all :average-session-length data))
-   :abandon-count (sum-list (get-all :abandon-count data))
-   :engagements (sum-list (get-all :engagements data))
-   :cart-adds (sum-list (get-all :cart-adds data))
-   :total-revenue (round2 2 (sum-list (get-all :total-revenue data)))
-   :checkouts (sum-list (get-all :checkouts data))
-   :abandon-value (sum-list (get-all :abandon-value data))
-   :revenue-per-order (average-list (get-all :revenue-per-order data))
-   :order-count (sum-list (get-all :order-count data))
-   :ssids (sum-list (get-all :ssids data))
-   :product-views (sum-list (get-all :product-views data))
-   :average-items-per-order (average-list (get-all :average-items-per-order data))
-   :total-items (sum-list (get-all :total-items data))})
+  (let [rev (round2 2 (sum-list (get-all :total-revenue data)))
+        order-count (sum-list (get-all :order-count data))
+        total-items (sum-list (get-all :total-items data))
+        items-per-order (round2 2 (if (= 0 order-count) 0 (/ total-items order-count)))
+        rev-per-order (round2 2 (if (= 0 order-count) 0 (/ rev order-count)))]
+    {:total-discount (round2 2 (sum-list (get-all :total-discount data)))
+     :visits (sum-list (get-all :visits data))
+     :average-session-length (average-list (get-all :average-session-length data))
+     :abandon-count (sum-list (get-all :abandon-count data))
+     :engagements (sum-list (get-all :engagements data))
+     :cart-adds (sum-list (get-all :cart-adds data))
+     :total-revenue (round2 2 (sum-list (get-all :total-revenue data)))
+     :checkouts (sum-list (get-all :checkouts data))
+     :abandon-value (sum-list (get-all :abandon-value data))
+     :revenue-per-order rev-per-order
+     :order-count order-count
+     :ssids (sum-list (get-all :ssids data))
+     :product-views (sum-list (get-all :product-views data))
+     :average-items-per-order items-per-order
+     :total-items total-items}))
 
 (defn site-insights-by-days
   [site-uuid start-day end-day]
