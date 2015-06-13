@@ -74,7 +74,6 @@
               (facts "Offer Create"
                 (let [r (create-offer (default-offer))]
                   (:status r) => 201
-                  (println (:body r))
                   (json/read-str (:body r) :key-fn keyword) => (contains {:code "NEW-VISITOR"
                                                                           :conditions (just [(contains {:type "dates"})])
                                                                           :site-id string?})))
@@ -96,12 +95,12 @@
                       listed (parse-string (:body r) keyword)]
                   listed => (just [(contains
                                     {:name "New Visitor Offer"
-                                     :presentation {:css "body {}"
-                                                    :display-text "presentation text"
-                                                    :html "<html></html>"
-                                                    :page "any"
-                                                    :theme "theme"
-                                                    :type "lightbox"}
+                                     :presentation (contains {:css "body {}"
+                                                              :display-text "presentation text"
+                                                              :html "<html></html>"
+                                                              :page "any"
+                                                              :theme "theme"
+                                                              :type "lightbox"})
                                      :active true
                                      :reward {:type "dynamic-promo"
                                               :promo-id (-> promos first :uuid str)
@@ -114,12 +113,12 @@
                                                   :in-any-order)})
                                    (contains
                                     {:name "Easter Offer"
-                                     :presentation {:css "body {}",
-                                                    :display-text "presentation text",
-                                                    :html "<html></html>",
-                                                    :page "any",
-                                                    :theme "theme",
-                                                    :type "lightbox"}
+                                     :presentation (contains {:css "body {}",
+                                                              :display-text "presentation text",
+                                                              :html "<html></html>",
+                                                              :page "any",
+                                                              :theme "theme",
+                                                              :type "lightbox"})
                                      :active true
                                      :reward {:type "dynamic-promo"
                                               :promo-id (-> promos first :uuid str)
@@ -145,7 +144,11 @@
                                                     :css "body {}",
                                                     :html "<html></html>",
                                                     :theme "theme",
-                                                    :display-text "foo"}
+                                                    :display-text "foo"
+                                                    :inline-selector nil
+                                                    :prompt-position nil
+                                                    :prompt-html "<html></html>"
+                                                    :prompt-css "body {}"}
                                      :conditions [{:type :product-views
                                                    :product-views 3}]
                                      :html "<html></html>"
@@ -160,12 +163,12 @@
                                                                            :site-id string?})
                   listed => (just [(contains
                                     {:name "Old Visitor Offer"
-                                     :presentation {:css "body {}"
-                                                    :display-text "foo"
-                                                    :html "<html></html>"
-                                                    :page "search-results"
-                                                    :theme "theme"
-                                                    :type "fixed-div"}
+                                     :presentation (contains {:css "body {}"
+                                                              :display-text "foo"
+                                                              :html "<html></html>"
+                                                              :page "search-results"
+                                                              :theme "theme"
+                                                              :type "fixed-div"})
                                      :active false
                                      :reward {:type "promo"
                                               :promo-id (-> promos first :uuid str)}
@@ -174,12 +177,12 @@
                                                    :type "product-views"}]})
                                    (contains
                                     {:name "Easter Offer"
-                                     :presentation {:css "body {}"
-                                                    :display-text "presentation text"
-                                                    :html "<html></html>"
-                                                    :page "any"
-                                                    :theme "theme"
-                                                    :type "lightbox"}
+                                     :presentation (contains {:css "body {}"
+                                                              :display-text "presentation text"
+                                                              :html "<html></html>"
+                                                              :page "any"
+                                                              :theme "theme"
+                                                              :type "lightbox"})
                                      :active true
                                      :reward {:type "dynamic-promo"
                                               :promo-id (-> promos first :uuid str)
@@ -202,12 +205,12 @@
                   pr => (contains {:code "EASTER PROMO FOR SITE 2"
                                    :active true
                                    :promo {:conditions []}
-                                   :presentation {:css "body {}",
-                                                  :display-text nil,
-                                                  :html "<html></html>",
-                                                  :page "product-detail",
-                                                  :theme "theme",
-                                                  :type "lightbox"}})))
+                                   :presentation (contains {:css "body {}",
+                                                            :display-text nil,
+                                                            :html "<html></html>",
+                                                            :page "product-detail",
+                                                            :theme "theme",
+                                                            :type "lightbox"})})))
 
               (facts "Offer with number of cart adds condition"
                 (let [r (get-rcos offers-fixture/site-3-id
@@ -278,12 +281,12 @@
                   (:status r) => 200
                   pr => (contains {:expires string?
                                    :promo {:conditions []},
-                                   :presentation {:css nil
-                                                  :display-text nil
-                                                  :html nil
-                                                  :page "product-detail"
-                                                  :theme nil
-                                                  :type "lightbox"},
+                                   :presentation (contains {:css nil
+                                                            :display-text nil
+                                                            :html nil
+                                                            :page "product-detail"
+                                                            :theme nil
+                                                            :type "lightbox"}),
                                    :is-limited-time true,
                                    :code string?,
                                    :active true})))))

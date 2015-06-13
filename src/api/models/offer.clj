@@ -195,9 +195,6 @@
                          (not (nil? active)) (assoc :active active))
             result (insert offers (values new-values))
             the-offer (db-to-offer result)]
-        (println result)
-        (println the-offer)
-        (println conditions)
         (when (seq conditions)
           (c/create-conditions! (map #(-> %
                                           (assoc :uuid (java.util.UUID/randomUUID))

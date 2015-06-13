@@ -92,12 +92,12 @@
                   (:status r2) => 200
                   pr1 => (contains {:expires string?
                                     :promo {:conditions []},
-                                    :presentation {:display-text nil,
-                                                   :page "product-detail",
-                                                   :html nil
-                                                   :css nil
-                                                   :theme nil
-                                                   :type "lightbox"},
+                                    :presentation (contains {:display-text nil,
+                                                             :page "product-detail",
+                                                             :html nil
+                                                             :css nil
+                                                             :theme nil
+                                                             :type "lightbox"}),
                                     :is-limited-time true,
                                     :code string?,
                                     :active true})
