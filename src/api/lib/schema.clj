@@ -523,13 +523,20 @@
 (def valid-presentation-types #{:lightbox :fly-in :fixed-div :inline :on-exit})
 (def valid-presentation-page-types #{:product-detail :cart :checkout
                                      :search-results :any})
+(def valid-prompt-positions #{:top-left :top-center :top-right :center-left
+                              :center-right :bottom-left :bottom-center
+                              :bottom-right :inline})
 (def BasePresentation
   {(s/required-key :type) (apply s/enum (vec valid-presentation-types))
    (s/required-key :page) (apply s/enum (vec valid-presentation-page-types))
    (s/required-key :html) (s/maybe s/Str)
    (s/required-key :css) (s/maybe s/Str)
    (s/required-key :theme) (s/maybe s/Str)
-   (s/required-key :display-text) (s/maybe s/Str)})
+   (s/required-key :display-text) (s/maybe s/Str)
+   (s/required-key :inline-selector) (s/maybe s/Str)
+   (s/required-key :prompt-position) (s/maybe (apply s/enum (vec valid-prompt-positions)))
+   (s/required-key :prompt-html) (s/maybe s/Str)
+   (s/required-key :prompt-css) (s/maybe s/Str)})
 (def Presentation
   (s/conditional #(= (:type %) :lightbox)
                  (merge BasePresentation {})
@@ -701,7 +708,11 @@
    (s/required-key :presentation) Presentation
    (s/optional-key :html) s/Str
    (s/optional-key :css) s/Str
-   (s/optional-key :theme) s/Str})
+   (s/optional-key :theme) s/Str
+   (s/optional-key :inline-selector) s/Str
+   (s/optional-key :prompt-position) (s/maybe (apply s/enum (vec valid-prompt-positions)))
+   (s/optional-key :prompt-html) s/Str
+   (s/optional-key :prompt-css) s/Str})
 
 (def OutboundOffer (merge (dissoc BaseOffer :conditions)
                           {(s/required-key :id) s/Int

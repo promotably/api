@@ -71,13 +71,21 @@
                         (update-in [:reward :type] #(keyword %1))
                         (update-in [:presentation :type] #(keyword %1))
                         (assoc :display-text
-                          (-> body-params :presentation :display-text))
+                               (-> body-params :presentation :display-text))
                         (assoc :html
-                          (-> body-params :presentation :html))
+                               (-> body-params :presentation :html))
                         (assoc :css
-                          (-> body-params :presentation :css))
+                               (-> body-params :presentation :css))
                         (assoc :theme
-                          (-> body-params :presentation :theme))
+                               (-> body-params :presentation :theme))
+                        (assoc :inline-selector
+                               (-> body-params :presentation :inline-selector))
+                        (assoc :prompt-position
+                               (-> body-params :presentation :prompt-position))
+                        (assoc :prompt-html
+                               (-> body-params :presentation :prompt-html))
+                        (assoc :prompt-css
+                               (-> body-params :presentation :prompt-css))
                         (assoc :conditions conditions))
         coerced-params ((c/coercer NewOffer
                                    (c/first-matcher [custom-matcher

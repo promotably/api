@@ -27,7 +27,7 @@
    [com.stuartsierra.component :as component]
    [api.components :as c]))
 
-(def expected-db-version 20150524184432)
+(def expected-db-version 20150609223834)
 
 (def test-target (atom (java.net.URL. "http://localhost:3000")))
 

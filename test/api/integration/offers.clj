@@ -34,7 +34,11 @@
                     :html "<html></html>"
                     :css "body {}"
                     :theme "theme"
-                    :display-text "presentation text"}
+                    :display-text "presentation text"
+                    :inline-selector "mep"
+                    :prompt-position "inline"
+                    :prompt-html "<html></html>"
+                    :prompt-css "body {}"}
      :conditions [{:type "dates"
                    :start-date "2014-11-27T05:00:00Z"
                    :end-date "2014-11-29T04:59:59Z"}]})
@@ -70,6 +74,7 @@
               (facts "Offer Create"
                 (let [r (create-offer (default-offer))]
                   (:status r) => 201
+                  (println (:body r))
                   (json/read-str (:body r) :key-fn keyword) => (contains {:code "NEW-VISITOR"
                                                                           :conditions (just [(contains {:type "dates"})])
                                                                           :site-id string?})))
