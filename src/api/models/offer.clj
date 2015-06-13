@@ -69,7 +69,11 @@
                        :type (keyword (:presentation-type cleaned))
                        :html (:html cleaned)
                        :css (:css cleaned)
-                       :theme (:theme cleaned)})
+                       :theme (:theme cleaned)
+                       :prompt-html (:prompt-html cleaned)
+                       :prompt-css (:prompt-css cleaned)
+                       :inline-selector (:inline-selector cleaned)
+                       :prompt-position (keyword (:prompt-position cleaned))})
                     (assoc :reward {:type (if (:dynamic cleaned)
                                             :dynamic-promo
                                             :promo)
