@@ -76,4 +76,4 @@
                                       (set-fields params-for-update)
                                       (where {:site_id (:site-id site)
                                               :account_id account-id}))]
-        (underscore-to-dash-keys updated-site)))))
+        (find-by-site-uuid (:site-id site))))))

@@ -24,6 +24,13 @@
             cookies (assoc :cookies cookies)
             session (assoc :session session))))
 
+(defn- fix-sites-account-ids
+  [account]
+  (let [account-uuid (:account-id account)
+        sites (:sites account)
+        fixed-sites (map #(assoc % :account-id account-uuid) sites)]
+    (assoc account :sites fixed-sites)))
+
 (defn get-account
   "Returns an account."
   [{:keys [params user-id] :as request}]
@@ -32,7 +39,7 @@
                                                     inbound-account-spec)]
     (if (user-access-to-account? user-id account-id)
       (if-let [result (account/find-by-account-id account-id)]
-        (merge base-response (build-response 200 :account result))
+        (merge base-response (build-response 200 :account (fix-sites-account-ids result)))
         (merge base-response (build-response 404 :error "Account does not exist.")))
       (merge base-response (build-response 403 :error "User does not have access to this account.")))))
 
@@ -44,7 +51,7 @@
                                inbound-account-spec)
         results (account/new-account! account)]
     (if results
-      (merge base-response (build-response 201 :account results))
+      (merge base-response (build-response 201 :account (fix-sites-account-ids results)))
       (merge base-response (build-response 400 :error "Unable to create account, invalid or missing parameters.")))))
 
 (defn update-account!
@@ -55,5 +62,5 @@
     (if (user-access-to-account? (:user-id account) (:account-id account))
       (let [result (account/update! account)]
         (if result
-          (merge base-response (build-response 200 :account result))
+          (merge base-response (build-response 200 :account (fix-sites-account-ids result)))
           (merge base-response (build-response 400 :error "Unable to update account, invalid or missing parameters.")))))))

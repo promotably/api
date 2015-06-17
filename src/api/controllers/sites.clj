@@ -58,6 +58,6 @@
         account-id (:account-id (account/find-by-id id))]
     (if (user-access-to-account? (:user-id site) account-id)
       (if-let [result (site/update-site-for-account! id site)]
-        (merge base-response (build-response 200 :site (merge (site/find-by-site-uuid (:site-id site)) {:account-id account-id})))
+        (merge base-response (build-response 200 :site (merge result {:account-id account-id})))
         (merge base-response (build-response 400 :error "Unable to update site, invalid or missing parameters.")))
       (merge base-response (build-response 403 :error "User does not have access to this account.")))))
