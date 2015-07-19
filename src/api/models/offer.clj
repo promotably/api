@@ -28,18 +28,31 @@
 (def OffersCache (atom (cache/ttl-cache-factory {} :ttl 300000))) ;; TTL 5 minutes
 
 (defn fallback-to-exploding
-  [cloudwatch-recorder site-id code]
-  (let [{:keys [offer-id]
-         :as offer-event} (event/find-outstanding-offer cloudwatch-recorder
-                                                        site-id
-                                                        code)]
-    (when offer-event
-      (let [offer-promo (promo/find-by-uuid (-> offer-event
-                                                :data
-                                                :promo-id
-                                                java.util.UUID/fromString))]
-        (if offer-promo [(-> offer-event :data :offer-id)
-                         (assoc offer-promo :code code)])))))
+  ([cloudwatch-recorder site-id site-session-id code]
+     (let [{:keys [offer-id]
+            :as offer-event} (event/find-outstanding-offer-for-session cloudwatch-recorder
+                                                                       site-id
+                                                                       site-session-id
+                                                                       code)]
+       (when offer-event
+         (let [offer-promo (promo/find-by-uuid (-> offer-event
+                                                   :data
+                                                   :promo-id
+                                                   java.util.UUID/fromString))]
+           (if offer-promo [(-> offer-event :data :offer-id)
+                            (assoc offer-promo :code code)])))))
+  ([cloudwatch-recorder site-id code]
+     (let [{:keys [offer-id]
+            :as offer-event} (event/find-outstanding-offer cloudwatch-recorder
+                                                           site-id
+                                                           code)]
+       (when offer-event
+         (let [offer-promo (promo/find-by-uuid (-> offer-event
+                                                   :data
+                                                   :promo-id
+                                                   java.util.UUID/fromString))]
+           (if offer-promo [(-> offer-event :data :offer-id)
+                            (assoc offer-promo :code code)]))))))
 
 (defn lookup-exploding
   [site-id code]

@@ -126,11 +126,10 @@
                          "LIMIT 1")
                     [site-id code]] :results)))
 
-(sm/defn find-outstanding-offer
-  "Find an unredeemed, unexpired offer with the code."
-  [cloudwatch-recorder site-id :- s/Uuid code :- s/Str]
-  (let [offer (find-offer site-id code)
-        expiry (-> offer :data :expiry clj-time.format/parse)
+(sm/defn validate-exploding-offer
+  "Checks that an offer is not redeemed and has not expired. If it has been redeemed or has expired, returns nil"
+  [cloudwatch-recorder site-id :- s/Uuid offer code :- s/Str]
+  (let [expiry (-> offer :data :expiry clj-time.format/parse)
         redemption (first (select promo-redemptions
                                   (where {:site_id site-id
                                           :promo_code code})
@@ -143,6 +142,26 @@
           (log/logf :debug "Expired offer")
           (cloudwatch-recorder "offer-expired" 1 :Count)
           nil)))))
+
+(sm/defn find-outstanding-offer-for-session
+  "Find an unredeemed, unexpired offer for the given site session id."
+  [cloudwatch-recorder site-id :- s/Uuid site-session-id :- s/Uuid code :- s/Str]
+  (let [offer (first (exec-raw [(str "SELECT events.* "
+                                     "FROM events "
+                                     "WHERE "
+                                     "  (site_id = ? AND "
+                                     "   type = 'offer-made' AND "
+                                     "   site_session_id = ? AND "
+                                     "   data->>'code' = ?)"
+                                     "ORDER BY events.created_at DESC "
+                                     "LIMIT 1")]))]
+    (validate-exploding-offer cloudwatch-recorder site-id offer code)))
+
+(sm/defn find-outstanding-offer
+  "Find an unredeemed, unexpired offer with the code."
+  [cloudwatch-recorder site-id :- s/Uuid code :- s/Str]
+  (let [offer (find-offer site-id code)]
+    (validate-exploding-offer cloudwatch-recorder site-id offer code)))
 
 ;; (find-outstanding-offer #uuid "9be8a905-498d-4a8e-ba50-397e2d5f5275" "XP9HEW")
 

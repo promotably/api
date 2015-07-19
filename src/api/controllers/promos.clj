@@ -142,8 +142,8 @@
                                       (or (:promotably-auth params)
                                           (get headers "promotably-auth")))
                                true prep-incoming
-                               true coercer)]
-
+                               true coercer)
+        site-session-id (java.util.UUID/fromString (:site-session-id params))]
     (if (= (class coerced-params) schema.utils.ErrorContainer)
       (do
         (cloudwatch-recorder "promo-validate-schema-error" 1 :Count)
@@ -157,6 +157,7 @@
               [offer-id offer-promo] (if (and the-site code)
                                        (fallback-to-exploding cloudwatch-recorder
                                                               site-id
+                                                              site-session-id
                                                               code))
               the-promo (or found-promo offer-promo)]
 
@@ -209,8 +210,10 @@
                            coercer)
         site-id (-> coerced-params :site :site-id)
         code (-> coerced-params :code clojure.string/upper-case)
+        site-session-id (java.util.UUID/fromString (:site-session-id params))
         [offer-id offer-promo] (fallback-to-exploding cloudwatch-recorder
                                                       site-id
+                                                      site-session-id
                                                       code)
         the-promo (or (promo/find-by-site-uuid-and-code site-id code)
                       offer-promo)
