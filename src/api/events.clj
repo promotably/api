@@ -10,8 +10,7 @@
             [api.models.helper :refer :all]
             [api.models.site :as site]
             [api.models.promo :as promo]
-            [api.models.offer :as offer :refer [fallback-to-exploding
-                                                lookup-exploding]]
+            [api.models.offer :as offer :refer [lookup-exploding]]
             [api.lib.schema :refer :all]
             [api.lib.traffic :refer [source] :as traffic]
             [api.lib.coercion-helper :refer [transform-map
